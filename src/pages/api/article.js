@@ -52,7 +52,6 @@ export default function handler(req, res) {
           image: "/uploads/artikel/exam-tips.jpg",
           link: "/artikel/tips-ujian-nasional",
         },
-        // Anda bisa menambahkan lebih banyak data artikel dummy di sini
       ];
   
       // Mengirimkan data artikel dengan status 200 OK

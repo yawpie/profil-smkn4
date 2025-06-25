@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'; // Import useEffect
 export default function TeacherList() {
   // State untuk menyimpan data guru yang akan diambil dari backend
   const [teachers, setTeachers] = useState([]);
-  const [loading, setLoading] = useState(true); // State untuk indikator loading
-  const [error, setError] = useState(null);   // State untuk error
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); 
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4; // Jumlah guru per halaman
@@ -13,32 +13,31 @@ export default function TeacherList() {
   useEffect(() => {
     // Fungsi untuk mengambil data guru dari backend/API
     async function fetchTeachersFromBackend() {
-      setLoading(true); // Mulai loading
-      setError(null);   // Reset error
+      setLoading(true);
+      setError(null); 
       try {
-        const response = await fetch('/api/teachers');
+        const response = await fetch(`${process.env.DOT || "http://192.168.236.15:3000"}/api/teacher/?page=1&limit=4`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setTeachers(data);
-        setCurrentPage(1); // Reset ke halaman 1 setiap kali data baru diambil
-      } catch (e) {
+        setTeachers(data.data.data);
+        setCurrentPage(1);
+      }
+      catch(e){
         console.error("Gagal mengambil daftar guru dari backend:", e);
         setError("Gagal memuat daftar guru. Silakan coba lagi nanti.");
       } finally {
-        setLoading(false); // Selesai loading
+        setLoading(false); 
       }
     }
 
     fetchTeachersFromBackend();
-  }, []); // Array dependensi kosong: useEffect ini hanya akan berjalan sekali setelah render pertama
+  }, []);
 
-  // --- LOGIKA PAGINASI ---
   const totalPages = Math.ceil(teachers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  // Memastikan kita tidak mengambil indeks di luar batas array jika data baru dimuat
   const currentTeachers = teachers.slice(startIndex, startIndex + itemsPerPage);
 
   const goToPage = (page) => {
@@ -47,7 +46,6 @@ export default function TeacherList() {
     }
   };
 
-  // --- KONDISI LOADING DAN ERROR ---
   if (loading) {
     return (
       <section className="py-10 bg-gray-50 text-center text-gray-700">
@@ -91,12 +89,10 @@ export default function TeacherList() {
         {/* Grid Guru */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {currentTeachers.map((teacher) => (
-            // Gunakan 'teacher.id' sebagai key jika data dari database menyediakan ID unik
-            // Jika tidak, Anda bisa menggunakan index, tapi ID unik lebih baik.
-            <div key={teacher.id || teacher.name} className="bg-white shadow-md rounded-lg overflow-hidden">
-              <div className="w-full h-64 relative">
+            <div key={teacher.guru_id || teacher.name} className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="w-full h-56 relative">
                 <Image
-                  src={teacher.image} // Path gambar akan diambil dari properti 'image' di data backend
+                  src={teacher.image_url}
                   alt={teacher.name}
                   layout="fill"
                   objectFit="cover"
@@ -104,7 +100,7 @@ export default function TeacherList() {
               </div>
               <div className="p-4 text-center">
                 <h3 className="text-lg font-semibold text-gray-800">{teacher.name}</h3>
-                <p className="text-sm text-gray-500">{teacher.role}</p>
+                <p className="text-sm text-gray-500">{teacher.jabatan}</p>
               </div>
             </div>
           ))}

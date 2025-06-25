@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react'; // Import useState dan useEffect
+import { useState, useEffect } from 'react';
+import { formatDate } from '@/utils/formatDate';
 
 export default function ArticleSection() {
   const [articles, setArticles] = useState([]);
@@ -9,18 +10,18 @@ export default function ArticleSection() {
 
   useEffect(() => {
     async function fetchArticlesFromBackend() {
-      setLoading(true); // Mulai loading
-      setError(null);   // Reset error
+      setLoading(true);
+      setError(null);   
       try {
-        const response = await fetch('/api/articles'); 
+        const response = await fetch('http://192.168.236.15:3000/api/articles?page=1&limit=5'); 
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        setArticles(data);
+        setArticles(data.data.data);
       } catch (e) {
-        console.error("Gagal mengambil artikel dari backend:", e);
+        console.error("Gagal mengambil artikel dari rafi", e);
         setError("Gagal memuat artikel. Silakan coba lagi nanti.");
       } finally {
         setLoading(false); 
@@ -76,10 +77,10 @@ export default function ArticleSection() {
         {/* Render Artikel Unggulan (Kolom Kiri) */}
         {featuredArticle && (
           <div className="lg:col-span-1">
-            <Link href={featuredArticle.link} className="block group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+            <Link href="#" className="block group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
               <div className="relative w-full h-96">
                 <Image
-                  src={featuredArticle.image} // Path gambar akan diambil dari properti 'image' di data backend
+                  src={featuredArticle.image_url}
                   alt={featuredArticle.title}
                   layout="fill"
                   objectFit="cover"
@@ -87,9 +88,9 @@ export default function ArticleSection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 <div className="absolute bottom-0 left-0 p-6 text-white">
-                  <p className="text-xs font-semibold mb-1 opacity-90">{featuredArticle.categories}</p>
+                  <p className="text-xs font-semibold mb-1 opacity-90">{featuredArticle.category.name}</p>
                   <h3 className="text-xl font-bold mb-2 leading-tight">{featuredArticle.title}</h3>
-                  <p className="text-sm opacity-80">{featuredArticle.date}</p>
+                  <p className="text-sm opacity-80">{formatDate(featuredArticle.published_date)}</p>
                 </div>
               </div>
             </Link>
@@ -99,10 +100,10 @@ export default function ArticleSection() {
         {/* Render Artikel Kecil (Dua Kolom Kanan) */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
           {smallArticles.map((article) => (
-            <Link href={article.link} key={article.id || article.title} className="block group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+            <Link href="#" key={article.id || article.title} className="block group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
               <div className="relative w-full h-48">
                 <Image
-                  src={article.image} // Path gambar akan diambil dari properti 'image' di data backend
+                  src={article.image_url} // Path gambar akan diambil dari properti 'image' di data backend
                   alt={article.title}
                   layout="fill"
                   objectFit="cover"
@@ -110,9 +111,9 @@ export default function ArticleSection() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
                 <div className="absolute bottom-0 left-0 p-4 text-white">
-                  <p className="text-xs font-semibold mb-1 opacity-90">{article.categories}</p>
+                  <p className="text-xs font-semibold mb-1 opacity-90">{article.category.name}</p>
                   <h3 className="text-md font-bold mb-1 leading-tight">{article.title}</h3>
-                  <p className="text-xs opacity-80">{article.date}</p>
+                  <p className="text-xs opacity-80">{formatDate(article.published_date)}</p>
                 </div>
               </div>
             </Link>

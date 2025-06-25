@@ -4,7 +4,7 @@ export default function handler(req, res) {
 
     if (req.method === 'GET') {
       const daftarTeachersData = [
-        { id: 1, name: 'Prof. Sonia Wandari S.pd', role: 'Kepala Sekolah', image: '/images/guru1.jpg' },
+        { id: 1, name: 'Prof. Sonia Wandari S.pd', role: 'Kepala Sekolah', image: '/public/images/tes.png' },
         { id: 2, name: 'Bu Lestari', role: 'Guru Bahasa Inggris', image: '/images/guru2.jpg' },
         { id: 3, name: 'Pak Deni', role: 'Guru TIK', image: '/images/guru3.jpg' },
         { id: 4, name: 'Bu Santi', role: 'Guru Biologi', image: '/images/guru4.jpg' },

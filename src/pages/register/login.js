@@ -21,42 +21,76 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (generatedCaptcha === null) {
-      setGeneratedCaptcha(generateCaptcha());
+      // setGeneratedCaptcha(generateCaptcha());
     }
   }, [generatedCaptcha]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     setLoading(true);
-
+  
     if (!username || !password) {
       setError('Username dan Password harus diisi.');
       setLoading(false);
       return;
     }
+  
+    // if (generatedCaptcha && captcha && captcha.toLowerCase() !== generatedCaptcha.toLowerCase()) {
+    //   setError('CAPTCHA salah. Silakan coba lagi.');
+    //   setGeneratedCaptcha(generateCaptcha());
+    //   setLoading(false);
+    //   return;
+    // }
+  
+    try {
 
-    if (generatedCaptcha && captcha && captcha.toLowerCase() !== generatedCaptcha.toLowerCase()) {
-      setError('CAPTCHA salah. Silakan coba lagi.');
-      setGeneratedCaptcha(generateCaptcha());
-      setLoading(false);
-      return;
-    }
-
-    setTimeout(() => {
-      setLoading(false);
-      if (username === 'user' && password === 'pass') {
-        setSuccess('Login Berhasil! Selamat datang.');
-        setUsername('');
-        setPassword('');
-        setCaptcha('');
-        setGeneratedCaptcha(generateCaptcha());
-      } else {
-        setError('Username atau password salah.');
-        setGeneratedCaptcha(generateCaptcha());
+      // 1. Kirim request login
+      const loginResponse = await fetch('http://192.168.236.15:3000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include',
+      });
+  
+      const loginData = await loginResponse.json();
+  
+      if (!loginResponse.ok) {
+        throw new Error(loginData.message || 'Login gagal.');
       }
-    }, 1500);
+  
+      const token = loginData.token;
+  
+      // 2. Ambil data user
+      // const userResponse = await fetch('http://192.168.236.15:3000/api/user', { 
+      //   headers: {
+      //     'Authorization': `Bearer ${token}`,
+      //   },
+      // });
+  
+      // const userData = await userResponse.json();
+  
+      // if (!userResponse.ok) {
+      //   throw new Error(userData.message || 'Gagal mengambil data user.');
+      // }
+  
+      // ✅ Login sukses
+      setSuccess(`Login Berhasil! Selamat datang.`);
+      setUsername('');
+      setPassword('');
+      setCaptcha('');
+      setGeneratedCaptcha(generateCaptcha());
+      setError('');
+    } catch (err) {
+      setError(err.message);
+      setSuccess('');
+      setGeneratedCaptcha(generateCaptcha());
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
