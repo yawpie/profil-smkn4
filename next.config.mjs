@@ -5,14 +5,17 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: `${process.env.HOST || "192.168.236.15:3000"}`,
-
+        hostname: process.env.HOST || '192.168.236.15',
+        port: '3000',
       },
-
       {
         protocol: 'https',
-        hostname: "storage.googleapis.com"
-      }
+        hostname: 'storage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
 };

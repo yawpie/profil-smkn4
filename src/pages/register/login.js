@@ -1,5 +1,7 @@
+// pages/register/login.js (or wherever your LoginPage component is located)
 import { useState, useEffect } from 'react';
-import { FaUserAlt, FaLock, FaSyncAlt } from 'react-icons/fa';
+import { FaUserAlt, FaLock, FaSyncAlt } from 'react-icons/fa'; // Corrected: FaUser Alt -> FaUserAlt
+import { useRouter } from 'next/router';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -9,6 +11,7 @@ export default function LoginPage() {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [generatedCaptcha, setGeneratedCaptcha] = useState(null);
+  const router = useRouter();
 
   function generateCaptcha() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -21,7 +24,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (generatedCaptcha === null) {
-      // setGeneratedCaptcha(generateCaptcha());
+      setGeneratedCaptcha(generateCaptcha());
     }
   }, [generatedCaptcha]);
 
@@ -30,23 +33,23 @@ export default function LoginPage() {
     setError('');
     setSuccess('');
     setLoading(true);
-  
+
     if (!username || !password) {
       setError('Username dan Password harus diisi.');
       setLoading(false);
       return;
     }
-  
-    // if (generatedCaptcha && captcha && captcha.toLowerCase() !== generatedCaptcha.toLowerCase()) {
-    //   setError('CAPTCHA salah. Silakan coba lagi.');
-    //   setGeneratedCaptcha(generateCaptcha());
+
+    // Add CAPTCHA validation here if it's not optional
+    // if (captcha.toLowerCase() !== generatedCaptcha.toLowerCase()) {
+    //   setError('CAPTCHA tidak cocok.');
+    //   setGeneratedCaptcha(generateCaptcha()); // Refresh CAPTCHA on failure
     //   setLoading(false);
     //   return;
     // }
-  
-    try {
 
-      // 1. Kirim request login
+    try {
+      // Kirim request login
       const loginResponse = await fetch('http://192.168.236.15:3000/api/login', {
         method: 'POST',
         headers: {
@@ -55,28 +58,15 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
         credentials: 'include',
       });
-  
+
       const loginData = await loginResponse.json();
-  
+
       if (!loginResponse.ok) {
         throw new Error(loginData.message || 'Login gagal.');
       }
-  
-      const token = loginData.token;
-  
-      // 2. Ambil data user
-      // const userResponse = await fetch('http://192.168.236.15:3000/api/user', { 
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //   },
-      // });
-  
-      // const userData = await userResponse.json();
-  
-      // if (!userResponse.ok) {
-      //   throw new Error(userData.message || 'Gagal mengambil data user.');
-      // }
-  
+
+      // const token = loginData.token; // 'token' is not used, consider removing if not needed for client-side storage
+
       // ✅ Login sukses
       setSuccess(`Login Berhasil! Selamat datang.`);
       setUsername('');
@@ -84,6 +74,10 @@ export default function LoginPage() {
       setCaptcha('');
       setGeneratedCaptcha(generateCaptcha());
       setError('');
+
+      // Arahkan ke dashboard setelah login berhasil
+      router.push('/dashboard'); // Tambahkan ini untuk pengalihan
+
     } catch (err) {
       setError(err.message);
       setSuccess('');
@@ -98,7 +92,6 @@ export default function LoginPage() {
       <form
         onSubmit={handleSubmit}
         className="box-border relative w-[90%] max-w-[320px] bg-white px-5 pt-[10px] pb-20 rounded-t-[2px] rounded-b-[5px] shadow-[0px_1px_5px_rgba(0,0,0,0.3)]"
-
       >
         <h2 className="text-3xl font-bold text-center text-blue-700 mb-6 tracking-wide">
           Login
@@ -116,13 +109,13 @@ export default function LoginPage() {
         )}
 
         {/* Username */}
-        <div className="relative">
+        <div className="relative mb-4"> {/* Added mb-4 for spacing */}
           <label htmlFor="username" className="block text-gray-700 text-sm font-semibold mb-2">
             Username
           </label>
           <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-500 transition">
             <span className="pl-3 text-gray-400">
-              <FaUserAlt />
+              <FaUserAlt /> {/* Corrected here as well */}
             </span>
             <input
               type="text"
@@ -137,7 +130,7 @@ export default function LoginPage() {
         </div>
 
         {/* Password */}
-        <div className="relative">
+        <div className="relative mb-4"> {/* Added mb-4 for spacing */}
           <label htmlFor="password" className="block text-gray-700 text-sm font-semibold mb-2">
             Password
           </label>
@@ -158,7 +151,7 @@ export default function LoginPage() {
         </div>
 
         {/* CAPTCHA */}
-        <div>
+        <div className="mb-6"> {/* Added mb-6 for spacing */}
           <label htmlFor="captcha" className="block text-gray-700 font-semibold mb-2">
             CAPTCHA (Opsional)
           </label>
@@ -191,8 +184,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="mt-10 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow-lg transition duration-300"
-
+          className="mt-4 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow-lg transition duration-300"
         >
           {loading ? (
             <svg
