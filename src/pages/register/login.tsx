@@ -1,0 +1,232 @@
+// pages/register/login.tsx
+"use client"; // Pastikan ini ada jika Anda menggunakan App Router
+
+import React, { useState, useEffect, FC, ChangeEvent, FormEvent } from 'react';
+import { FaUserAlt, FaLock, FaSyncAlt } from 'react-icons/fa';
+import { useRouter } from 'next/router'; // useRouter dari next/router
+
+const LoginPage: FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [captcha, setCaptcha] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [generatedCaptcha, setGeneratedCaptcha] = useState<string | null>(null); // CAPTCHA bisa string atau null
+  const router = useRouter();
+
+  // Fungsi untuk menghasilkan CAPTCHA
+  const generateCaptcha = (): string => {
+    const chars: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result: string = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  // Efek untuk menghasilkan CAPTCHA pertama kali
+  useEffect(() => {
+    if (generatedCaptcha === null) {
+      setGeneratedCaptcha(generateCaptcha());
+    }
+  }, [generatedCaptcha]); // Dependensi generatedCaptcha agar hanya berjalan sekali
+
+  // Handler untuk submit form
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    if (!username || !password) {
+      setError('Username dan Password harus diisi.');
+      setLoading(false);
+      return;
+    }
+
+    // CAPTCHA validation (uncomment if needed)
+    if (generatedCaptcha === null || captcha.toLowerCase() !== generatedCaptcha.toLowerCase()) {
+      setError('CAPTCHA tidak cocok.');
+      setGeneratedCaptcha(generateCaptcha()); // Refresh CAPTCHA on failure
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Kirim request login
+      // PERHATIAN: Endpoint ini adalah IP lokal. Pastikan ini sesuai dengan server API Anda.
+      const loginResponse: Response = await fetch('http://192.168.236.15:3000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+        credentials: 'include', // Penting untuk cookies/sesi
+      });
+
+      // Tipekan data respons yang diharapkan dari API login
+      interface LoginResponseData {
+        message: string;
+        token?: string; // Token bisa opsional tergantung API Anda
+        // Tambahkan properti lain yang mungkin ada di respons API
+      }
+
+      const loginData: LoginResponseData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        // Jika respons tidak OK, lempar error dengan pesan dari API
+        throw new Error(loginData.message || 'Login gagal.');
+      }
+
+      // ✅ Login sukses
+      setSuccess(`Login Berhasil! Selamat datang.`);
+      setUsername('');
+      setPassword('');
+      setCaptcha('');
+      setGeneratedCaptcha(generateCaptcha()); // Refresh CAPTCHA
+      setError('');
+
+      // Arahkan ke dashboard setelah login berhasil
+      router.push('/dashboard');
+
+    } catch (err: any) { // Gunakan 'any' untuk error atau tipekan lebih spesifik jika dikenal
+      // Tangani error dari fetch atau dari throw new Error
+      setError(err.message || 'Terjadi kesalahan tidak terduga saat login.');
+      setSuccess('');
+      setGeneratedCaptcha(generateCaptcha()); // Refresh CAPTCHA pada kegagalan
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-tr from-blue-100 via-white to-blue-100 flex items-center justify-center px-4">
+      <form
+        onSubmit={handleSubmit}
+        className="box-border relative w-[90%] max-w-[320px] bg-white px-5 pt-[10px] pb-20 rounded-t-[2px] rounded-b-[5px] shadow-[0px_1px_5px_rgba(0,0,0,0.3)]"
+      >
+        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6 tracking-wide">
+          Login
+        </h2>
+
+        {error && (
+          <p className="text-red-600 text-center text-sm font-semibold animate-shake">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p className="text-green-600 text-center text-sm font-semibold">
+            {success}
+          </p>
+        )}
+
+        {/* Username */}
+        <div className="relative mb-4">
+          <label htmlFor="username" className="block text-gray-700 text-sm font-semibold mb-2">
+            Username
+          </label>
+          <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-500 transition">
+            <span className="pl-3 text-gray-400">
+              <FaUserAlt />
+            </span>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-r-lg focus:outline-none bg-transparent"
+              placeholder="Masukkan username Anda"
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div className="relative mb-4">
+          <label htmlFor="password" className="block text-gray-700 text-sm font-semibold mb-2">
+            Password
+          </label>
+          <div className="flex items-center border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-500 transition">
+            <span className="pl-3 text-gray-400">
+              <FaLock />
+            </span>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-r-lg focus:outline-none bg-transparent"
+              placeholder="Masukkan password Anda"
+            />
+          </div>
+        </div>
+
+        {/* CAPTCHA */}
+        <div className="mb-6">
+          <label htmlFor="captcha" className="block text-gray-700 font-semibold mb-2">
+            CAPTCHA
+          </label>
+          <div className="flex items-center mb-2 space-x-3">
+            <div className="flex-1 bg-gray-200 font-mono tracking-widest text-gray-700 text-sm rounded-lg py-3 px-5 select-none text-center shadow-inner">
+              {generatedCaptcha || 'Loading...'}
+            </div>
+            <button
+              type="button"
+              onClick={() => setGeneratedCaptcha(generateCaptcha())}
+              className="flex items-center text-blue-600 hover:text-blue-800 transition font-semibold space-x-1"
+              aria-label="Refresh CAPTCHA"
+              title="Refresh CAPTCHA"
+            >
+              <FaSyncAlt />
+              <span>Refresh</span>
+            </button>
+          </div>
+          <input
+            type="text"
+            id="captcha"
+            value={captcha}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setCaptcha(e.target.value)}
+            placeholder="Masukkan kode CAPTCHA"
+            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 transition"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-4 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow-lg transition duration-300"
+        >
+          {loading ? (
+            <svg
+              className="animate-spin h-5 w-5 mx-auto text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+              />
+            </svg>
+          ) : (
+            'Login'
+          )}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default LoginPage;
