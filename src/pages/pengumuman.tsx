@@ -1,3 +1,4 @@
+// pages/pengumuman/index.tsx
 import { useState, useEffect, FC, useCallback } from 'react';
 import Link from 'next/link';
 import MainLayout from '../components/layout/MainLayout';
@@ -92,18 +93,18 @@ const Pengumuman: FC = () => {
   const otherAnnouncements = announcements.length > 1 ? announcements.slice(1) : [];
 
   const getAnnouncementLink = (announcement: Announcement) => {
-    // Prioritize slug if available, otherwise use id
-    return `/pengumuman/${announcement.slug || announcement.id}`;
+    // Akan selalu menggunakan ID untuk link
+    return `/pengumuman/${announcement.id}`;
   };
 
   const getTruncatedContent = (content: string, summary?: string) => {
-    return summary || content.substring(0, 150) + '...'; // Fallback if summary is not provided
+    return summary || content.substring(0, 120) + '...'; // Potongan konten sedikit lebih pendek
   };
 
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative w-full py-20 md:py-28 lg:py-36 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100">
+      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100 font-sans"> {/* Tambahkan font-sans di sini */}
         <div className="absolute inset-0 opacity-40 animate-blob-pulse">
           <div className="absolute -top-10 -left-10 w-48 h-48 bg-sky-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
           <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -114,7 +115,7 @@ const Pengumuman: FC = () => {
             initial="hidden"
             animate="visible"
             variants={headerVariants}
-            className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-blue-800 leading-tight mb-4 drop-shadow-xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-800 leading-tight mb-3 drop-shadow-xl" // Font H1 lebih kecil
           >
             Pengumuman <span className="text-cyan-600">Resmi</span>
           </motion.h1>
@@ -123,7 +124,7 @@ const Pengumuman: FC = () => {
             animate="visible"
             variants={textVariants}
             transition={{ delay: 0.2 }}
-            className="text-lg sm:text-xl text-gray-800 max-w-3xl mx-auto mb-10 leading-relaxed"
+            className="text-sm sm:text-base text-gray-800 max-w-2xl mx-auto mb-8 leading-relaxed" // Font P lebih kecil
           >
             Dapatkan informasi terkini dan penting langsung dari SMKN 4 Mataram.
           </motion.p>
@@ -132,26 +133,30 @@ const Pengumuman: FC = () => {
 
       {/* Loading State with Skeleton */}
       {loading && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 animate-pulse">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Tambahkan font-sans di sini */}
+          <h2 className="text-xl md:text-2xl font-bold text-center text-gray-900 mb-10 animate-pulse"> {/* Font H2 lebih kecil */}
             Memuat Pengumuman...
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 bg-gray-100 rounded-xl shadow-md p-6 animate-pulse">
-              <div className="h-4 bg-gray-300 rounded w-1/4 mb-4"></div> {/* Date */}
-              <div className="h-8 bg-gray-300 rounded w-3/4 mb-4"></div> {/* Title */}
-              <div className="h-5 bg-gray-300 rounded w-full mb-2"></div> {/* Summary line 1 */}
-              <div className="h-5 bg-gray-300 rounded w-11/12 mb-4"></div> {/* Summary line 2 */}
-              <div className="h-4 bg-gray-300 rounded w-1/3"></div> {/* Read more */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 bg-gray-100 rounded-xl shadow-md p-5 animate-pulse">
+              <div className="h-3 bg-gray-300 rounded w-1/4 mb-3"></div> {/* Date */}
+              <div className="h-7 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Title */}
+              <div className="h-4 bg-gray-300 rounded w-full mb-2"></div> {/* Summary line 1 */}
+              <div className="h-4 bg-gray-300 rounded w-11/12 mb-3"></div> {/* Summary line 2 */}
+              <div className="h-3 bg-gray-300 rounded w-1/3"></div> {/* Read more */}
             </div>
-            <div className="space-y-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-xl shadow-md p-5 animate-pulse">
-                  <div className="h-3 bg-gray-300 rounded w-1/4 mb-2"></div> {/* Date */}
-                  <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div> {/* Title */}
-                  <div className="h-4 bg-gray-300 rounded w-full"></div> {/* Summary */}
-                </div>
-              ))}
+            <div className="space-y-5">
+              <AnimatePresence>
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="bg-gray-100 rounded-xl shadow-md p-4 animate-pulse">
+                    <div className="h-3 bg-gray-300 rounded w-1/4 mb-2"></div> {/* Date */}
+                    <div className="h-5 bg-gray-300 rounded w-3/4 mb-2"></div> {/* Title */}
+                    <div className="h-4 bg-gray-300 rounded w-full"></div> {/* Summary */}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           </div>
         </section>
@@ -159,18 +164,18 @@ const Pengumuman: FC = () => {
 
       {/* Error State */}
       {!loading && error && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-red-50 rounded-xl shadow-lg border border-red-200 text-center -mt-16 relative z-10">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-red-50 rounded-xl shadow-lg border border-red-200 text-center -mt-16 relative z-10 font-sans"> {/* Tambahkan font-sans di sini */}
           <motion.p
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-2xl text-red-700 font-semibold mb-4"
+            className="text-lg text-red-700 font-semibold mb-3" // Font lebih kecil
           >
             {error}
           </motion.p>
           <button
             onClick={fetchAnnouncementsFromBackend}
-            className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+            className="px-6 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md text-base"
           >
             Coba Lagi
           </button>
@@ -179,23 +184,23 @@ const Pengumuman: FC = () => {
 
       {/* Empty State */}
       {!loading && !error && announcements.length === 0 && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-blue-50 rounded-xl shadow-lg border border-blue-200 text-center -mt-16 relative z-10">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200 text-center -mt-16 relative z-10 font-sans"> {/* Tambahkan font-sans di sini */}
           <motion.p
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-2xl text-blue-700 font-semibold mb-4"
+            className="text-lg text-blue-700 font-semibold mb-3" // Font lebih kecil
           >
             Belum ada pengumuman yang tersedia saat ini.
           </motion.p>
-          <p className="text-lg text-gray-600">Nantikan informasi terbaru dari kami!</p>
+          <p className="text-base text-gray-600">Nantikan informasi terbaru dari kami!</p>
         </section>
       )}
 
       {/* Main Content when data is loaded */}
       {!loading && !error && announcements.length > 0 && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Tambahkan font-sans di sini */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {mainAnnouncement && (
               <motion.div
                 key={mainAnnouncement.id}
@@ -205,23 +210,23 @@ const Pengumuman: FC = () => {
                 variants={mainCardVariants}
                 className="md:col-span-2 bg-white rounded-xl shadow-2xl overflow-hidden
                            transition-all duration-300 ease-in-out transform hover:scale-[1.01] hover:shadow-blue-500/30
-                           relative group border border-blue-100"
+                           relative group border border-blue-100 p-6"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
 
-                <div className="p-8 relative z-10">
-                  <p className="text-sm text-gray-500 mb-3 font-medium">
+                <div className="p-0 relative z-10">
+                  <p className="text-xs text-gray-500 mb-2 font-medium">
                     {new Date(mainAnnouncement.publishDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </p>
                   <Link href={getAnnouncementLink(mainAnnouncement)} className="block">
-                    <h3 className="text-3xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-blue-700 transition-colors duration-300 leading-tight">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-blue-700 transition-colors duration-300 leading-tight"> {/* Font H3 lebih kecil */}
                       {mainAnnouncement.title}
                     </h3>
                   </Link>
-                  <p className="text-gray-700 mb-5 leading-relaxed line-clamp-4">
+                  <p className="text-sm text-gray-700 mb-4 leading-relaxed line-clamp-4">
                     {getTruncatedContent(mainAnnouncement.content, mainAnnouncement.summary)}
                   </p>
-                  <Link href={getAnnouncementLink(mainAnnouncement)} className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold transition-colors group-hover:underline">
+                  <Link href={getAnnouncementLink(mainAnnouncement)} className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold transition-colors group-hover:underline text-sm"> {/* Font link lebih kecil */}
                     Baca Selengkapnya
                     <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                   </Link>
@@ -229,7 +234,7 @@ const Pengumuman: FC = () => {
               </motion.div>
             )}
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               <AnimatePresence>
                 {otherAnnouncements.map((announcement, index) => (
                   <motion.div
@@ -239,22 +244,22 @@ const Pengumuman: FC = () => {
                     viewport={{ once: true, amount: 0.1 }}
                     variants={cardVariants}
                     transition={{ delay: index * 0.1 }}
-                    className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500
+                    className="bg-white rounded-xl shadow-lg p-5 border-l-4 border-blue-500
                                transition-all duration-300 ease-in-out transform hover:scale-[1.02] hover:shadow-xl
                                relative group overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
 
                     <div className="relative z-10">
-                      <p className="text-xs text-gray-500 mb-2 font-medium">
+                      <p className="text-xs text-gray-500 mb-1 font-medium">
                         {new Date(announcement.publishDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
                       </p>
                       <Link href={getAnnouncementLink(announcement)} className="block">
-                        <h4 className="text-lg font-semibold text-gray-800 mb-2 cursor-pointer hover:text-blue-700 transition-colors duration-300">
+                        <h4 className="text-sm font-semibold text-gray-800 mb-1 cursor-pointer hover:text-blue-700 transition-colors duration-300"> {/* Font H4 lebih kecil */}
                           {announcement.title}
                         </h4>
                       </Link>
-                      <p className="text-gray-600 text-sm line-clamp-3">
+                      <p className="text-xs text-gray-600 line-clamp-3">
                         {getTruncatedContent(announcement.content, announcement.summary)}
                       </p>
                     </div>
@@ -262,12 +267,6 @@ const Pengumuman: FC = () => {
                 ))}
               </AnimatePresence>
             </div>
-          </div>
-
-          <div className="text-center mt-16">
-            <Link href="/pengumuman-arsip" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg transform hover:scale-105">
-              Lihat Semua Pengumuman &rarr;
-            </Link>
           </div>
         </section>
       )}

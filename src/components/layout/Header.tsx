@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, FC } from 'react'; // Import FC for Functional Component typing
+import React, { useState, useRef, useEffect, FC } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -7,15 +7,12 @@ const Header: FC = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
-  
-  // Tipekan useRef dengan HTMLElement atau null
-  const dropdownRef = useRef<HTMLLIElement>(null); // Ref untuk elemen li dropdown
-  const mobileMenuRef = useRef<HTMLDivElement>(null); // Ref untuk div menu mobile
 
-  // Fungsi untuk menutup dropdown dan menu mobile saat klik di luar
+  const dropdownRef = useRef<HTMLLIElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Pastikan event.target adalah Node sebelum menggunakan contains
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
       }
@@ -27,9 +24,8 @@ const Header: FC = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []); // Dependensi kosong karena listener hanya perlu disetel sekali
+  }, []);
 
-  // Efek untuk mengubah header saat scroll
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -43,36 +39,35 @@ const Header: FC = () => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []); // Dependensi kosong karena listener hanya perlu disetel sekali
+  }, []);
 
   const toggleProfileDropdown = () => {
-    setIsProfileDropdownOpen(prev => !prev); // Gunakan functional update
+    setIsProfileDropdownOpen(prev => !prev);
   };
 
   const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(prev => !prev); // Gunakan functional update
+    setIsMobileMenuOpen(prev => !prev);
   };
 
   return (
-    <header className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out
+    <header className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ease-in-out font-sans
       ${isScrolled
-        ? 'bg-gradient-to-r from-blue-700 to-blue-900 shadow-xl'
-        : 'bg-transparent'
+        ? 'bg-gradient-to-r from-blue-700 to-indigo-900 shadow-2xl py-2' // Gradasi biru-indigo yang lebih dalam
+        : 'bg-transparent py-4' // Lebih banyak padding saat transparan
       }`}
     >
-      {/* Bagian Atas: Logo dan Nama Sekolah */}
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
+      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between"> {/* Padding horizontal lebih besar */}
+        <Link href="/" className="flex items-center gap-2"> {/* Gap logo dan teks lebih rapat */}
           <Image
             src="/images/logo_sekolah.png"
             alt="SMKN 4 Mataram Logo"
-            width={45}
-            height={45}
-            className="rounded-full bg-white p-1 shadow-md"
-            unoptimized // Pertimbangkan apakah ini benar-benar diperlukan untuk gambar lokal
+            width={40} // Ukuran logo sedikit lebih kecil
+            height={40} // Ukuran logo sedikit lebih kecil
+            className="rounded-full bg-white p-0.5 shadow-md" // Padding logo lebih kecil
+            unoptimized
           />
-          <span className={`text-xl md:text-2xl font-extrabold transition-colors duration-300 ease-in-out
-            ${isScrolled ? 'text-white' : 'text-blue-900'}`}>
+          <span className={`text-lg md:text-xl font-extrabold transition-colors duration-300 ease-in-out
+            ${isScrolled ? 'text-white' : 'text-blue-950'}`}> {/* Warna teks yang lebih gelap saat transparan */}
             SMKN 4 Mataram
           </span>
         </Link>
@@ -81,59 +76,59 @@ const Header: FC = () => {
         <div className="md:hidden">
           <button
             onClick={toggleMobileMenu}
-            className={`p-2 rounded-md transition-colors duration-300 ease-in-out
-              ${isScrolled ? 'text-white hover:bg-blue-600' : 'text-blue-900 hover:bg-gray-200'}`}
+            className={`p-2 rounded-lg transition-colors duration-300 ease-in-out
+              ${isScrolled ? 'text-white hover:bg-blue-600/70' : 'text-blue-900 hover:bg-gray-100/50'}`}
             aria-label="Toggle mobile menu"
           >
             {isMobileMenuOpen ? (
-              <XMarkIcon className="h-7 w-7" />
+              <XMarkIcon className="h-6 w-6" />
             ) : (
-              <Bars3Icon className="h-7 w-7" />
+              <Bars3Icon className="h-6 w-6" />
             )}
           </button>
         </div>
 
         {/* Navigasi Utama (Desktop) */}
         <nav className="hidden md:block">
-          <ul className="flex gap-8 text-base font-medium">
-            <li><Link href="/" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-900'}`}>Beranda</Link></li>
+          <ul className="flex gap-6 text-sm font-medium"> {/* Gap antar link lebih rapat, ukuran font lebih kecil */}
+            <li><Link href="/" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-950'}`}>Beranda</Link></li>
 
             {/* Profile dengan Dropdown */}
             <li className="relative" ref={dropdownRef}>
               <button
                 onClick={toggleProfileDropdown}
-                className={`nav-link flex items-center gap-1 ${isScrolled ? 'text-white' : 'text-blue-900'}`}
+                className={`nav-link flex items-center gap-1 ${isScrolled ? 'text-white' : 'text-blue-950'}`}
                 aria-expanded={isProfileDropdownOpen}
                 aria-haspopup="true"
               >
                 Profile
-                <ChevronDownIcon className={`ml-1 h-4 w-4 transform transition-transform ${isProfileDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
+                <ChevronDownIcon className={`ml-0.5 h-4 w-4 transform transition-transform ${isProfileDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </button>
 
               {isProfileDropdownOpen && (
-                <ul className="absolute left-1/2 -translate-x-1/2 mt-3 w-52 bg-white text-blue-800 rounded-lg shadow-xl py-2 z-50 animate-fade-in-down">
+                <ul className="absolute left-1/2 -translate-x-1/2 mt-2 w-48 bg-white text-blue-800 rounded-lg shadow-xl py-1.5 z-50 animate-fade-in-down border border-blue-100"> {/* Ukuran dropdown, padding, dan border disesuaikan */}
                   <li>
-                    <Link href="/visi-misi" className="block px-4 py-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
+                    <Link href="/visi-misi" className="block px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}> {/* Ukuran font item dropdown lebih kecil */}
                       Visi Misi
                     </Link>
                   </li>
                   <li>
-                    <Link href="/daftar-guru" className="block px-4 py-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
+                    <Link href="/daftar-guru" className="block px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
                       Daftar Guru
                     </Link>
                   </li>
                   <li>
-                    <Link href="/fasilitas" className="block px-4 py-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
+                    <Link href="/fasilitas" className="block px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
                       Fasilitas
                     </Link>
                   </li>
                   <li>
-                    <Link href="/ekskul" className="block px-4 py-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
+                    <Link href="/ekstrakurikuler" className="block px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
                       Ekstrakurikuler
                     </Link>
                   </li>
                   <li>
-                    <Link href="/jurusan" className="block px-4 py-2 hover:bg-blue-100 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
+                    <Link href="/jurusan" className="block px-4 py-2 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200" onClick={() => setIsProfileDropdownOpen(false)}>
                       Jurusan
                     </Link>
                   </li>
@@ -141,9 +136,9 @@ const Header: FC = () => {
               )}
             </li>
 
-            <li><Link href="/pengumuman" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-900'}`}>Pengumuman</Link></li>
-            <li><Link href="/artikel" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-900'}`}>Artikel</Link></li>
-            <li><Link href="/kontak" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-900'}`}>Hubungi Kami</Link></li>
+            <li><Link href="/pengumuman" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-950'}`}>Pengumuman</Link></li>
+            <li><Link href="/artikel" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-950'}`}>Artikel</Link></li>
+            <li><Link href="/kontak" className={`nav-link ${isScrolled ? 'text-white' : 'text-blue-950'}`}>Hubungi Kami</Link></li>
           </ul>
         </nav>
       </div>
@@ -151,7 +146,7 @@ const Header: FC = () => {
       {/* Mobile Menu */}
       <div
         ref={mobileMenuRef}
-        className={`fixed top-0 left-0 w-full bg-gradient-to-br from-blue-700 to-blue-900 shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out md:hidden
+        className={`fixed top-0 left-0 w-full bg-gradient-to-br from-blue-800 to-indigo-950 shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out md:hidden
           ${isMobileMenuOpen ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}
         style={{ height: '100vh' }}
       >
@@ -161,11 +156,11 @@ const Header: FC = () => {
             className="p-2 rounded-md text-white hover:bg-blue-600 focus:outline-none"
             aria-label="Close mobile menu"
           >
-            <XMarkIcon className="h-8 w-8" />
+            <XMarkIcon className="h-7 w-7" />
           </button>
         </div>
-        <nav className="px-8 py-4">
-          <ul className="flex flex-col gap-6 text-xl text-white font-semibold">
+        <nav className="px-6 py-4"> {/* Padding horizontal lebih kecil */}
+          <ul className="flex flex-col gap-4 text-lg text-white font-medium"> {/* Gap antar link lebih rapat, ukuran font lebih kecil */}
             <li><Link href="/" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Beranda</Link></li>
             {/* Dropdown untuk Mobile */}
             <li className="relative">
@@ -174,35 +169,58 @@ const Header: FC = () => {
                 className="mobile-nav-link flex items-center justify-between w-full"
               >
                 Profile
-                <ChevronDownIcon className={`ml-1 h-6 w-6 transform transition-transform ${isProfileDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
+                <ChevronDownIcon className={`ml-1 h-5 w-5 transform transition-transform ${isProfileDropdownOpen ? 'rotate-180' : 'rotate-0'}`} /> {/* Ukuran icon lebih kecil */}
               </button>
               {isProfileDropdownOpen && (
-                <ul className="mt-2 pl-4 text-lg bg-white bg-opacity-10 rounded-md py-2 space-y-2 animate-fade-in-down">
-                  <li><Link href="/visi-misi" className="block px-3 py-2 hover:text-yellow-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Visi Misi</Link></li>
-                  <li><Link href="/daftar-guru" className="block px-3 py-2 hover:text-yellow-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Daftar Guru</Link></li>
-                  <li><Link href="/fasilitas" className="block px-3 py-2 hover:text-yellow-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Fasilitas</Link></li>
-                  <li><Link href="/ekstrakurikuler" className="block px-3 py-2 hover:text-yellow-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Ekstrakurikuler</Link></li>
-                  <li><Link href="/jurusan" className="block px-3 py-2 hover:text-yellow-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Jurusan</Link></li>
+                <ul className="mt-2 pl-4 text-base bg-white bg-opacity-10 rounded-md py-1.5 space-y-1 animate-fade-in-down"> {/* Ukuran font, padding, dan spasi lebih kecil */}
+                  <li><Link href="/visi-misi" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Visi Misi</Link></li>
+                  <li><Link href="/daftar-guru" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Daftar Guru</Link></li>
+                  <li><Link href="/fasilitas" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Fasilitas</Link></li>
+                  <li><Link href="/ekstrakurikuler" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Ekstrakurikuler</Link></li>
+                  <li><Link href="/jurusan" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Jurusan</Link></li>
                 </ul>
               )}
             </li>
             <li><Link href="/pengumuman" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Pengumuman</Link></li>
             <li><Link href="/artikel" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Artikel</Link></li>
-            <li><Link href="/contact" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Hubungi Kami</Link></li>
+            <li><Link href="/kontak" className="mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Hubungi Kami</Link></li>
           </ul>
         </nav>
       </div>
 
-      {/* Global styles untuk link navigasi */}
-      {/* Jika Anda menggunakan Tailwind CSS, sebaiknya definisikan ini di file CSS global (misal: globals.css) */}
       <style jsx>{`
         .nav-link {
-          /* Warna teks untuk desktop nav link saat tidak di-scroll */
-          /* Default text-blue-900 atau text-white tergantung isScrolled */
-          @apply hover:text-yellow-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 px-2 py-1 rounded-md;
+          @apply relative text-white transition-colors duration-300 ease-in-out px-2 py-1 rounded-md;
         }
+
+        /* Hover dan Focus efek untuk desktop nav link */
+        .nav-link::after {
+          content: '';
+          @apply absolute left-0 bottom-0 h-[2px] bg-white w-0 transition-all duration-300 ease-in-out;
+        }
+
+        .nav-link:hover::after,
+        .nav-link:focus::after {
+          @apply w-full;
+        }
+
+        /* Adjust text color for transparent state for nav-link directly */
+        header:not(.bg-gradient-to-r) .nav-link {
+          @apply text-blue-950;
+        }
+
+        /* Special hover/focus for transparent state */
+        header:not(.bg-gradient-to-r) .nav-link:hover,
+        header:not(.bg-gradient-to-r) .nav-link:focus {
+          @apply text-blue-700; /* Biru yang lebih terang saat hover di mode transparan */
+        }
+        
+        header:not(.bg-gradient-to-r) .nav-link::after {
+          @apply bg-blue-700;
+        }
+
         .mobile-nav-link {
-          @apply block w-full text-white hover:text-yellow-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50 py-3 px-4 rounded-md;
+          @apply block w-full text-white font-medium hover:text-blue-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-opacity-50 py-2.5 px-3 rounded-md; /* Padding dan ukuran font lebih kecil */
         }
       `}</style>
     </header>

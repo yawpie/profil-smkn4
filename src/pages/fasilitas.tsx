@@ -93,7 +93,7 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
   return (
     <MainLayout>
       {/* Hero Section with Title */}
-      <section className="relative w-full py-20 md:py-28 lg:py-36 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100">
+      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100 font-sans"> {/* Padding dan font-sans */}
         <div className="absolute inset-0 opacity-40 animate-blob-pulse">
           <div className="absolute -top-10 -left-10 w-48 h-48 bg-sky-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
           <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -104,7 +104,7 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
-            className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-blue-800 leading-tight mb-4 drop-shadow-xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-800 leading-tight mb-3 drop-shadow-xl" // Font H1 lebih kecil
           >
             Fasilitas <span className="text-cyan-600">Unggulan</span>
           </motion.h1>
@@ -112,8 +112,8 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
-            transition={{ delay: 0.2 }} // transition dipindah ke sini
-            className="text-lg sm:text-xl text-gray-800 max-w-3xl mx-auto mb-10 leading-relaxed"
+            transition={{ delay: 0.2 }}
+            className="text-sm sm:text-base text-gray-800 max-w-2xl mx-auto mb-8 leading-relaxed" // Font P lebih kecil
           >
             Jelajahi berbagai fasilitas modern dan lengkap yang mendukung proses belajar mengajar di sekolah kami untuk pengalaman terbaik.
           </motion.p>
@@ -121,23 +121,23 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
       </section>
 
       {/* Main Content Area */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
         {/* Loading State with Skeleton */}
         {loading && (
-          <div className="flex flex-col md:flex-row gap-8 mt-8">
+          <div className="flex flex-col md:flex-row gap-6 mt-8"> {/* Gap lebih kecil */}
             {/* Sidebar Skeleton */}
-            <div className="w-full md:w-1/4 bg-gray-100 p-6 rounded-xl shadow-md animate-pulse">
+            <div className="w-full md:w-1/4 bg-gray-100 p-5 rounded-xl shadow-md animate-pulse"> {/* Padding lebih kecil */}
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-10 bg-gray-300 rounded-md mb-3"></div>
+                <div key={i} className="h-8 bg-gray-300 rounded-md mb-2"></div>
               ))}
             </div>
             {/* Content Skeleton */}
-            <div className="w-full md:w-3/4 bg-gray-100 p-8 rounded-xl shadow-md animate-pulse">
-              <div className="w-full h-[300px] bg-gray-300 rounded-lg mb-6"></div>
-              <div className="h-8 bg-gray-300 rounded w-3/4 mb-4"></div>
-              <div className="h-5 bg-gray-300 rounded w-full mb-3"></div>
-              <div className="h-5 bg-gray-300 rounded w-11/12 mb-3"></div>
-              <div className="h-5 bg-gray-300 rounded w-5/6"></div>
+            <div className="w-full md:w-3/4 bg-gray-100 p-7 rounded-xl shadow-md animate-pulse"> {/* Padding lebih kecil */}
+              <div className="w-full h-[250px] bg-gray-300 rounded-lg mb-5"></div> {/* Tinggi dan margin lebih kecil */}
+              <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Tinggi dan margin lebih kecil */}
+              <div className="h-4 bg-gray-300 rounded w-full mb-2"></div> {/* Tinggi dan margin lebih kecil */}
+              <div className="h-4 bg-gray-300 rounded w-11/12 mb-2"></div> {/* Tinggi dan margin lebih kecil */}
+              <div className="h-4 bg-gray-300 rounded w-5/6"></div>
             </div>
           </div>
         )}
@@ -148,12 +148,12 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
-            className="text-center py-20 bg-red-50 rounded-xl shadow-lg border border-red-200"
+            className="text-center py-16 bg-red-50 rounded-xl shadow-lg border border-red-200 font-sans" // Padding dan font-sans
           >
-            <p className="text-2xl text-red-700 font-semibold mb-4">{error}</p>
+            <p className="text-lg text-red-700 font-semibold mb-3">{error}</p> {/* Font lebih kecil */}
             <button
               onClick={fetchFacilities}
-              className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+              className="px-6 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md text-base" // Padding & font lebih kecil
             >
               Coba Lagi
             </button>
@@ -166,10 +166,10 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
-            className="text-center py-20 bg-blue-50 rounded-xl shadow-lg border border-blue-200"
+            className="text-center py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200 font-sans" // Padding dan font-sans
           >
-            <p className="text-2xl text-blue-700 font-semibold mb-4">Tidak ada fasilitas yang tersedia saat ini.</p>
-            <p className="text-lg text-gray-600">Mohon maaf, kami sedang mempersiapkan informasi lebih lanjut.</p>
+            <p className="text-lg text-blue-700 font-semibold mb-3">Tidak ada fasilitas yang tersedia saat ini.</p> {/* Font lebih kecil */}
+            <p className="text-base text-gray-600">Mohon maaf, kami sedang mempersiapkan informasi lebih lanjut.</p>
           </motion.div>
         )}
 
@@ -180,7 +180,7 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
             variants={containerVariants}
-            className="flex flex-col md:flex-row gap-8 relative mt-8"
+            className="flex flex-col md:flex-row gap-6 relative mt-8" // Gap lebih kecil
           >
             {/* Background decoration (optional, for aesthetic touch) */}
             <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl opacity-20 pointer-events-none">
@@ -192,24 +192,24 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             {/* Left Sidebar for Navigation */}
             <motion.div
               variants={itemVariants}
-              className="w-full md:w-1/4 bg-white p-6 rounded-xl shadow-xl md:sticky md:top-24 h-fit z-10 border border-gray-100"
+              className="w-full md:w-1/4 bg-white p-5 rounded-xl shadow-xl md:sticky md:top-20 h-fit z-10 border border-gray-100" // Padding lebih kecil, top lebih kecil
             >
-              <h3 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">Daftar Fasilitas</h3>
+              <h3 className="text-base font-bold text-gray-800 mb-3 pb-1.5 border-b border-gray-200">Daftar Fasilitas</h3> {/* Font H3 lebih kecil, padding lebih kecil */}
               <nav>
                 <ul>
-                  {facilities.map((fac: Facility) => ( // Tipekan 'fac'
-                    <li key={fac.id ?? fac.name} className="mb-2"> {/* Gunakan id atau name sebagai key */}
+                  {facilities.map((fac: Facility) => (
+                    <li key={fac.id ?? fac.name} className="mb-1.5"> {/* Margin bawah lebih kecil */}
                       <button
-                        onClick={() => setActiveFacility(fac.id ?? null)} // Pastikan ID tidak null saat diatur
-                        className={`relative block w-full text-left py-3 px-4 rounded-lg transition-all duration-300 ease-in-out group
+                        onClick={() => setActiveFacility(fac.id ?? null)}
+                        className={`relative block w-full text-left py-2.5 px-3 rounded-lg transition-all duration-300 ease-in-out group text-sm
                           ${activeFacility === fac.id
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold shadow-md transform translate-x-1'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold shadow-md transform translate-x-0.5' // Transform lebih kecil
                             : 'text-gray-700 hover:bg-blue-50 hover:text-blue-800'
                           }`}
                       >
                         {fac.name}
                         {activeFacility === fac.id && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 bg-white rounded-full transition-all duration-300 group-hover:scale-125"></span>
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2.5 w-2.5 bg-white rounded-full transition-all duration-300 group-hover:scale-125"></span>
                         )}
                       </button>
                     </li>
@@ -221,32 +221,32 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
             {/* Right Content Area */}
             <motion.div
               variants={itemVariants}
-              className="w-full md:w-3/4 bg-white p-8 rounded-xl shadow-xl z-10 border border-gray-100"
+              className="w-full md:w-3/4 bg-white p-7 rounded-xl shadow-xl z-10 border border-gray-100" // Padding lebih kecil
             >
               <AnimatePresence mode="wait">
                 {currentFacility ? (
                   <motion.div
-                    key={currentFacility.id ?? currentFacility.name} // Key changes to trigger animation on facility switch
+                    key={currentFacility.id ?? currentFacility.name}
                     initial="initial"
                     animate="animate"
                     exit="exit"
                     variants={detailVariants}
                   >
-                    <div className="mb-6 overflow-hidden rounded-xl shadow-lg border border-gray-200">
+                    <div className="mb-5 overflow-hidden rounded-lg shadow-md border border-gray-200"> {/* Margin bawah, rounded, shadow lebih kecil */}
                       <Image
                         src={currentFacility.image}
-                        alt={currentFacility.name} // Gunakan currentFacility.name
+                        alt={currentFacility.name}
                         width={1600}
                         height={900}
                         layout="responsive"
                         objectFit="cover"
-                        className="rounded-xl transition-transform duration-700 hover:scale-105"
-                        priority={activeFacility === facilities[0]?.id} // Prioritize loading the first image, gunakan optional chaining
+                        className="rounded-lg transition-transform duration-700 hover:scale-105" // Rounded lebih kecil
+                        priority={activeFacility === facilities[0]?.id}
                       />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-4 leading-tight">{currentFacility.name}</h2> {/* Gunakan currentFacility.name */}
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-3 leading-tight">{currentFacility.name}</h2> {/* Font H2 lebih kecil */}
                     {currentFacility.description.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="text-lg text-gray-700 leading-relaxed mb-4">
+                      <p key={index} className="text-sm text-gray-700 leading-relaxed mb-3"> {/* Font P lebih kecil */}
                         {paragraph}
                       </p>
                     ))}
@@ -258,9 +258,9 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
                     animate="animate"
                     exit="exit"
                     variants={detailVariants}
-                    className="text-center py-10 text-gray-600"
+                    className="text-center py-8 text-gray-600 text-base" // Padding dan font lebih kecil
                   >
-                    <p className="text-lg">Silakan pilih salah satu fasilitas dari daftar di samping untuk melihat detailnya.</p>
+                    <p>Silakan pilih salah satu fasilitas dari daftar di samping untuk melihat detailnya.</p>
                   </motion.div>
                 )}
               </AnimatePresence>

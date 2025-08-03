@@ -1,12 +1,12 @@
-// src/components/Dashboard/Sidebar.tsx
 "use client";
 
 import React, { useState, useEffect, FC } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import type { Notification } from "@/types/Notification";
 import type { NavItem } from "@/types/Sidebar";
-import { iconsSvg } from "@/icons/icons"; // Perhatikan path, pastikan sesuai dengan lokasi icons.tsx
+import { iconsSvg } from "@/icons/icons";
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -15,91 +15,95 @@ type SidebarProps = {
 };
 
 const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification }) => {
-  const [isMounted, setIsMounted] = useState<boolean>(false);
-  const pathname: string = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Definisikan navItems dengan menggunakan komponen SVG langsung dari iconsSvg
   const navItems: NavItem[] = [
     { href: "/dashboard/", label: "Dashboard Overview", icon: iconsSvg.DashboardIcon },
     { href: "/dashboard/admin-profile", label: "Profil Admin", icon: iconsSvg.UserIcon },
     { href: "/dashboard/teachers", label: "Daftar Guru", icon: iconsSvg.TeacherIcon },
-    { href: "/dashboard/facilities", label: "Fasilitas", icon: iconsSvg.BuildingIcon }, // Menggunakan BuildingIcon untuk fasilitas
-    { href: "/dashboard/extracurriculars", label: "Ekstrakurikuler", icon: iconsSvg.SportIcon }, // Menggunakan SportIcon untuk ekstrakurikuler
-    { href: "/dashboard/majors", label: "Jurusan", icon: iconsSvg.AcademicCapIcon }, // Menggunakan AcademicCapIcon untuk jurusan
-    { href: "/dashboard/announcements", label: "Pengumuman", icon: iconsSvg.MegaphoneIcon }, // Menggunakan MegaphoneIcon untuk pengumuman
+    { href: "/dashboard/facilities", label: "Fasilitas", icon: iconsSvg.BuildingIcon },
+    { href: "/dashboard/extracurriculars", label: "Ekstrakurikuler", icon: iconsSvg.SportIcon },
+    { href: "/dashboard/majors", label: "Jurusan", icon: iconsSvg.AcademicCapIcon },
+    { href: "/dashboard/announcements", label: "Pengumuman", icon: iconsSvg.MegaphoneIcon },
     { href: "/dashboard/articles", label: "Artikel Sekolah", icon: iconsSvg.ArticleIcon },
+    { href: "/dashboard/slides", label: "Manajemen Slides", icon: iconsSvg.ImageIcon },
   ];
 
-  const sidebarWidthClass: string = isMounted
-    ? (isCollapsed ? "w-20" : "w-64")
-    : "w-64";
-
-  // Kita akan membuat komponen kecil untuk merender ikon agar lebih rapi
-  const IconComponent: React.FC<{ Icon: React.ElementType; className?: string }> = ({ Icon, className }) => (
-    <Icon className={className} />
-  );
+  const sidebarWidth = isCollapsed ? 80 : 240;
 
   return (
-    <aside
-      className={`relative h-screen bg-blue-900 text-white transition-all duration-300 ease-in-out ${sidebarWidthClass} flex flex-col shadow-lg rounded-2xl m-4`}
+    <motion.aside
+      animate={{ width: sidebarWidth }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className="h-screen bg-gradient-to-br from-blue-900 to-indigo-950 text-white shadow-2xl rounded-2xl m-4 overflow-hidden flex flex-col justify-between"
     >
-      {isMounted && (
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-4 border-b border-blue-800">
+        {isCollapsed ? (
+          <iconsSvg.MenuIcon className="h-6 w-6 text-blue-200 mx-auto" />
+        ) : (
+          <div className="font-extrabold text-blue-100 tracking-wide font-poppins text-[16px]">
+            Admin Panel
+          </div>
+        )}
         <button
           onClick={toggleSidebar}
-          className="absolute top-4 right-[-1.25rem] transform translate-x-1/2 bg-blue-700 hover:bg-blue-600 text-white p-2 rounded-full shadow-lg z-10 hidden md:block"
+          className="ml-auto bg-blue-700 hover:bg-blue-600 text-white p-2 rounded-full transition duration-200"
           title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
         >
-          {/* Menggunakan komponen SVG langsung */}
           {isCollapsed ? (
-            <iconsSvg.ChevronRightIcon className="h-5 w-5" />
+            <iconsSvg.ChevronRightIcon className="h-4 w-4" />
           ) : (
-            <iconsSvg.ChevronLeftIcon className="h-5 w-5" />
+            <iconsSvg.ChevronLeftIcon className="h-4 w-4" />
           )}
         </button>
-      )}
-
-      <div className={`p-6 flex items-center ${isCollapsed && isMounted ? "justify-center" : "justify-between"}`}>
-        {isCollapsed && isMounted ? (
-          // Menggunakan komponen SVG langsung
-          <iconsSvg.MenuIcon className="h-5 w-5 text-blue-100" />
-        ) : (
-          <div className="text-xl font-bold text-blue-100 font-poppins">Admin Panel</div>
-        )}
       </div>
 
-      <nav className="flex-1 px-4 py-3">
-        <ul>
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-3 overflow-y-auto scrollbar-hidden">
+        <ul className="space-y-1">
           {navItems.map((item) => {
-            const isActive: boolean = item.href === pathname ||
-                                     (item.href === "/dashboard/" && pathname === "/dashboard");
-
-            // Ambil komponen ikon dari item.icon
+            const isActive =
+              item.href === pathname ||
+              (item.href === "/dashboard/" && pathname === "/dashboard") ||
+              (item.href !== "/dashboard/" && pathname.startsWith(item.href));
             const CurrentIcon = item.icon;
 
             return (
-              <li key={item.href} className="mb-2">
+              <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={`group flex items-center py-2.5 px-4 rounded-lg transition-all duration-200 ease-in-out border-4 w-full text-left text-sm
-                    ${
-                      isActive
-                        ? "bg-blue-700 text-white shadow-xl border-blue-600 transform scale-100"
-                        : "text-blue-100 hover:bg-blue-800 hover:text-white border-transparent"
-                    }
-                    ${isCollapsed ? "justify-center" : ""}
+                  className={`
+                    group flex items-center
+                    ${isCollapsed ? "justify-center p-2" : "justify-start py-2 px-4"}
+                    rounded-lg transition-all duration-200 
+                    border w-full text-left text-[14px] font-medium
+                    ${isActive ? "bg-blue-700 text-white shadow border-blue-500" : "text-blue-200 hover:bg-blue-800 hover:text-white border-transparent"}
+                    relative overflow-hidden
                   `}
                 >
-                  <span className={`${isCollapsed ? "mx-auto" : "mr-3"} text-blue-100 group-hover:text-white transition-colors duration-200`}>
-                    {/* Render komponen ikon secara langsung */}
+                  <span className={`flex-shrink-0 ${isCollapsed ? "" : "mr-3"}`}>
                     <CurrentIcon className="h-5 w-5" />
                   </span>
-                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
+
+                  {!isCollapsed && (
+                    <span className="truncate text-white text-[14px]">
+                      {item.label}
+                    </span>
+                  )}
+
                   {isCollapsed && (
-                    <span className="text-xs absolute left-1/2 -translate-x-1/2 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-700 text-white px-2 py-1 rounded-md whitespace-nowrap hidden md:block z-20">
+                    <span className="absolute left-full ml-3 py-1 px-3 
+                                     bg-blue-700 text-white text-xs font-medium rounded-md 
+                                     opacity-0 group-hover:opacity-100 
+                                     transition-opacity duration-200 
+                                     whitespace-nowrap z-20 
+                                     shadow-md hidden md:block">
                       {item.label}
                     </span>
                   )}
@@ -110,30 +114,33 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
         </ul>
       </nav>
 
-      {/* Logout Button */}
-      <div className={`px-4 pb-4 ${isCollapsed && isMounted ? "flex justify-center" : ""}`}>
+      {/* Logout */}
+      <div className={`px-4 py-4 border-t border-blue-800 ${isCollapsed ? "flex justify-center" : ""}`}>
         <button
           onClick={() => {
             setNotification({ message: "Anda telah logout! (Simulasi)", type: "success" });
           }}
-          className={`w-full bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors duration-200 text-sm py-2
-            ${isCollapsed && isMounted ? "w-12 h-12 rounded-full flex items-center justify-center relative" : ""}
-            ${isCollapsed ? "group" : ""}
+          className={`
+            ${isCollapsed ? "w-12 h-12 rounded-full flex items-center justify-center relative group" : "w-full"}
+            bg-red-700 hover:bg-red-600 text-white font-semibold transition-colors duration-200 
+            text-sm py-2 rounded-lg shadow-md
           `}
-          title={isCollapsed && isMounted ? "Logout" : ""}
+          title={isCollapsed ? "Logout" : ""}
         >
-          {isCollapsed && isMounted ? (
-            // Menggunakan komponen SVG LogoutIcon langsung
-            <iconsSvg.LogoutIcon className="h-5 w-5" />
-          ) : (
-            "Logout"
-          )}
-          {isCollapsed && isMounted && (
-            <span className="text-xs absolute left-1/2 -translate-x-1/2 top-full mt-1 opacity-0 group-hover:opacity-100 transition-opacity bg-red-700 text-white px-2 py-1 rounded-md whitespace-nowrap hidden md:block z-20">Logout</span>
+          {isCollapsed ? <iconsSvg.LogoutIcon className="h-5 w-5" /> : "Logout"}
+          {isCollapsed && (
+            <span className="absolute left-full ml-3 py-1 px-3 
+                             bg-red-700 text-white text-xs font-medium rounded-md 
+                             opacity-0 group-hover:opacity-100 
+                             transition-opacity duration-200 
+                             whitespace-nowrap z-20 
+                             shadow-md hidden md:block">
+              Logout
+            </span>
           )}
         </button>
       </div>
-    </aside>
+    </motion.aside>
   );
 };
 

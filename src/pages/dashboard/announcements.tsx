@@ -155,7 +155,7 @@ const AnnouncementsPage: FC = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
             <span>📢</span>
-            <span className="text-blue-700">Manajemen Pengumuman</span>
+            <span className="text-3xl font-bold text-blue-800 tracking-wide">Manajemen Pengumuman</span>
           </h1>
 
           <button

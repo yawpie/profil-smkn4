@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'; // Tambahkan useCallback
+// pages/artikel/index.tsx
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import MainLayout from '../components/layout/MainLayout';
-import { motion, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion'; // Tambahkan AnimatePresence
 import type { Article } from '@/types/Article';
 
 // Helper function to safely get a truncated text, now prioritizes summary
@@ -82,7 +83,7 @@ const ArtikelPage: React.FC = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative w-full py-20 md:py-28 lg:py-36 overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100">
+      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100 font-sans"> {/* Padding dan font-sans */}
         <div className="absolute inset-0 opacity-40 animate-blob-pulse">
           <div className="absolute -top-10 -left-10 w-48 h-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
           <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
@@ -93,7 +94,7 @@ const ArtikelPage: React.FC = () => {
             initial="hidden"
             animate="visible"
             variants={headerVariants}
-            className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-indigo-800 leading-tight mb-4 drop-shadow-xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-800 leading-tight mb-3 drop-shadow-xl" // Font H1 lebih kecil
           >
             Semua <span className="text-blue-600">Artikel</span>
           </motion.h1>
@@ -101,7 +102,7 @@ const ArtikelPage: React.FC = () => {
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-lg sm:text-xl text-gray-800 max-w-3xl mx-auto mb-10 leading-relaxed"
+            className="text-sm sm:text-base text-gray-800 max-w-2xl mx-auto mb-8 leading-relaxed" // Font P lebih kecil
           >
             Jelajahi berbagai artikel informatif dan inspiratif dari sekolah kami.
           </motion.p>
@@ -110,21 +111,19 @@ const ArtikelPage: React.FC = () => {
 
       {/* Loading State with Skeleton */}
       {loading && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12 animate-pulse">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
+          <h2 className="text-xl md:text-2xl font-bold text-center text-gray-900 mb-10 animate-pulse"> {/* Font H2 lebih kecil */}
             Memuat Artikel...
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> {/* Gap lebih kecil */}
             {[...Array(6)].map((_, i) => ( // Show 6 skeleton cards
-              <div key={i} className="bg-gray-100 rounded-xl shadow-md overflow-hidden animate-pulse">
-                <div className="w-full h-48 bg-gray-300"></div> {/* Skeleton for image */}
-                <div className="p-6">
-                  <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Skeleton for title */}
-                  <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div> {/* Skeleton for date */}
-                  <div className="h-4 bg-gray-300 rounded w-full mb-2"></div> {/* Skeleton for summary line 1 */}
-                  <div className="h-4 bg-gray-300 rounded w-11/12"></div> {/* Skeleton for summary line 2 */}
-                  <div className="h-4 bg-gray-300 rounded w-1/3 mt-4"></div> {/* Skeleton for read more */}
-                </div>
+              <div key={i} className="bg-gray-100 rounded-xl shadow-md overflow-hidden p-5 animate-pulse"> {/* Padding lebih kecil */}
+                <div className="w-full h-36 bg-gray-300 mb-3"></div> {/* Skeleton for image */}
+                <div className="h-5 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Skeleton for title */}
+                <div className="h-3 bg-gray-300 rounded w-1/2 mb-2"></div> {/* Skeleton for date */}
+                <div className="h-4 bg-gray-300 rounded w-full mb-2"></div> {/* Skeleton for summary line 1 */}
+                <div className="h-4 bg-gray-300 rounded w-11/12"></div> {/* Skeleton for summary line 2 */}
+                <div className="h-3 bg-gray-300 rounded w-1/3 mt-4"></div> {/* Skeleton for read more */}
               </div>
             ))}
           </div>
@@ -133,18 +132,18 @@ const ArtikelPage: React.FC = () => {
 
       {/* Error State */}
       {!loading && error && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-red-50 rounded-xl shadow-lg border border-red-200 text-center -mt-16 relative z-10">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-red-50 rounded-xl shadow-lg border border-red-200 text-center -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
           <motion.p
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-2xl text-red-700 font-semibold mb-4"
+            className="text-lg text-red-700 font-semibold mb-3" // Font lebih kecil
           >
             Error: Gagal memuat artikel. {error}
           </motion.p>
           <button
-            onClick={fetchArticles} // Menggunakan fetchArticles
-            className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md"
+            onClick={fetchArticles}
+            className="px-6 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md text-base" // Padding & font lebih kecil
           >
             Coba Lagi
           </button>
@@ -153,33 +152,33 @@ const ArtikelPage: React.FC = () => {
 
       {/* Empty State */}
       {!loading && !error && articles.length === 0 && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 bg-blue-50 rounded-xl shadow-lg border border-blue-200 text-center -mt-16 relative z-10">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200 text-center -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
           <motion.p
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-2xl text-blue-700 font-semibold mb-4"
+            className="text-lg text-blue-700 font-semibold mb-3" // Font lebih kecil
           >
             Belum ada artikel yang tersedia saat ini.
           </motion.p>
-          <p className="text-lg text-gray-600">Nantikan tulisan-tulisan terbaru dari kami!</p>
+          <p className="text-base text-gray-600">Nantikan tulisan-tulisan terbaru dari kami!</p> {/* Font lebih kecil */}
         </section>
       )}
 
       {/* Main Content when data is loaded */}
       {!loading && !error && articles.length > 0 && (
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
+        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
           <motion.h2
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.5 }}
             variants={textVariants}
-            className="text-3xl sm:text-4xl font-extrabold text-center text-gray-900 mb-12"
+            className="text-2xl sm:text-3xl font-extrabold text-center text-gray-900 mb-10" // Font H2 lebih kecil
           >
             Semua <span className="text-blue-700">Artikel Sekolah</span>
           </motion.h2>
 
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"> {/* Gap lebih kecil */}
             {articles.map((article, index) => (
               <motion.div
                 key={article.id ?? `article-${index}`} // Gunakan ID atau fallback ke index
@@ -196,7 +195,7 @@ const ArtikelPage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
 
                 {article.image && ( // Menggunakan 'article.image' sesuai tipe Article
-                  <div className="w-full h-48 relative overflow-hidden rounded-t-xl">
+                  <div className="w-full h-40 relative overflow-hidden rounded-t-xl"> {/* Tinggi gambar sedikit lebih kecil */}
                     <Image
                       src={article.image} // Menggunakan 'article.image'
                       alt={article.title}
@@ -207,20 +206,20 @@ const ArtikelPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="p-6 relative z-10">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-700 transition-colors duration-300">
+                <div className="p-5 relative z-10"> {/* Padding lebih kecil */}
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-700 transition-colors duration-300"> {/* Font H3 lebih kecil */}
                     {article.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3">
+                  <p className="text-gray-600 text-xs mb-2"> {/* Font & margin lebih kecil */}
                     Tanggal: {new Date(article.publishDate).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })} {/* Menggunakan publishDate */}
                     {article.author && ` oleh ${article.author}`}
                   </p>
-                  <p className="text-gray-700 mt-3 line-clamp-3 flex-grow">
-                    {article.summary || getTruncatedText(article.content, 150)} {/* Prioritaskan summary */}
+                  <p className="text-gray-700 mt-2 line-clamp-3 flex-grow text-sm"> {/* Font P lebih kecil */}
+                    {getTruncatedText(article.content, 120)} {/* Potongan konten lebih pendek */}
                   </p>
                   <Link
-                    href={`/artikel/${article.slug || article.id}`} // Menggunakan slug atau id
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold mt-4 group-hover:underline transition-colors"
+                    href={`/artikel/${article.id}`} // Menggunakan ID untuk link
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold mt-3 group-hover:underline transition-colors text-sm" // Font link lebih kecil
                   >
                     Baca Selengkapnya
                     <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>

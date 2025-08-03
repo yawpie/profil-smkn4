@@ -1,6 +1,3 @@
-// src/pages/dashboard/facilities.tsx
-"use client";
-
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Dashboard/Layout';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';

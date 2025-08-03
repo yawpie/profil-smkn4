@@ -1,9 +1,5 @@
-// src/pages/daftar-guru.tsx
-"use client";
-
 import Image from 'next/image';
 import React, { useState, useEffect, FC, useCallback } from 'react'; // Import FC, useCallback
-import Link from 'next/link';
 import { motion, AnimatePresence, type Variants } from 'framer-motion'; // Import Framer Motion and type Variants
 import type { ModalMessage } from '@/types/Teacher';
 import type { Teacher } from '@/types/Teacher';
@@ -17,7 +13,7 @@ const DaftarGuruPage: FC = () => {
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<ModalMessage | null>(null);
 
-  const itemsPerPage: number = 8; 
+  const itemsPerPage: number = 8;
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 50, scale: 0.95 },
     visible: {
@@ -57,11 +53,11 @@ const DaftarGuruPage: FC = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data: Teacher[] = await response.json();
-      
+
       setTeachers(data);
       setTotalTeachersCount(data.length); // Total count diambil dari panjang data yang diterima
-      
-      setCurrentPage(1); 
+
+      setCurrentPage(1);
     } catch (e: unknown) {
       console.error("Gagal mengambil daftar guru dari database:", e);
       if (e instanceof Error) {
@@ -103,20 +99,20 @@ const DaftarGuruPage: FC = () => {
   };
 
   return (
-    <section className="relative w-full overflow-hidden">
+    <section className="relative w-full overflow-hidden font-sans">
       {/* Hero Section */}
-      <section className="relative w-full py-20 md:py-28 lg:py-36 overflow-hidden bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
+      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
         <div className="absolute inset-0 opacity-30 animate-blob-pulse">
-          <div className="absolute -top-10 -left-10 w-48 h-48 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/3 w-56 h-56 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+          <div className="absolute -top-8 -left-8 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute -bottom-8 -right-8 w-56 h-56 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
             initial="hidden"
             animate="visible"
             variants={headerVariants}
-            className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-indigo-800 leading-tight mb-4 drop-shadow-xl"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-800 leading-tight mb-3 drop-shadow-xl"
           >
             Daftar <span className="text-blue-600">Guru</span>
           </motion.h1>
@@ -125,7 +121,7 @@ const DaftarGuruPage: FC = () => {
             animate="visible"
             variants={textVariants}
             transition={{ delay: 0.2 }}
-            className="text-lg sm:text-xl text-gray-800 max-w-3xl mx-auto mb-10 leading-relaxed"
+            className="text-sm sm:text-base text-gray-800 max-w-xl mx-auto mb-8 leading-relaxed"
           >
             Kenali para pendidik hebat yang berdedikasi membimbing dan menginspirasi setiap siswa di SMKN 4 Mataram.
           </motion.p>
@@ -133,15 +129,15 @@ const DaftarGuruPage: FC = () => {
       </section>
 
       {/* Main Content Section */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10">
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans">
         {/* Loading State */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
             {[...Array(itemsPerPage)].map((_, i) => (
-              <div key={i} className="bg-gray-100 rounded-xl shadow-md p-6 text-center animate-pulse">
-                <div className="w-24 h-24 rounded-full bg-gray-300 mx-auto mb-4"></div>
-                <div className="h-6 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
-                <div className="h-4 bg-gray-300 rounded w-1/2 mx-auto"></div>
+              <div key={i} className="bg-gray-100 rounded-xl shadow-md p-5 text-center animate-pulse">
+                <div className="w-20 h-20 rounded-full bg-gray-300 mx-auto mb-3"></div>
+                <div className="h-5 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2 mx-auto"></div>
               </div>
             ))}
           </div>
@@ -149,14 +145,14 @@ const DaftarGuruPage: FC = () => {
 
         {/* Error State (using custom modal) */}
         {showErrorModal && modalMessage && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-sans">
             <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center">
-              <p className={`text-lg font-semibold mb-4 ${modalMessage.type === 'error' ? 'text-red-600' : 'text-blue-600'}`}>
+              <p className={`text-base font-semibold mb-4 ${modalMessage.type === 'error' ? 'text-red-600' : 'text-blue-600'}`}>
                 {modalMessage.message}
               </p>
               <button
                 onClick={handleCloseModal}
-                className={`px-6 py-2 rounded-lg text-white transition ${modalMessage.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`px-5 py-2 rounded-lg text-white text-sm transition ${modalMessage.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 Tutup
               </button>
@@ -170,16 +166,16 @@ const DaftarGuruPage: FC = () => {
             initial="hidden"
             animate="visible"
             variants={textVariants}
-            className="text-center py-20 bg-blue-50 rounded-xl shadow-lg border border-blue-200"
+            className="text-center py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200"
           >
-            <p className="text-2xl text-blue-700 font-semibold mb-4">Belum ada data guru yang tersedia saat ini.</p>
-            <p className="text-lg text-gray-600">Mohon maaf, kami sedang memperbarui daftar ini.</p>
+            <p className="text-xl text-blue-700 font-semibold mb-3">Belum ada data guru yang tersedia saat ini.</p>
+            <p className="text-base text-gray-600">Mohon maaf, kami sedang memperbarui daftar ini.</p>
           </motion.div>
         )}
 
         {/* Grid Guru */}
         {!loading && !error && teachers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
             <AnimatePresence>
               {currentTeachers.map((teacher, index) => (
                 <motion.div
@@ -192,12 +188,12 @@ const DaftarGuruPage: FC = () => {
                   className="bg-white rounded-xl shadow-xl overflow-hidden
                              transform transition-all duration-300 ease-in-out
                              hover:scale-[1.03] hover:shadow-2xl hover:border-blue-400 border border-transparent
-                             group relative cursor-pointer"
+                             group relative cursor-pointer font-sans"
                 >
                   {/* Subtle gradient overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
 
-                  <div className="w-full h-48 relative overflow-hidden">
+                  <div className="w-full h-44 relative overflow-hidden">
                     <Image
                       src={teacher.image || 'https://placehold.co/400x300/cccccc/333333?text=No+Image'} // Gunakan 'teacher.image'
                       alt={teacher.name}
@@ -213,15 +209,15 @@ const DaftarGuruPage: FC = () => {
                     {/* Dark overlay at the bottom for text contrast */}
                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     {/* Role/Jabatan */}
-                    <p className="absolute bottom-3 left-3 text-white text-sm md:text-base font-medium px-3 py-1 bg-blue-600 rounded-lg shadow-md z-20">
+                    <p className="absolute bottom-2 left-2 text-white text-xs md:text-sm font-medium px-2 py-0.5 bg-blue-600 rounded-md shadow-md z-20">
                       {teacher.position || 'Tenaga Pengajar'} {/* Gunakan 'teacher.position' */}
                     </p>
                   </div>
-                  <div className="p-6 text-center relative z-10">
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">{teacher.name}</h3>
-                    <p className="text-base text-blue-700 font-semibold">{teacher.subject || 'Belum Ditentukan'}</p>
+                  <div className="p-4 text-center relative z-10">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 leading-tight">{teacher.name}</h3>
+                    <p className="text-sm text-blue-700 font-semibold">{teacher.subject || 'Belum Ditentukan'}</p>
                     {/* Menampilkan NIP jika ada */}
-                    {teacher.nip && <p className="text-sm text-gray-600">NIP: {teacher.nip}</p>}
+                    {teacher.nip && <p className="text-xs text-gray-600">NIP: {teacher.nip}</p>}
                   </div>
                 </motion.div>
               ))}
@@ -231,18 +227,18 @@ const DaftarGuruPage: FC = () => {
 
         {/* Pagination */}
         {!loading && !error && teachers.length > 0 && totalPages > 1 && (
-          <div className="flex justify-center mt-12">
+          <div className="flex justify-center mt-10">
             <motion.nav
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.5 }}
               variants={textVariants}
-              className="inline-flex space-x-2 text-base rounded-lg bg-white p-3 shadow-xl border border-gray-100"
+              className="inline-flex space-x-1 text-sm rounded-lg bg-white p-2 shadow-xl border border-gray-100"
             >
               <button
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`px-6 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium
+                className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-medium
                   ${currentPage === 1
                     ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                     : 'text-blue-700 bg-white hover:bg-blue-50 hover:text-blue-800'
@@ -255,7 +251,7 @@ const DaftarGuruPage: FC = () => {
                 <button
                   key={i}
                   onClick={() => goToPage(i + 1)}
-                  className={`px-6 py-2 rounded-lg transition-all duration-300 ease-in-out font-semibold
+                  className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-semibold
                     ${currentPage === i + 1
                       ? 'bg-blue-600 text-white shadow-md transform scale-105'
                       : 'text-gray-700 bg-white hover:bg-blue-50 hover:text-blue-800'
@@ -268,7 +264,7 @@ const DaftarGuruPage: FC = () => {
               <button
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`px-6 py-2 rounded-lg transition-all duration-300 ease-in-out font-medium
+                className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-medium
                   ${currentPage === totalPages
                     ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
                     : 'text-blue-700 bg-white hover:bg-blue-50 hover:text-blue-800'
