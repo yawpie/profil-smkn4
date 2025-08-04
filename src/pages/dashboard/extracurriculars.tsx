@@ -17,28 +17,32 @@ const ExtracurricularsPage: React.FC = () => {
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
-
   // Function to fetch extracurricular data from API
   const fetchExtracurriculars = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/extracurriculars'); // Fetch from your API Route
+      const response = await fetch('/api/extracurriculars');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
       }
       const data: Extracurricular[] = await response.json();
       setExtracurriculars(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Failed to fetch extracurriculars:", e);
-      setError("Gagal memuat data ekstrakurikuler. Silakan coba lagi.");
+      if (e instanceof Error) {
+        setError(`Gagal memuat data ekstrakurikuler. Detail: ${e.message}`);
+      } else {
+        setError("Gagal memuat data ekstrakurikuler. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchExtracurriculars(); // Call fetchExtracurriculars when the component mounts
+    fetchExtracurriculars();
   }, []);
 
   const handleAddEdit = (extracurricular: Extracurricular | null = null) => {
@@ -46,7 +50,6 @@ const ExtracurricularsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Custom confirmation dialog instead of 'confirm()'
   const handleDeleteClick = (id: string | null) => {
     setDeleteItemId(id);
     setShowConfirmModal(true);
@@ -60,15 +63,24 @@ const ExtracurricularsPage: React.FC = () => {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        // Gunakan pesan error dari backend jika ada, jika tidak, pakai pesan status
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for DELETE:', errorData);
+        return; // Hentikan eksekusi fungsi
       }
-      // No need to await response.json() if the API doesn't return meaningful data for DELETE
-      // await response.json();
+      // Konsumsi respons meskipun tidak digunakan, untuk menghindari warning/error
+      await response.json();
       setNotification({ message: 'Ekstrakurikuler berhasil dihapus!', type: 'success' });
-      fetchExtracurriculars(); // Re-fetch data after deletion
-    } catch (e: any) {
-      console.error("Failed to delete extracurricular:", e);
-      setNotification({ message: `Gagal menghapus ekstrakurikuler: ${e.message}`, type: 'error' });
+      fetchExtracurriculars();
+    } catch (e: unknown) {
+      console.error("Gagal menghapus ekstrakurikuler:", e);
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menghapus ekstrakurikuler: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menghapus ekstrakurikuler. Silakan coba lagi.', type: 'error' });
+      }
     } finally {
       setShowConfirmModal(false);
       setDeleteItemId(null);
@@ -90,18 +102,33 @@ const ExtracurricularsPage: React.FC = () => {
         },
         body: JSON.stringify(newExtracurricular),
       });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan ekstrakurikuler. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+        
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi fungsi
       }
-      // No need to await response.json() if the API doesn't return meaningful data for POST/PUT
-      // await response.json();
+
+      await response.json();
       setNotification({ message: `Ekstrakurikuler berhasil ${newExtracurricular.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
-      setIsModalOpen(false);
+      setIsModalOpen(false); // Tutup modal hanya jika berhasil
       setCurrentExtracurricular(null);
-      fetchExtracurriculars(); // Re-fetch data after saving
-    } catch (e: any) {
-      console.error("Failed to save extracurricular:", e);
-      setNotification({ message: `Gagal menyimpan ekstrakurikuler: ${e.message}`, type: 'error' });
+      fetchExtracurriculars();
+    } catch (e: unknown) {
+      console.error("Gagal menyimpan ekstrakurikuler:", e);
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menyimpan ekstrakurikuler: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menyimpan ekstrakurikuler. Silakan coba lagi.', type: 'error' });
+      }
     }
   };
 
@@ -159,7 +186,7 @@ const ExtracurricularsPage: React.FC = () => {
                             className="h-12 w-12 rounded-lg object-cover shadow"
                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                               e.currentTarget.onerror = null;
-                              e.currentTarget.src = 'https://via.placeholder.com/48x48?text=No+Image';
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=64&h=64&q=70'; // Fallback Unsplash
                             }}
                           />
                         ) : (
@@ -185,7 +212,7 @@ const ExtracurricularsPage: React.FC = () => {
                             <PencilIcon className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(item.id)} // Use custom confirmation
+                            onClick={() => handleDeleteClick(item.id)}
                             className="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-full transition"
                             title="Hapus"
                           >
@@ -209,7 +236,6 @@ const ExtracurricularsPage: React.FC = () => {
           />
         )}
 
-        {/* Custom Confirmation Modal */}
         {showConfirmModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">

@@ -6,7 +6,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <link rel="icon" href="/logo_sekolah.ico" />
+        <link rel="icon" href="/favicon.ico" />
         <title>SMKN 4 MATARAM</title> {/* Optional */}
       </Head>
       <Component {...pageProps} />

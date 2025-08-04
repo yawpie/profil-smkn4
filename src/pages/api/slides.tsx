@@ -1,127 +1,178 @@
-// pages/api/slides.ts (Pages Router)
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { Slide } from '@/types/Slide'; // Gunakan tipe Slide
+import { NextApiRequest, NextApiResponse } from 'next';
+import type { Slide } from '@/types/Slide';
 
-// --- DATA SLIDE INTERNAL (DIREKOMENDASIKAN HANYA UNTUK PROTOTIPE/DEMO KECIL) ---
-// CATATAN: Perubahan pada data ini TIDAK akan persisten setelah server di-restart.
-let slides: Slide[] = [
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb', // Sesuaikan dengan kebutuhan Anda
+    },
+  },
+};
+
+let slidesData: Slide[] = [
   {
-    "id": "slide1",
-    "src": "/images/logo_sekolah.png",
-    "alt": "Pemandangan modern SMKN 4 Mataram",
-    "title": "Selamat Datang di",
-    "subtitle": "SMK NEGERI 4 MATARAM",
-    "description": "Membentuk generasi unggul, berprestasi, dan siap menghadapi masa depan.",
-    "gradientFrom": "from-blue-900",
-    "gradientTo": "to-blue-600",
-    "order": 1,
-    "isActive": true
+    id: 'slide-1',
+    image: 'https://images.unsplash.com/photo-1553095066-5014bc7b7f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8c2Nob29sfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=1920&q=90',
+    alt: 'Siswa belajar di kelas',
+    title: 'Selamat Datang di SMKN 4',
+    subtitle: 'Wujudkan Masa Depan Cemerlangmu Bersama Kami',
+    description: 'SMKN 4 menawarkan pendidikan kejuruan unggul dengan fasilitas modern dan kurikulum relevan industri.',
+    gradientFrom: 'from-blue-900',
+    gradientTo: 'to-blue-500',
+    order: 1,
+    isActive: true,
   },
   {
-    "id": "slide2",
-    "src": "/images/bg-hero-2.jpg",
-    "alt": "Lingkungan belajar inovatif",
-    "title": "Inovasi Pendidikan",
-    "subtitle": "Fokus pada Keunggulan Vokasi",
-    "description": "Kurikulum adaptif yang selaras dengan industri terkini.",
-    "gradientFrom": "from-purple-900",
-    "gradientTo": "to-indigo-600",
-    "order": 2,
-    "isActive": true
-  },
-  {
-    "id": "slide3",
-    "src": "/images/bg-hero-3.jpg",
-    "alt": "Kegiatan ekstrakurikuler siswa",
-    "title": "Ekstrakurikuler Beragam",
-    "subtitle": "Kembangkan Bakat dan Potensi",
-    "description": "Pilih dari berbagai kegiatan yang menginspirasi dan membangun karakter.",
-    "gradientFrom": "from-cyan-900",
-    "gradientTo": "to-teal-600",
-    "order": 3,
-    "isActive": true
-  }
+    id: 'slide-2',
+    image: 'https://images.unsplash.com/photo-1505678229849-6293c9984632?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8NXx8ZmFjaWxpdHl8ZW58MHx8MHx8A%3D%3D&auto=format&fit=crop&w=1920&q=90',
+    alt: 'Laboratorium komputer modern',
+    title: 'Fasilitas Belajar Terbaik',
+    subtitle: 'Laboratorium Lengkap, Siap Mengembangkan Potensimu',
+    description: 'Nikmati akses ke lab komputer canggih, bengkel praktik, dan perpustakaan digital.',
+    gradientFrom: 'from-gray-700',
+    gradientTo: 'to-gray-400',
+    order: 2,
+    isActive: true,
+   },
+   {
+    id: 'slide-3',
+    image: 'https://images.unsplash.com/photo-1519389950473-47a0f98683bf?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8ZXh0cmFjdXJyaWN1bGFyfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=1920&q=90',
+    alt: 'Siswa bekerja sama dalam tim',
+    title: 'Ekstrakurikuler Beragam',
+    subtitle: 'Kembangkan Minat dan Bakatmu di Luar Akademik',
+    description: 'Dari olahraga hingga seni, temukan kegiatan yang cocok untukmu dan raih prestasi.',
+    gradientFrom: 'from-purple-800',
+    gradientTo: 'to-pink-500',
+    order: 3,
+    isActive: true,
+   },
 ];
-// --- AKHIR DATA SLIDE INTERNAL ---
 
-export default function handler(req: NextApiRequest, res: NextApiResponse<Slide[] | Slide | { message: string }>) {
-  // Dalam skenario nyata, Anda akan berinteraksi dengan database di sini, bukan variabel global.
+const MAX_SLIDES = 3;
 
-  switch (req.method) {
-    case 'GET':
-      // Mengambil semua slide (filter berdasarkan query param jika ada)
-      const filteredSlides = req.query.activeOnly === 'true'
-        ? slides.filter(slide => slide.isActive).sort((a, b) => a.order - b.order)
-        : slides.sort((a, b) => a.order - b.order); // Urutkan juga jika tidak difilter
-      res.status(200).json(filteredSlides);
-      break;
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Slide[] | Slide | { message: string; id?: string }>
+) {
+  // Tanpa fs, kita langsung bekerja dengan slidesData in-memory
+  // Penting: Variabel slidesData ini akan di-reset setiap server Next.js di-restart.
 
-    case 'POST':
-      // Menambahkan slide baru
-      const newSlide: Slide = {
-        id: Date.now().toString(), // Generate ID unik (sederhana)
-        ...req.body, // Ambil data dari body request
-        order: parseInt(req.body.order as string, 10), // Pastikan order adalah number
-        isActive: req.body.isActive === true || req.body.isActive === 'true' // Pastikan isActive adalah boolean
-      };
+  if (req.method === 'GET') {
+    const sortedSlides = slidesData.sort((a, b) => a.order - b.order);
+    res.status(200).json(sortedSlides);
+  } else if (req.method === 'POST') {
+    const { image, alt, title, subtitle, description, gradientFrom, gradientTo, order, isActive } = req.body as Partial<Slide>;
 
-      // Validasi data minimal
-      if (!newSlide.title || !newSlide.src || !newSlide.gradientFrom || !newSlide.subtitle || !newSlide.description) {
-        return res.status(400).json({ message: 'Data slide tidak lengkap. Pastikan semua bidang terisi.' });
+    if (!title || !description || typeof order === 'undefined' || !image) {
+      return res.status(400).json({ message: 'Data slide tidak lengkap. Pastikan judul, deskripsi, urutan, dan URL gambar terisi.' });
+    }
+
+    if (slidesData.length >= MAX_SLIDES) {
+      return res.status(400).json({ message: `Tidak dapat menambah slide baru. Maksimal ${MAX_SLIDES} slide.` });
+    }
+    
+    if (order > MAX_SLIDES || order < 1) {
+      return res.status(400).json({ message: `Urutan slide harus antara 1 dan ${MAX_SLIDES}.` });
+    }
+
+    const existingOrders = new Set(slidesData.map(s => s.order));
+    if (existingOrders.has(order)) {
+        return res.status(400).json({ message: `Urutan ${order} sudah digunakan. Harap pilih urutan lain.` });
+    }
+
+    const newId = `slide-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+
+    const newSlide: Slide = {
+      id: newId,
+      image: image,
+      alt: alt || title || `Slide ${newId}`,
+      title: title,
+      subtitle: subtitle || '',
+      description: description,
+      gradientFrom: gradientFrom || '',
+      gradientTo: gradientTo || '',
+      order: order,
+      isActive: isActive ?? true,
+    };
+
+    slidesData.push(newSlide);
+    slidesData.sort((a, b) => a.order - b.order);
+    
+    res.status(201).json(newSlide);
+  } else if (req.method === 'PUT') {
+    const { id, ...updatedFields } = req.body as Partial<Slide> & { id: string };
+
+    if (!id) {
+      return res.status(400).json({ message: 'Slide ID diperlukan untuk pembaruan.' });
+    }
+
+    let foundSlideIndex = -1;
+    let oldOrder = -1;
+
+    slidesData.forEach((slide, index) => {
+      if (slide.id === id) {
+        foundSlideIndex = index;
+        oldOrder = slide.order;
       }
+    });
 
-      slides.push(newSlide); // Tambahkan ke array in-memory
-      res.status(201).json(newSlide); // Kirim slide yang baru dibuat
-      break;
+    if (foundSlideIndex === -1) {
+      return res.status(404).json({ message: 'Slide tidak ditemukan.' });
+    }
 
-    case 'PUT':
-      // Memperbarui slide berdasarkan ID dari body
-      const { id: putId, ...updatedFields } = req.body;
+    const newOrder = typeof updatedFields.order !== 'undefined' ? updatedFields.order : oldOrder;
 
-      if (!putId) {
-        return res.status(400).json({ message: 'ID slide tidak ditemukan dalam body request untuk PUT.' });
+    if (newOrder > MAX_SLIDES || newOrder < 1) {
+      return res.status(400).json({ message: `Urutan slide harus antara 1 dan ${MAX_SLIDES}.` });
+    }
+
+    if (newOrder !== oldOrder) {
+      const targetSlideIndex = slidesData.findIndex(slide => slide.order === newOrder);
+
+      if (targetSlideIndex !== -1) {
+        const slideToSwap = slidesData[targetSlideIndex];
+        slidesData[targetSlideIndex] = { ...slideToSwap, order: oldOrder };
       }
+    }
 
-      const putSlideIndex = slides.findIndex(s => s.id === putId);
+    slidesData[foundSlideIndex] = {
+      ...slidesData[foundSlideIndex],
+      ...updatedFields,
+      id: slidesData[foundSlideIndex].id,
+      image: updatedFields.image || slidesData[foundSlideIndex].image, // Update image jika ada
+      alt: updatedFields.alt || slidesData[foundSlideIndex].alt,
+      title: updatedFields.title || slidesData[foundSlideIndex].title,
+      description: updatedFields.description || slidesData[foundSlideIndex].description,
+      order: newOrder,
+      isActive: typeof updatedFields.isActive !== 'undefined' ? updatedFields.isActive : slidesData[foundSlideIndex].isActive,
+    };
 
-      if (putSlideIndex !== -1) {
-        // Pastikan order dan isActive di-parse dengan benar dari body
-        const parsedOrder = parseInt(updatedFields.order as string, 10);
-        const parsedIsActive = updatedFields.isActive === true || updatedFields.isActive === 'true';
+    slidesData.sort((a, b) => a.order - b.order);
 
-        slides[putSlideIndex] = {
-          ...slides[putSlideIndex],
-          ...updatedFields,
-          id: putId as string, // Pastikan ID tidak berubah
-          order: isNaN(parsedOrder) ? slides[putSlideIndex].order : parsedOrder, // Gunakan yang lama jika parsing gagal
-          isActive: parsedIsActive
-        };
-        res.status(200).json(slides[putSlideIndex]); // Kirim slide yang diperbarui
-      } else {
-        res.status(404).json({ message: 'Slide tidak ditemukan untuk diperbarui.' });
-      }
-      break;
+    res.status(200).json({ message: 'Slide berhasil diperbarui.', id: id });
+  } else if (req.method === 'DELETE') {
+    const { id } = req.body;
+    const slideIdToDelete = id ? String(id) : null;
 
-    case 'DELETE':
-      // Menghapus slide berdasarkan ID dari query parameter
-      const { id: deleteId } = req.query;
+    if (!slideIdToDelete) {
+      return res.status(400).json({ message: 'Slide ID diperlukan untuk penghapusan.' });
+    }
 
-      if (!deleteId || typeof deleteId !== 'string') {
-        return res.status(400).json({ message: 'ID slide tidak valid untuk dihapus.' });
-      }
+    const initialLength = slidesData.length;
+    slidesData = slidesData.filter(slide => slide.id !== slideIdToDelete);
 
-      const deleteSlideIndex = slides.findIndex(s => s.id === deleteId);
+    if (slidesData.length === initialLength) {
+      return res.status(404).json({ message: 'Slide tidak ditemukan.', id: slideIdToDelete });
+    }
 
-      if (deleteSlideIndex !== -1) {
-        slides.splice(deleteSlideIndex, 1); // Hapus slide dari array
-        res.status(204).end(); // 204 No Content untuk DELETE berhasil
-      } else {
-        res.status(404).json({ message: 'Slide tidak ditemukan untuk dihapus.' });
-      }
-      break;
+    slidesData.forEach((slide, index) => {
+        slide.order = index + 1;
+    });
+    slidesData.sort((a, b) => a.order - b.order);
 
-    default:
-      res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
-      res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.status(200).json({ message: 'Slide berhasil dihapus.', id: slideIdToDelete });
+  } else {
+    res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+    res.status(405).end(`Metode ${req.method} Tidak Diizinkan`);
   }
 }

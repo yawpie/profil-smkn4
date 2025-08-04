@@ -1,12 +1,11 @@
-// src/pages/dashboard/majors.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react'; // Tambahkan useCallback
-import Layout from '../../components/Dashboard/Layout'; // Path layout
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'; // Ikon
-import MajorFormModal from '../../components/Dashboard/MajorFormModal'; // Modal form
-import type { Major } from '@/types/Major'; // Tipe Major
-import type { Notification } from '@/types/Notification'; // Tipe Notifikasi
+import React, { useState, useEffect, useCallback } from 'react';
+import Layout from '../../components/Dashboard/Layout';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import MajorFormModal from '../../components/Dashboard/MajorFormModal';
+import type { Major } from '@/types/Major';
+import type { Notification } from '@/types/Notification';
 
 const MajorsPage: React.FC = () => {
   const [majors, setMajors] = useState<Major[]>([]);
@@ -23,13 +22,15 @@ const MajorsPage: React.FC = () => {
     try {
       const response = await fetch('/api/majors');
       if (!response.ok) {
-        // Coba parsing pesan error dari respons API
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
-        throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
+        // Gunakan pesan error dari backend jika ada, jika tidak, pakai pesan status
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        throw new Error(errorMessage); // Tetap throw untuk menonaktifkan loading dan menampilkan error di halaman
       }
-      const data: Major[] = await response.json(); // Tipekan data yang diambil
+      const data: Major[] = await response.json();
       setMajors(data);
-    } catch (e: unknown) { // Gunakan 'unknown' untuk penanganan error yang lebih aman
+    } catch (e: unknown) {
       console.error("Gagal memuat jurusan:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat data jurusan. Detail: ${e.message}`);
@@ -39,18 +40,18 @@ const MajorsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependensi kosong karena fungsi ini hanya bergantung pada API endpoint
+  }, []);
 
   useEffect(() => {
     fetchMajors();
-  }, [fetchMajors]); // Tambahkan fetchMajors sebagai dependensi useEffect
+  }, [fetchMajors]);
 
-  const handleAddEdit = useCallback((major: Major | null = null) => { // Gunakan useCallback
+  const handleAddEdit = useCallback((major: Major | null = null) => {
     setCurrentMajor(major);
     setIsModalOpen(true);
-  }, []); // Dependensi kosong
+  }, []);
 
-  const handleDelete = useCallback(async (id: string) => { // Gunakan useCallback
+  const handleDelete = useCallback(async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus jurusan ini? Aksi ini tidak bisa dibatalkan!')) {
       try {
         const response = await fetch(`/api/majors?id=${id}`, {
@@ -58,11 +59,14 @@ const MajorsPage: React.FC = () => {
         });
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
-          throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
+          const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+          setNotification({ message: errorMessage, type: 'error' });
+          console.error('Backend Error Response for DELETE:', errorData);
+          return; // Hentikan eksekusi
         }
         await response.json(); // Konsumsi respons
         setNotification({ message: 'Jurusan berhasil dihapus!', type: 'success' });
-        fetchMajors(); // Ambil ulang data setelah penghapusan
+        fetchMajors();
       } catch (e: unknown) {
         console.error("Gagal menghapus jurusan:", e);
         if (e instanceof Error) {
@@ -72,13 +76,13 @@ const MajorsPage: React.FC = () => {
         }
       }
     }
-  }, [fetchMajors]); // Tergantung pada fetchMajors
+  }, [fetchMajors]);
 
-  const handleSaveMajor = useCallback(async (newMajor: Major) => { // Gunakan useCallback
+  const handleSaveMajor = useCallback(async (newMajor: Major) => {
     try {
       const method = newMajor.id ? 'PUT' : 'POST';
       const url = '/api/majors';
-      const bodyToSend = JSON.stringify(newMajor); // Kirim objek Major langsung
+      const bodyToSend = JSON.stringify(newMajor);
 
       const response = await fetch(url, {
         method: method,
@@ -90,14 +94,23 @@ const MajorsPage: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
-        throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan jurusan. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+        
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi
       }
 
-      await response.json(); // Konsumsi respons
+      await response.json();
       setNotification({ message: `Jurusan berhasil ${newMajor.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
-      setIsModalOpen(false);
+      setIsModalOpen(false); // Tutup modal hanya jika berhasil
       setCurrentMajor(null);
-      fetchMajors(); // Ambil ulang data setelah penyimpanan
+      fetchMajors();
     } catch (e: unknown) {
       console.error("Gagal menyimpan jurusan:", e);
       if (e instanceof Error) {
@@ -106,7 +119,7 @@ const MajorsPage: React.FC = () => {
         setNotification({ message: 'Gagal menyimpan jurusan. Silakan coba lagi.', type: 'error' });
       }
     }
-  }, [fetchMajors]); // Tergantung pada fetchMajors
+  }, [fetchMajors]);
 
   return (
     <Layout setNotification={setNotification}>
@@ -160,9 +173,9 @@ const MajorsPage: React.FC = () => {
                             alt={item.name}
                             className="h-12 w-12 rounded-lg object-cover border border-blue-200 shadow"
                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                              const target = e.target as HTMLImageElement; // Cast target to HTMLImageElement
+                              const target = e.target as HTMLImageElement;
                               target.onerror = null;
-                              target.src = 'https://via.placeholder.com/48x48?text=No+Image'; // Fallback image
+                              target.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=64&h=64&q=70'; // Fallback Unsplash
                             }}
                           />
                         ) : (

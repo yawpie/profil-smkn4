@@ -1,4 +1,4 @@
-// pages/api/announcements/index.ts
+// src/pages/api/announcements.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Announcement } from '@/types/Announcement';
 
@@ -79,75 +79,62 @@ export default function handler(
   res: NextApiResponse<Announcement[] | Announcement | { message: string; id?: string }>
 ) {
   if (req.method === 'GET') {
-    const { id, slug } = req.query; // Mengambil kedua 'id' dan 'slug'
+    const { id, slug } = req.query;
 
-    // Jika ada 'id' di query, cari pengumuman berdasarkan 'id'
     if (id && typeof id === 'string') {
-      const selectedAnnouncement = announcementsData.find((ann) => ann.id === id); // Cari berdasarkan 'id'
+      const selectedAnnouncement = announcementsData.find((ann) => ann.id === id);
       if (selectedAnnouncement) {
         return res.status(200).json(selectedAnnouncement);
-      } else {
-        return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id });
       }
-    }
-    // Jika ada 'slug' di query (fallback jika Anda masih punya link slug dari tempat lain)
-    if (slug && typeof slug === 'string') {
+      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.' });
+    } else if (slug && typeof slug === 'string') {
       const selectedAnnouncement = announcementsData.find((ann) => ann.slug === slug);
       if (selectedAnnouncement) {
         return res.status(200).json(selectedAnnouncement);
-      } else {
-        return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id: slug }); // Mengembalikan slug jika tidak ditemukan
       }
+      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.' });
     }
 
-    // Jika tidak ada 'id' atau 'slug' di query, kembalikan semua pengumuman yang Published
-    const publishedAnnouncements = announcementsData.filter(ann => ann.status === 'Published');
+    // Jika tidak ada 'id' atau 'slug', kembalikan semua pengumuman yang Published
+    const publishedAnnouncements = announcementsData.filter(ann => ann.status === 'Published').sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
     return res.status(200).json(publishedAnnouncements);
-
   } else if (req.method === 'POST') {
-    const { title, content, summary, publishDate, status, slug} = req.body as Partial<Announcement>;
+    const { title, content, summary, publishDate, status, slug } = req.body as Partial<Announcement>;
 
     if (!title || !content || !publishDate || !status) {
-        return res.status(400).json({ message: 'Judul, konten, tanggal publikasi, dan status wajib diisi.' });
+      return res.status(400).json({ message: 'Judul, konten, tanggal publikasi, dan status wajib diisi.' });
     }
 
-    const newId = (announcementsData.length > 0 ? Math.max(...announcementsData.map(a => parseInt(a.id.replace('a','')))) + 1 : 1).toString();
+    const newId = (announcementsData.length > 0 ? Math.max(...announcementsData.map(a => parseInt(a.id))) + 1 : 1).toString();
     const newSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
     const newAnnouncement: Announcement = {
-        id: `a${newId}`,
-        title,
-        content,
-        summary: summary || content.substring(0, 150) + '...',
-        publishDate,
-        status,
-        slug: newSlug,
+      id: newId,
+      slug: newSlug,
+      title,
+      content,
+      summary: summary || content.substring(0, 150) + '...',
+      publishDate,
+      status,
     };
 
     announcementsData.push(newAnnouncement);
     return res.status(201).json(newAnnouncement);
-
   } else if (req.method === 'PUT') {
     const { id, ...updatedFields } = req.body as Partial<Announcement> & { id: string };
-    const announcementId = String(id); 
 
-    if (!announcementId) {
+    if (!id) {
       return res.status(400).json({ message: 'ID pengumuman diperlukan untuk pembaruan.' });
     }
 
     let found = false;
     announcementsData = announcementsData.map(ann => {
-      if (ann.id === announcementId) {
+      if (ann.id === id) {
         found = true;
         const updatedAnn: Announcement = {
-          ...ann, 
+          ...ann,
+          ...updatedFields,
           id: ann.id,
-          title: updatedFields.title || ann.title,
-          content: updatedFields.content || ann.content,
-          summary: updatedFields.summary || ann.summary,
-          publishDate: updatedFields.publishDate || ann.publishDate,
-          status: updatedFields.status || ann.status,
-          slug: updatedFields.slug || ann.slug,
         };
         return updatedAnn;
       }
@@ -155,29 +142,26 @@ export default function handler(
     });
 
     if (!found) {
-      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id: announcementId });
+      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id });
     }
 
-    const returnedAnn = announcementsData.find(a => a.id === announcementId);
-    return res.status(200).json(returnedAnn || { message: 'Pengumuman diperbarui', id: announcementId });
-
+    const returnedAnn = announcementsData.find(a => a.id === id);
+    return res.status(200).json(returnedAnn || { message: 'Pengumuman diperbarui', id });
   } else if (req.method === 'DELETE') {
-    const { id } = req.query;
-    const targetId = Array.isArray(id) ? id[0] : String(id);
+    const { id } = req.body as { id: string };
 
-    if (!targetId) {
+    if (!id) {
       return res.status(400).json({ message: 'ID pengumuman diperlukan untuk penghapusan.' });
     }
 
     const initialLength = announcementsData.length;
-    announcementsData = announcementsData.filter(ann => ann.id !== targetId);
+    announcementsData = announcementsData.filter(ann => ann.id !== id);
 
     if (announcementsData.length === initialLength) {
-      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id: targetId });
+      return res.status(404).json({ message: 'Pengumuman tidak ditemukan.', id });
     }
 
-    return res.status(200).json({ message: 'Pengumuman dihapus', id: targetId });
-
+    return res.status(200).json({ message: 'Pengumuman dihapus', id });
   } else {
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
     res.status(405).end(`Method ${req.method} Not Allowed`);

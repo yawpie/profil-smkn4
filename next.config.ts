@@ -1,13 +1,20 @@
-// next.config.ts
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["images.unsplash.com", "i.pravatar.cc"], // Gabungan domain
+    domains: [
+      "images.unsplash.com",
+      "placehold.co",
+      "picsum.photos",
+      "cdn.pixabay.com",
+      "i.pravatar.cc",
+    ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   webpack(config, options) {
-    // Enable SVG import as React component
     config.module.rules.push({
       test: /\.svg$/i,
       issuer: /\.[jt]sx?$/,

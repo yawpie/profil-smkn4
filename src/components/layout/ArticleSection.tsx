@@ -1,10 +1,7 @@
-// components/ArticleSection.tsx
-"use client";
-
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useState, useEffect, FC, useCallback } from 'react'; // Import FC, useCallback
-import { motion, AnimatePresence, type Variants } from 'framer-motion'; // Import type Variants
+import React, { useState, useEffect, FC, useCallback } from 'react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { Article } from '@/types/Article';
 
 
@@ -15,13 +12,18 @@ const getTruncatedText = (content: string, summary?: string, maxLength: number =
   if (content === null || content === undefined) {
     return '';
   }
-  return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+  // Pastikan content adalah string sebelum memanggil .length atau .substring
+  return String(content).length > maxLength ? String(content).substring(0, maxLength) + '...' : String(content);
 };
 
 const formatDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
-    return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) { // Validasi tanggal tidak valid
+      throw new Error('Invalid date string');
+    }
+    return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
     console.error("Error formatting date:", e);
     return dateString; // Mengembalikan string asli jika parsing gagal
@@ -77,25 +79,20 @@ const ArticleSection: FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Menggunakan endpoint /api/articles yang sudah kita buat
-      // Anda mungkin ingin menambahkan parameter query seperti ?limit=5 jika API mendukung
-      const response = await fetch('/api/articles'); // Menggunakan endpoint relatif
+      // Menggunakan endpoint /api/articles.
+      // API Anda sudah mengembalikan yang terbaru (published) di indeks 0.
+      // Jika Anda hanya ingin mengambil 5, pertimbangkan untuk menambahkan parameter limit ke API jika memungkinkan.
+      const response = await fetch('/api/articles');
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Article[] = await response.json(); // Tipekan data langsung sebagai Article[]
+      const data: Article[] = await response.json();
       
-      // Sort by publishDate (terbaru pertama)
-      const sortedArticles: Article[] = data.sort((a: Article, b: Article) => {
-        const dateA = new Date(a.publishDate).getTime(); // Menggunakan 'publishDate'
-        const dateB = new Date(b.publishDate).getTime(); // Menggunakan 'publishDate'
-        return dateB - dateA;
-      });
-      
-      // Ambil hanya 5 artikel teratas setelah diurutkan
-      setArticles(sortedArticles.slice(0, 5));
-    } catch (e: unknown) { // Gunakan 'unknown' untuk penanganan error yang lebih aman
+      // API Anda sudah mengurutkan berdasarkan publishDate (terbaru pertama)
+      // dan menyaring yang 'Published'. Jadi kita tinggal ambil 5 teratas.
+      setArticles(data.slice(0, 5));
+    } catch (e: unknown) {
       console.error("Gagal mengambil artikel:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat artikel. Detail: ${e.message}`);
@@ -105,14 +102,14 @@ const ArticleSection: FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependensi kosong karena fungsi ini hanya bergantung pada API endpoint
+  }, []);
 
   useEffect(() => {
     fetchArticlesFromBackend();
-  }, [fetchArticlesFromBackend]); // Tambahkan sebagai dependensi useEffect
+  }, [fetchArticlesFromBackend]);
 
   const featuredArticle: Article | null = articles.length > 0 ? articles[0] : null;
-  const smallArticles: Article[] = articles.length > 1 ? articles.slice(1, 5) : []; // Ambil 4 artikel kecil setelah yang utama
+  const smallArticles: Article[] = articles.length > 1 ? articles.slice(1, 5) : [];
 
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 bg-gray-50 rounded-3xl mb-16">
@@ -189,21 +186,20 @@ const ArticleSection: FC = () => {
               viewport={{ once: true, amount: 0.2 }}
               className="lg:col-span-1"
             >
-              <Link href={`/artikel/${featuredArticle.slug || featuredArticle.id}`} className="block group relative overflow-hidden rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.01] border border-transparent hover:border-teal-300">
+              <Link href={`/artikel/${featuredArticle.id}`} className="block group relative overflow-hidden rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.01] border border-transparent hover:border-teal-300">
                 <div className="relative w-full h-80 md:h-96">
                   <Image
-                    src={featuredArticle.image || '/images/default_article.png'} // Menggunakan 'image'
+                    src={featuredArticle.image || '/images/default_article.png'}
                     alt={featuredArticle.title}
-                    layout="fill"
-                    objectFit="cover"
+                    fill // Menggunakan fill sebagai pengganti layout="fill"
+                    style={{ objectFit: 'cover' }} // Properti objectFit dipindahkan ke style
                     className="group-hover:scale-105 transition-transform duration-500 brightness-75 group-hover:brightness-90"
                     quality={80}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-100"></div>
                   <div className="absolute bottom-0 left-0 p-6 text-white z-10">
-                    {/* Category dihapus karena tidak ada di tipe Article */}
                     <h3 className="text-xl md:text-2xl font-bold mb-2 leading-tight group-hover:text-blue-200 transition-colors duration-300">{featuredArticle.title}</h3>
-                    <p className="text-sm opacity-80">{formatDate(featuredArticle.publishDate)}</p> {/* Menggunakan 'publishDate' */}
+                    <p className="text-sm opacity-80">{formatDate(featuredArticle.publishDate)}</p>
                   </div>
                 </div>
               </Link>
@@ -215,7 +211,7 @@ const ArticleSection: FC = () => {
             <AnimatePresence>
               {smallArticles.map((article, index) => (
                 <motion.div
-                  key={article.id} // ID adalah string dan wajib, gunakan langsung
+                  key={article.id}
                   variants={smallCardVariants}
                   initial="hidden"
                   whileInView="visible"
@@ -225,18 +221,17 @@ const ArticleSection: FC = () => {
                   <Link href={`/artikel/${article.slug || article.id}`} className="block group relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] border border-transparent hover:border-cyan-300">
                     <div className="relative w-full h-40">
                       <Image
-                        src={article.image || '/images/default_article.png'} // Menggunakan 'image'
+                        src={article.image || '/images/default_article.png'}
                         alt={article.title}
-                        layout="fill"
-                        objectFit="cover"
+                        fill // Menggunakan fill sebagai pengganti layout="fill"
+                        style={{ objectFit: 'cover' }} // Properti objectFit dipindahkan ke style
                         className="group-hover:scale-105 transition-transform duration-500 brightness-75 group-hover:brightness-90"
                         quality={70}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100"></div>
                       <div className="absolute bottom-0 left-0 p-4 text-white z-10">
-                        {/* Category dihapus karena tidak ada di tipe Article */}
                         <h3 className="text-base font-bold mb-1 leading-tight group-hover:text-blue-200 transition-colors duration-300">{article.title}</h3>
-                        <p className="text-xs opacity-80">{formatDate(article.publishDate)}</p> {/* Menggunakan 'publishDate' */}
+                        <p className="text-xs opacity-80">{formatDate(article.publishDate)}</p>
                       </div>
                     </div>
                   </Link>

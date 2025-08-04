@@ -3,12 +3,13 @@ import Layout from '../../components/Dashboard/Layout';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import FacilityFormModal from '../../components/Dashboard/FacilityFormModal';
 import type { Facility } from '@/types/Facility'; // Assuming you have a types.ts file for interfaces
+import type { Notification } from '@/types/Notification'; // Asumsikan Anda memiliki type Notification
 
 const FacilitiesPage = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentFacility, setCurrentFacility] = useState<Facility | null>(null);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [notification, setNotification] = useState<Notification | null>(null); // Gunakan type Notification
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,13 +20,19 @@ const FacilitiesPage = () => {
     try {
       const response = await fetch('/api/facilities'); // Fetch from your API Route
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Tangani error dari API dengan lebih baik
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
       }
       const data: Facility[] = await response.json();
       setFacilities(data);
-    } catch (e: any) {
+    } catch (e: unknown) { // Gunakan unknown untuk type safety
       console.error("Failed to fetch facilities:", e);
-      setError("Failed to load facility data. Please try again.");
+      if (e instanceof Error) {
+        setError(`Gagal memuat data fasilitas. Detail: ${e.message}`);
+      } else {
+        setError("Gagal memuat data fasilitas. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,20 +48,25 @@ const FacilitiesPage = () => {
   };
 
   const handleDelete = async (id: string | null) => {
-    if (confirm('Are you sure you want to delete this facility?')) {
+    if (confirm('Apakah Anda yakin ingin menghapus fasilitas ini?')) {
       try {
         const response = await fetch(`/api/facilities?id=${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+          throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
         }
         await response.json(); // Consume the response
-        setNotification({ message: 'Facility successfully deleted!', type: 'success' });
+        setNotification({ message: 'Fasilitas berhasil dihapus!', type: 'success' });
         fetchFacilities(); // Re-fetch data after deletion
-      } catch (e: any) {
-        console.error("Failed to delete facility:", e);
-        setNotification({ message: `Failed to delete facility: ${e.message}`, type: 'error' });
+      } catch (e: unknown) {
+        console.error("Gagal menghapus fasilitas:", e);
+        if (e instanceof Error) {
+          setNotification({ message: `Gagal menghapus fasilitas: ${e.message}`, type: 'error' });
+        } else {
+          setNotification({ message: 'Gagal menghapus fasilitas. Silakan coba lagi.', type: 'error' });
+        }
       }
     }
   };
@@ -69,17 +81,33 @@ const FacilitiesPage = () => {
         },
         body: JSON.stringify(newFacility),
       });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan fasilitas. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+        
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi fungsi
       }
+
       await response.json(); // Consume the response
-      setNotification({ message: `Facility successfully ${newFacility.id ? 'updated' : 'added'}!`, type: 'success' });
-      setIsModalOpen(false);
+      setNotification({ message: `Fasilitas berhasil ${newFacility.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
+      setIsModalOpen(false); // Tutup modal hanya jika berhasil
       setCurrentFacility(null);
       fetchFacilities(); // Re-fetch data after saving
-    } catch (e: any) {
-      console.error("Failed to save facility:", e);
-      setNotification({ message: `Failed to save facility: ${e.message}`, type: 'error' });
+    } catch (e: unknown) { // Gunakan unknown untuk type safety
+      console.error("Gagal menyimpan fasilitas:", e);
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menyimpan fasilitas: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menyimpan fasilitas. Silakan coba lagi.', type: 'error' });
+      }
     }
   };
 

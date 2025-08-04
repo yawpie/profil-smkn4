@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Layout from '../../components/Dashboard/Layout'; // Pastikan path ke Dashboard Layout Anda benar
+import React, { useState, useEffect } from 'react';
+import Layout from '../../components/Dashboard/Layout';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import SlideFormModal from '../../components/Dashboard/SlideFormModal'; // Komponen Modal Form untuk Slide
-import type { Slide } from '@/types/Slide'; // Gunakan Slide yang punya ID, order, isActive
-import type { Notification } from '@/types/Notification'; // Pastikan tipe Notification sudah ada
+import SlideFormModal from '../../components/Dashboard/SlideFormModal';
+import type { Slide } from '@/types/Slide';
+import type { Notification } from '@/types/Notification';
 
 const SlidesPage: React.FC = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -13,18 +13,19 @@ const SlidesPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fungsi untuk mengambil data slides dari API
-  const fetchSlides = useCallback(async (): Promise<void> => {
+  const MAX_SLIDE_ORDER = 3;
+
+  const fetchSlides = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/slides'); // Endpoint API untuk mengambil semua slides
+      const response = await fetch('/api/slides');
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
         throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
       }
       const data: Slide[] = await response.json();
-      setSlides(data);
+      setSlides(data.sort((a, b) => a.order - b.order));
     } catch (e: unknown) {
       console.error("Gagal memuat slides:", e);
       if (e instanceof Error) {
@@ -35,29 +36,39 @@ const SlidesPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchSlides();
-  }, [fetchSlides]);
-
-  const handleAddEdit = useCallback((slide: Slide | null = null) => {
-    setCurrentSlide(slide);
-    setIsModalOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleAddEdit = (slide: Slide | null = null) => {
+    if (!slide && slides.length >= MAX_SLIDE_ORDER) {
+      setNotification({ message: `Tidak dapat menambah slide. Maksimal ${MAX_SLIDE_ORDER} slide. Silakan edit yang sudah ada.`, type: 'error' });
+      return;
+    }
+    setCurrentSlide(slide);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus slide ini? Aksi ini tidak bisa dibatalkan!')) {
       try {
-        const response = await fetch(`/api/slides/${id}`, { // Endpoint API untuk delete berdasarkan ID
+        const response = await fetch('/api/slides', {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id }),
         });
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+          console.error('Backend Error Response for DELETE:', errorData);
           throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
         }
+        await response.json();
         setNotification({ message: 'Slide berhasil dihapus!', type: 'success' });
-        fetchSlides(); // Ambil ulang data setelah penghapusan
+        fetchSlides();
       } catch (e: unknown) {
         console.error("Gagal menghapus slide:", e);
         if (e instanceof Error) {
@@ -67,12 +78,12 @@ const SlidesPage: React.FC = () => {
         }
       }
     }
-  }, [fetchSlides]);
+  };
 
-  const handleSaveSlide = useCallback(async (slideToSave: Slide) => {
+  const handleSaveSlide = async (slideToSave: Slide) => {
     try {
-      const method = slideToSave.id ? 'PUT' : 'POST'; // Jika ada ID, update; jika tidak, tambah baru
-      const url = slideToSave.id ? `/api/slides/${slideToSave.id}` : '/api/slides'; // URL spesifik untuk PUT
+      const method = slideToSave.id ? 'PUT' : 'POST';
+      const url = '/api/slides';
       const bodyToSend = JSON.stringify(slideToSave);
 
       const response = await fetch(url, {
@@ -84,15 +95,29 @@ const SlidesPage: React.FC = () => {
       });
 
       if (!response.ok) {
+        // PERBAIKAN PENTING: Tangani error spesifik dari server
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
-        throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
+        // Gunakan pesan error dari backend jika ada, jika tidak, pakai pesan status
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan slide. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+
+        // Jangan me-re-throw error di sini
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi fungsi
       }
 
+      await response.json();
       setNotification({ message: `Slide berhasil ${slideToSave.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
-      setIsModalOpen(false);
+      setIsModalOpen(false); // Modal ditutup HANYA jika berhasil
       setCurrentSlide(null);
-      fetchSlides(); // Ambil ulang data setelah penyimpanan
+      fetchSlides();
     } catch (e: unknown) {
+      // Tangkap error jika fetch gagal total (misalnya, masalah jaringan)
       console.error("Gagal menyimpan slide:", e);
       if (e instanceof Error) {
         setNotification({ message: `Gagal menyimpan slide: ${e.message}`, type: 'error' });
@@ -100,7 +125,9 @@ const SlidesPage: React.FC = () => {
         setNotification({ message: 'Gagal menyimpan slide. Silakan coba lagi.', type: 'error' });
       }
     }
-  }, [fetchSlides]);
+  };
+
+  const canAddMoreSlides = slides.length < MAX_SLIDE_ORDER;
 
   return (
     <Layout setNotification={setNotification}>
@@ -114,7 +141,12 @@ const SlidesPage: React.FC = () => {
           </div>
           <button
             onClick={() => handleAddEdit()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-all duration-200 shadow-md"
+            className={`flex items-center gap-2 px-5 py-2.5 font-semibold rounded-full transition-all duration-200 shadow-md
+              ${canAddMoreSlides 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            disabled={!canAddMoreSlides}
           >
             <PlusIcon className="h-5 w-5" />
             Tambah Slide
@@ -126,16 +158,16 @@ const SlidesPage: React.FC = () => {
         ) : error ? (
           <div className="text-center py-8 text-red-600">{error}</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-200">
+            <table className="min-w-full bg-white">
               <thead className="bg-blue-100 text-blue-800 uppercase text-xs font-semibold tracking-wider">
                 <tr>
-                  <th className="px-6 py-3 text-left">Urutan</th>
-                  <th className="px-6 py-3 text-left">Gambar</th>
+                  <th className="px-6 py-3 text-left w-20">Urutan</th>
+                  <th className="px-6 py-3 text-left w-32">Gambar</th>
                   <th className="px-6 py-3 text-left">Judul</th>
                   <th className="px-6 py-3 text-left">Sub Judul</th>
-                  <th className="px-6 py-3 text-left">Aktif</th>
-                  <th className="px-6 py-3 text-right">Aksi</th>
+                  <th className="px-6 py-3 text-left w-28">Aktif</th>
+                  <th className="px-6 py-3 text-right w-32">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -150,25 +182,29 @@ const SlidesPage: React.FC = () => {
                     <tr key={item.id} className="hover:bg-blue-50 transition duration-150">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.order}</td>
                       <td className="px-6 py-4">
-                        {item.src ? (
+                        {item.image ? (
                           <img
-                            src={item.src}
+                            src={item.image}
                             alt={item.alt}
-                            className="h-12 w-16 rounded-lg object-cover border border-blue-200 shadow" // Ukuran gambar disesuaikan
+                            className="h-12 w-16 rounded-lg object-cover border border-blue-200 shadow"
                             onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                               const target = e.target as HTMLImageElement;
                               target.onerror = null;
-                              target.src = 'https://via.placeholder.com/64x48?text=No+Img';
+                              target.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=64&h=48&q=70';
                             }}
                           />
                         ) : (
-                          <div className="h-12 w-16 rounded-lg bg-gray-300 flex items-center justify-center text-gray-600 text-xs">
+                          <div className="h-12 w-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-500 text-xs border border-gray-300">
                             No Img
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 line-clamp-2 max-w-xs">{item.title}</td> {/* Tambah max-w-xs */}
-                      <td className="px-6 py-4 text-sm text-gray-700 line-clamp-2 max-w-xs">{item.subtitle}</td> {/* Tambah max-w-xs */}
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 break-words max-w-xs sm:max-w-sm md:max-w-md lg:max-w-none">
+                        <p className="line-clamp-2">{item.title}</p>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs sm:max-w-sm md:max-w-md lg:max-w-none">
+                        <p className="line-clamp-2">{item.subtitle}</p>
+                      </td>
                       <td className="px-6 py-4 text-sm">
                         <span
                           className={`relative inline-block px-3 py-1 font-semibold leading-tight ${

@@ -1,10 +1,21 @@
+// src/pages/api/extracurriculars.tsx
+
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Extracurricular } from '@/types/Extracurricular'; // Pastikan path ini benar
+
+// Tambahkan konfigurasi ini untuk meningkatkan batas ukuran payload
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb', // Sesuaikan dengan kebutuhan Anda, misal '10mb'
+    },
+  },
+};
 
 // Data ekstrakurikuler yang disimpan di memori
 let extracurricularsData: Extracurricular[] = [
   {
-    id: '1', // ID sebagai string
+    id: '1',
     name: 'Futsal',
     image: 'https://images.unsplash.com/photo-1547347963-f09b537c3527?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     description: 'Ekstrakurikuler olahraga futsal untuk mengembangkan bakat dan sportivitas.',
@@ -45,29 +56,31 @@ export default function handler(
         return res.status(404).json({ message: 'Ekstrakurikuler tidak ditemukan.', id: String(id) });
       }
     }
-  
     return res.status(200).json(extracurricularsData);
   
   } else if (req.method === 'POST') {
-    // Dapatkan properti dari body request dan menipekannya
     const { name, image, description, coach, schedule } = req.body as Partial<Extracurricular>;
 
-    // Menghasilkan ID unik baru sebagai string
-    const newId = (extracurricularsData.length > 0
-      ? Math.max(...extracurricularsData.map(e => parseInt(e.id))) + 1
-      : 1
-    ).toString();
+    // Validasi input wajib
+    if (!name || !coach || !schedule) {
+      return res.status(400).json({ message: 'Nama, pelatih, dan jadwal wajib diisi!', id: '' });
+    }
+
+    // Menghasilkan ID unik baru yang lebih andal
+    const newId = (Date.now() + Math.floor(Math.random() * 1000)).toString();
 
     const newExtracurricular: Extracurricular = {
       id: newId,
-      name: name || 'Ekstrakurikuler Baru',
+      name: name,
       description: description || '',
-      image: image || '/images/default_ekskul.jpg', // Fallback gambar default
-      coach: coach || 'Belum Ditentukan',
-      schedule: schedule || 'Belum Ditentukan',
+      // Fallback gambar default jika tidak ada gambar yang diunggah
+      image: image || 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=1920&q=90',
+      coach: coach,
+      schedule: schedule,
     };
     extracurricularsData.push(newExtracurricular);
     res.status(201).json(newExtracurricular);
+
   } else if (req.method === 'PUT') {
     const { id, ...updatedFields } = req.body as Partial<Extracurricular> & { id: string };
     const extracurricularId = String(id); 
@@ -79,10 +92,10 @@ export default function handler(
     extracurricularsData = extracurricularsData.map(ext => {
       if (ext.id === extracurricularId) {
         found = true;
-        // Menyusun objek secara manual untuk memastikan semua properti wajib ada
         const updatedExt: Extracurricular = {
           ...ext, 
-          id: ext.id, // ID tidak berubah
+          ...updatedFields,
+          id: ext.id,
           name: updatedFields.name || ext.name,
           description: updatedFields.description || ext.description,
           image: updatedFields.image || ext.image,
@@ -99,9 +112,9 @@ export default function handler(
     }
 
     res.status(200).json({ message: 'Ekstrakurikuler diperbarui', id: extracurricularId });
+
   } else if (req.method === 'DELETE') {
     const { id } = req.query;
-    // ID dari query parameter bisa string atau array string, pastikan jadi string tunggal
     const extracurricularIdToDelete = Array.isArray(id) ? id[0] : String(id);
 
     if (!extracurricularIdToDelete) {
@@ -109,7 +122,6 @@ export default function handler(
     }
 
     const initialLength = extracurricularsData.length;
-    // Filter berdasarkan ID string
     extracurricularsData = extracurricularsData.filter(ext => ext.id !== extracurricularIdToDelete);
 
     if (extracurricularsData.length === initialLength) {
@@ -117,6 +129,7 @@ export default function handler(
     }
 
     res.status(200).json({ message: 'Ekstrakurikuler dihapus', id: extracurricularIdToDelete });
+
   } else {
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
     res.status(405).end(`Method ${req.method} Not Allowed`);

@@ -1,49 +1,46 @@
-// components/Beranda/HeroSection.tsx
 "use client";
 
 import Image from 'next/image';
-import { useState, useEffect, useCallback } from 'react'; // Tambahkan useCallback
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import type { Slide } from '@/types/Slide'; // Pastikan path ini benar
+import type { Slide } from '@/types/Slide';
 
 export default function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [slides, setSlides] = useState<Slide[]>([]); // Data slide dari API
+  const [slides, setSlides] = useState<Slide[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fungsi untuk mengambil data slide dari API
   const fetchSlides = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/slides'); // Panggil API Anda
+      const response = await fetch('/api/slides');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        throw new Error(`HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`);
       }
       const data: Slide[] = await response.json();
-      setSlides(data);
-      if (data.length > 0) {
+      // Filter slide yang aktif dan urutkan
+      const activeSlides = data.filter(slide => slide.isActive).sort((a, b) => a.order - b.order);
+      setSlides(activeSlides);
+      if (activeSlides.length > 0) {
         setActiveIndex(0); // Reset ke slide pertama jika data baru
       }
     } catch (e: unknown) {
-      console.error("Failed to fetch slides:", e);
+      console.error("Gagal memuat slides:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat slide: ${e.message}`);
       } else {
         setError("Terjadi kesalahan yang tidak diketahui saat memuat slide.");
       }
-      // Fallback ke slide statis jika terjadi error (opsional)
-      // setSlides([
-      //   // ... fallback slides statis yang ada sebelumnya
-      // ]);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchSlides(); // Panggil saat komponen pertama kali di-mount
+    fetchSlides();
   }, [fetchSlides]);
 
   useEffect(() => {
@@ -53,7 +50,7 @@ export default function HeroSection() {
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [slides.length]); // Bergantung pada slides.length
+  }, [slides.length]);
 
   const goToNextSlide = () => {
     if (slides.length > 0) {
@@ -97,8 +94,8 @@ export default function HeroSection() {
     <section className="relative w-full h-[450px] md:h-[650px] lg:h-[750px] overflow-hidden font-sans">
       {slides.map((slide, index) => (
         <Image
-          key={slide.id} // Gunakan ID unik dari data
-          src={slide.src}
+          key={slide.id}
+          src={slide.image}
           alt={slide.alt}
           layout="fill"
           objectFit="cover"
@@ -107,6 +104,13 @@ export default function HeroSection() {
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
             activeIndex === index ? 'opacity-100' : 'opacity-0'
           }`}
+          // PERBAIKAN: Ganti URL fallback onError ke Unsplash
+          onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null; // Mencegah loop error tak terbatas
+            // Gunakan gambar placeholder dari Unsplash jika terjadi error
+            target.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=1920&q=90';
+          }}
         />
       ))}
 
@@ -132,7 +136,7 @@ export default function HeroSection() {
       </div>
 
       {/* Navigasi (Panah dan Indikator) */}
-      {slides.length > 1 && ( // Hanya tampilkan navigasi jika ada lebih dari 1 slide
+      {slides.length > 1 && (
         <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center space-x-6 z-20">
           <button
             onClick={goToPrevSlide}

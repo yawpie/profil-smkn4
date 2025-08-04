@@ -1,11 +1,10 @@
-// src/pages/dashboard/teachers.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Dashboard/Layout';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import TeacherFormModal from '../../components/Dashboard/TeacherFormModal';
-import type { Teacher} from '@/types/Teacher';
+import type { Teacher } from '@/types/Teacher';
 import type { Notification } from '@/types/Notification';
 
 const TeachersPage: React.FC = () => {
@@ -23,15 +22,21 @@ const TeachersPage: React.FC = () => {
     try {
       const response = await fetch('/api/teachers');
       if (!response.ok) {
-        // Attempt to parse error message from response if available
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        // Gunakan pesan error dari backend jika ada, jika tidak, pakai pesan status
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        throw new Error(errorMessage); // Tetap throw untuk menonaktifkan loading dan menampilkan error di halaman
       }
-      const data: Teacher[] = await response.json(); // Type the fetched data
+      const data: Teacher[] = await response.json();
       setTeachers(data);
-    } catch (e: any) { // Use 'any' for the catch block error for broader compatibility
+    } catch (e: unknown) { // Ganti 'any' dengan 'unknown' untuk type safety
       console.error("Failed to fetch teachers:", e);
-      setError("Gagal memuat data guru. Silakan coba lagi.");
+      if (e instanceof Error) {
+        setError(`Gagal memuat data guru. Detail: ${e.message}`);
+      } else {
+        setError("Gagal memuat data guru. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
@@ -39,34 +44,41 @@ const TeachersPage: React.FC = () => {
 
   useEffect(() => {
     fetchTeachers();
-  }, []); // Call fetchTeachers when the component mounts
+  }, []);
 
-  const handleAddEdit = (teacher: Teacher | null = null) => { // Explicitly type 'teacher' parameter
+  const handleAddEdit = (teacher: Teacher | null = null) => {
     setCurrentTeacher(teacher);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => { // Explicitly type 'id' parameter
-    if (confirm('Apakah Anda yakin ingin menghapus data guru ini?')) { // Using confirm is generally discouraged in React apps for better UX, consider a custom modal
+  const handleDelete = async (id: string) => {
+    if (confirm('Apakah Anda yakin ingin menghapus data guru ini?')) {
       try {
         const response = await fetch(`/api/teachers?id=${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-          throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
+          const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+          const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+          setNotification({ message: errorMessage, type: 'error' });
+          console.error('Backend Error Response for DELETE:', errorData);
+          return; // Hentikan eksekusi
         }
         await response.json();
         setNotification({ message: 'Data guru berhasil dihapus!', type: 'success' });
-        fetchTeachers(); // Re-fetch data after deletion
-      } catch (e: any) {
+        fetchTeachers();
+      } catch (e: unknown) { // Ganti 'any' dengan 'unknown'
         console.error("Failed to delete teacher:", e);
-        setNotification({ message: `Gagal menghapus guru: ${e.message}`, type: 'error' });
+        if (e instanceof Error) {
+          setNotification({ message: `Gagal menghapus guru: ${e.message}`, type: 'error' });
+        } else {
+          setNotification({ message: 'Gagal menghapus guru. Silakan coba lagi.', type: 'error' });
+        }
       }
     }
   };
 
-  const handleSaveTeacher = async (newTeacher: Teacher) => { // Explicitly type 'newTeacher' parameter
+  const handleSaveTeacher = async (newTeacher: Teacher) => {
     try {
       const method = newTeacher.id ? 'PUT' : 'POST';
       const response = await fetch('/api/teachers', {
@@ -77,17 +89,30 @@ const TeachersPage: React.FC = () => {
         body: JSON.stringify(newTeacher),
       });
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan guru. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi
       }
       await response.json();
       setNotification({ message: `Data guru berhasil ${newTeacher.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
       setIsModalOpen(false);
       setCurrentTeacher(null);
-      fetchTeachers(); // Re-fetch data after saving
-    } catch (e: any) {
+      fetchTeachers();
+    } catch (e: unknown) { // Ganti 'any' dengan 'unknown'
       console.error("Failed to save teacher:", e);
-      setNotification({ message: `Gagal menyimpan guru: ${e.message}`, type: 'error' });
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menyimpan guru: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menyimpan guru. Silakan coba lagi.', type: 'error' });
+      }
     }
   };
 
@@ -139,10 +164,10 @@ const TeachersPage: React.FC = () => {
                             src={item.image}
                             alt={item.name}
                             className="h-10 w-10 rounded-full object-cover border border-blue-200 shadow"
-                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => { // Type the event
-                              const target = e.target as HTMLImageElement; // Cast target to HTMLImageElement
+                            onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                              const target = e.target as HTMLImageElement;
                               target.onerror = null;
-                              target.src = 'https://via.placeholder.com/40x40?text=No+Image'; // Placeholder for 40x40
+                              target.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=40&h=40&q=70'; // Fallback Unsplash
                             }}
                           />
                         ) : (
@@ -164,7 +189,7 @@ const TeachersPage: React.FC = () => {
                             <PencilIcon className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(item.id!)} // Use non-null assertion as id should be present for existing items
+                            onClick={() => handleDelete(item.id!)}
                             className="p-2 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors duration-200"
                             title="Hapus"
                           >
@@ -182,8 +207,8 @@ const TeachersPage: React.FC = () => {
 
         {isModalOpen && (
           <TeacherFormModal
-            teacher={currentTeacher} // This should now be compatible with Teacher | null
-            onSave={handleSaveTeacher} // This should now be compatible with (teacher: Teacher) => Promise<void>
+            teacher={currentTeacher}
+            onSave={handleSaveTeacher}
             onClose={() => setIsModalOpen(false)}
           />
         )}

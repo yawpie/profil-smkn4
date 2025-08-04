@@ -1,7 +1,7 @@
 // src/types/SlideData.ts (Ini akan digunakan untuk CRUD)
 export type Slide = {
   id: string; // ID unik untuk setiap slide
-  src: string;
+  image: string;
   alt: string;
   title: string;
   subtitle: string;

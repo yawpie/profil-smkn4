@@ -2,6 +2,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Article } from '@/types/Article';
 
+// Data dummy pengumuman (in-memory, akan hilang saat server restart)
 let articlesData: Article[] = [
   {
     id: '1',
@@ -22,9 +23,9 @@ let articlesData: Article[] = [
       <p>Oleh karena itu, mendorong anak-anak dan remaja untuk belajar coding sejak dini adalah investasi berharga untuk masa depan mereka.</p>
     `,
     author: 'Budi Setiawan',
-    publishDate: '2025-06-10',
+    publishDate: '2025-06-10T10:00:00Z',
     summary: 'Melatih logika dan pemecahan masalah sejak dini melalui coding.',
-    slug: 'manfaat-belajar-coding-sejak-dini',
+    // Slug dihapus karena tidak digunakan
   },
   {
     id: '2',
@@ -43,9 +44,9 @@ let articlesData: Article[] = [
       <p>Ingatlah bahwa Ujian Nasional adalah bagian dari perjalanan belajar Anda, bukan satu-satunya penentu masa depan. Berikan yang terbaik, dan percaya pada kemampuan diri.</p>
     `,
     author: 'Dewi Lestari',
-    publishDate: '2025-05-20',
+    publishDate: '2025-05-20T10:00:00Z',
     summary: 'Kunci sukses ujian: persiapan matang, jadwal belajar, materi, dan kesehatan.',
-    slug: 'tips-efektif-menghadapi-ujian-nasional',
+    // Slug dihapus
   },
   {
     id: '3',
@@ -65,13 +66,35 @@ let articlesData: Article[] = [
       <p>Bagi SMKN 4 Mataram, ekskul adalah bagian integral dari pengembangan siswa secara holistik. Kami mendorong setiap siswa untuk aktif berpartisipasi dalam berbagai pilihan ekskul yang kami tawarkan, karena kami percaya bahwa pengalaman di ekskul akan sangat berharga bagi masa depan mereka.</p>
     `,
     author: 'Agus Salim',
-    publishDate: '2025-07-01',
+    publishDate: '2025-07-01T10:00:00Z',
     summary: 'Ekstrakurikuler: kembangkan bakat, minat, dan soft skill.',
-    slug: 'pentingnya-kegiatan-ekstrakurikuler-di-sekolah',
+    // Slug dihapus
+  },
+  {
+    id: '4',
+    title: 'Perkembangan Teknologi Pendidikan di SMKN 4',
+    image: 'https://images.unsplash.com/photo-1546410531-bb4439c2c62c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    content: `<p>SMKN 4 Mataram terus beradaptasi dengan perkembangan teknologi dalam dunia pendidikan. Kami telah mengintegrasikan berbagai platform pembelajaran daring dan alat digital untuk mendukung proses belajar mengajar yang lebih interaktif dan efektif. Penggunaan proyektor interaktif, tablet untuk siswa, serta akses ke e-book dan jurnal online menjadi bagian dari komitmen kami.</p>
+    <p>Kami juga mengadakan pelatihan rutin bagi guru-guru untuk memastikan mereka mahir dalam memanfaatkan teknologi ini. Tujuannya adalah untuk menciptakan lingkungan belajar yang relevan dengan tuntutan zaman, mempersiapkan siswa menghadapi tantangan digital di masa depan.</p>`,
+    author: 'Retno Wulandari',
+    publishDate: '2025-07-15T09:30:00Z',
+    summary: 'Inovasi teknologi pendidikan di SMKN 4 Mataram untuk pembelajaran yang lebih efektif.',
+    // Slug dihapus
+  },
+  {
+    id: '5',
+    title: 'Prestasi Siswa SMKN 4 di Lomba Desain Grafis Nasional',
+    image: 'https://images.unsplash.com/photo-1526374965328-8742f0f04c00?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    content: `<p>Selamat kepada tim desain grafis SMKN 4 Mataram yang berhasil meraih juara kedua dalam Lomba Desain Grafis Tingkat Nasional! Prestasi ini merupakan bukti kerja keras, dedikasi, dan bimbingan dari para guru pembimbing.</p>
+    <p>Lomba ini diikuti oleh ratusan peserta dari berbagai sekolah kejuruan di seluruh Indonesia. Keberhasilan ini tidak hanya mengharumkan nama sekolah, tetapi juga memotivasi siswa lain untuk terus berprestasi di bidang yang mereka minati. Kami bangga dengan pencapaian luar biasa ini!</p>`,
+    author: 'Kepala Sekolah',
+    publishDate: '2025-07-28T14:00:00Z',
+    summary: 'Tim desain grafis SMKN 4 Mataram meraih juara kedua di lomba tingkat nasional.',
+    // Slug dihapus
   },
 ];
 
-// Helper untuk membuat slug URL-friendly
+// Helper untuk membuat slug URL-friendly (tetap ada di sini, tapi tidak digunakan dalam logika)
 const generateSlug = (title: string): string => {
   if (!title) return `article-${Date.now()}`;
   return title
@@ -88,21 +111,23 @@ export default function handler(
   if (req.method === 'GET') {
     const { id } = req.query; // Ambil 'id' dari query parameter
 
-    if (id) {
-      // Cari artikel berdasarkan 'id' yang diterima dari query
-      const selectedArticle = articlesData.find((a) => a.id === String(id)); // Menggunakan String(id) untuk memastikan perbandingan string
-      if (selectedArticle) {
-        return res.status(200).json(selectedArticle);
+    if (id && typeof id === 'string') {
+      // Hanya mencari berdasarkan ID
+      const foundArticle = articlesData.find((a) => a.id === id);
+
+      if (foundArticle) {
+        return res.status(200).json(foundArticle);
       } else {
-        return res.status(404).json({ message: 'Artikel tidak ditemukan.', id: String(id) });
+        return res.status(404).json({ message: 'Artikel tidak ditemukan.' });
       }
+    } else {
+      // Jika tidak ada 'id' di query, kembalikan semua artikel, diurutkan terbaru dahulu
+      const sortedArticles = [...articlesData].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
+      return res.status(200).json(sortedArticles);
     }
 
-    // Jika tidak ada 'id' di query, kembalikan semua artikel
-    return res.status(200).json(articlesData);
-
   } else if (req.method === 'POST') {
-    const { title, image, content, author, publishDate, summary, slug } = req.body as Partial<Article>;
+    const { title, image, content, author, publishDate, summary } = req.body as Partial<Article>;
 
     if (!title || !content) {
       return res.status(400).json({ message: 'Judul dan konten wajib diisi.' });
@@ -110,7 +135,7 @@ export default function handler(
 
     const newId = (
       articlesData.length > 0
-        ? Math.max(...articlesData.map((a) => parseInt(a.id))) + 1
+        ? (Math.max(...articlesData.map((a) => parseInt(a.id))) + 1)
         : 1
     ).toString();
 
@@ -120,9 +145,9 @@ export default function handler(
       image: image || '/images/default_article.jpg',
       content,
       author: author || 'Admin',
-      publishDate: publishDate || new Date().toISOString().slice(0, 10),
-      summary: summary || content.slice(0, 150) + '...',
-      slug: slug || generateSlug(title),
+      publishDate: publishDate || new Date().toISOString(),
+      summary: summary || content.substring(0, 150) + '...',
+      // Slug tidak dibuat lagi
     };
 
     articlesData.push(newArticle);
@@ -130,18 +155,18 @@ export default function handler(
 
   } else if (req.method === 'PUT') {
     const { id, ...updatedFields } = req.body as Partial<Article> & { id: string };
-    const articleId = String(id); 
 
-    if (!articleId) {
+    if (!id) {
       return res.status(400).json({ message: 'ID artikel diperlukan untuk pembaruan.' });
     }
 
     let found = false;
     articlesData = articlesData.map(art => {
-      if (art.id === articleId) {
+      if (art.id === id) {
         found = true;
         const updatedArt: Article = {
-          ...art, 
+          ...art,
+          ...updatedFields,
           id: art.id,
           title: updatedFields.title || art.title,
           image: updatedFields.image || art.image,
@@ -149,7 +174,6 @@ export default function handler(
           author: updatedFields.author || art.author,
           publishDate: updatedFields.publishDate || art.publishDate,
           summary: updatedFields.summary || art.summary,
-          slug: updatedFields.title ? generateSlug(updatedFields.title) : updatedFields.slug || art.slug,
         };
         return updatedArt;
       }
@@ -157,28 +181,27 @@ export default function handler(
     });
 
     if (!found) {
-      return res.status(404).json({ message: 'Artikel tidak ditemukan.', id: articleId });
+      return res.status(404).json({ message: 'Artikel tidak ditemukan.', id });
     }
 
-    const returnedArticle = articlesData.find(a => a.id === articleId); // Ambil objek artikel yang baru diperbarui
-    return res.status(200).json(returnedArticle || { message: 'Artikel diperbarui', id: articleId }); // Kembalikan objek penuh
+    const returnedArticle = articlesData.find(a => a.id === id);
+    return res.status(200).json(returnedArticle || { message: 'Artikel diperbarui', id });
 
   } else if (req.method === 'DELETE') {
-    const { id } = req.query;
-    const targetId = Array.isArray(id) ? id[0] : String(id); // Pastikan targetId adalah string
+    const { id } = req.body as { id: string };
 
-    if (!targetId) {
+    if (!id) {
       return res.status(400).json({ message: 'ID artikel diperlukan untuk penghapusan.' });
     }
 
     const initialLength = articlesData.length;
-    articlesData = articlesData.filter((a) => a.id !== targetId);
+    articlesData = articlesData.filter((a) => a.id !== id);
 
     if (articlesData.length === initialLength) {
-      return res.status(404).json({ message: 'Artikel tidak ditemukan.', id: targetId });
+      return res.status(404).json({ message: 'Artikel tidak ditemukan.', id });
     }
 
-    return res.status(200).json({ message: 'Artikel dihapus', id: targetId });
+    return res.status(200).json({ message: 'Artikel dihapus', id });
 
   } else {
     res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);

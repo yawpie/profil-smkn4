@@ -26,7 +26,7 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
       setFormData(facility);
     } else {
       // Reset form if facility is null (e.g., for creating new)
-      setFormData({ id: null, name: '', image: '', description: '', location: '', status: 'Tersedia' });
+      setFormData({ id: "", name: '', image: '', description: '', location: '', status: 'Tersedia' });
     }
   }, [facility]);
 
@@ -51,9 +51,6 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
       // Read file as Data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        // In a real application, you would upload this 'file' object to a storage service
-        // (e.g., Firebase Storage, AWS S3) and then save the returned URL to formData.image.
-        // For this example, we're using the Data URL for preview purposes.
         setFormData(prev => ({ ...prev, image: reader.result as string }));
       };
       reader.readAsDataURL(file); // Converts file to base64 string for preview

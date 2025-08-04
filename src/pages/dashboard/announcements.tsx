@@ -1,7 +1,6 @@
-// src/pages/dashboard/announcements.tsx
 "use client";
 
-import React, { useState, useEffect, FC, Dispatch, SetStateAction } from 'react';
+import React, { useState, useEffect, FC } from 'react';
 import Layout from '../../components/Dashboard/Layout';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import AnnouncementFormModal from '../../components/Dashboard/AnnouncementFormModal';
@@ -52,7 +51,6 @@ const CustomModal: FC<CustomModalProps> = ({ isOpen, onClose, onConfirm, title, 
   );
 };
 
-
 const AnnouncementsPage: FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -61,9 +59,9 @@ const AnnouncementsPage: FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for custom confirmation/error modals
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
   const [confirmActionId, setConfirmActionId] = useState<string | null>(null);
+  // State isErrorModalOpen dan errorModalMessage bisa dihapus, karena kita akan menggunakan notifikasi
   const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
   const [errorModalMessage, setErrorModalMessage] = useState<string>('');
 
@@ -73,24 +71,29 @@ const AnnouncementsPage: FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/announcements'); // Fetch from your API Route
+      const response = await fetch('/api/announcements');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        throw new Error(errorMessage); // Ini akan menangani error di `catch` block di bawah
       }
       const data: Announcement[] = await response.json();
       setAnnouncements(data);
-    } catch (e: any) {
+    } catch (e: unknown) { // Gunakan 'unknown' untuk type safety
       console.error("Failed to fetch announcements:", e);
-      setError("Gagal memuat data pengumuman. Silakan coba lagi.");
-      setErrorModalMessage("Gagal memuat data pengumuman. Silakan coba lagi.");
-      setIsErrorModalOpen(true);
+      if (e instanceof Error) {
+        setError(`Gagal memuat data pengumuman. Detail: ${e.message}`);
+      } else {
+        setError("Gagal memuat data pengumuman. Silakan coba lagi.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAnnouncements(); // Call fetchAnnouncements when the component first mounts
+    fetchAnnouncements();
   }, []);
 
   const handleAddEdit = (announcement: Announcement | null = null): void => {
@@ -99,7 +102,7 @@ const AnnouncementsPage: FC = () => {
   };
 
   const handleDeleteClick = (id: string | number): void => {
-    setConfirmActionId(id.toString()); // Store the ID to be deleted
+    setConfirmActionId(id.toString());
     setIsConfirmModalOpen(true);
   };
 
@@ -111,14 +114,22 @@ const AnnouncementsPage: FC = () => {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for DELETE:', errorData);
+        return; // Hentikan eksekusi
       }
       await response.json();
       setNotification({ message: 'Pengumuman berhasil dihapus!', type: 'success' });
-      fetchAnnouncements(); // Re-fetch data after deletion
-    } catch (e: any) {
-      console.error("Failed to delete announcement:", e);
-      setNotification({ message: `Gagal menghapus pengumuman: ${e.message}`, type: 'error' });
+      fetchAnnouncements();
+    } catch (e: unknown) { // Gunakan 'unknown' untuk type safety
+      console.error("Gagal menghapus pengumuman:", e);
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menghapus pengumuman: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menghapus pengumuman. Silakan coba lagi.', type: 'error' });
+      }
     } finally {
       setIsConfirmModalOpen(false);
       setConfirmActionId(null);
@@ -135,17 +146,32 @@ const AnnouncementsPage: FC = () => {
         },
         body: JSON.stringify(newAnnouncement),
       });
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan pengumuman. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+        
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi
       }
       await response.json();
       setNotification({ message: `Pengumuman berhasil ${newAnnouncement.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
       setIsModalOpen(false);
       setCurrentAnnouncement(null);
-      fetchAnnouncements(); // Re-fetch data after saving
-    } catch (e: any) {
+      fetchAnnouncements();
+    } catch (e: unknown) { // Ganti 'any' dengan 'unknown'
       console.error("Failed to save announcement:", e);
-      setNotification({ message: `Gagal menyimpan pengumuman: ${e.message}`, type: 'error' });
+      if (e instanceof Error) {
+        setNotification({ message: `Gagal menyimpan pengumuman: ${e.message}`, type: 'error' });
+      } else {
+        setNotification({ message: 'Gagal menyimpan pengumuman. Silakan coba lagi.', type: 'error' });
+      }
     }
   };
 
@@ -193,7 +219,7 @@ const AnnouncementsPage: FC = () => {
                 ) : (
                   announcements.map((item, index) => (
                     <tr
-                      key={item.id || `announcement-${index}`} // Use id if available, fallback to index
+                      key={item.id || `announcement-${index}`}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50 hover:bg-gray-100"}
                     >
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.title}</td>
@@ -202,6 +228,7 @@ const AnnouncementsPage: FC = () => {
                         {item.publishDate}
                       </td>
                       <td className="px-6 py-4 text-sm">
+                        {/* Status logic needs to be implemented */}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
@@ -213,7 +240,7 @@ const AnnouncementsPage: FC = () => {
                             <PencilIcon className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteClick(item.id!)} // Use non-null assertion if id is guaranteed for deletion
+                            onClick={() => handleDeleteClick(item.id!)}
                             className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full transition"
                             title="Hapus"
                           >
@@ -250,14 +277,7 @@ const AnnouncementsPage: FC = () => {
         />
 
         {/* Error Modal */}
-        <CustomModal
-          isOpen={isErrorModalOpen}
-          onClose={() => setIsErrorModalOpen(false)}
-          title="Terjadi Kesalahan"
-          message={errorModalMessage}
-          confirmText="Tutup"
-          type="error"
-        />
+        {/* Hapus CustomModal ini, karena kita akan menggunakan setNotification yang sudah terintegrasi dengan Layout */}
       </div>
     </Layout>
   );

@@ -1,6 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Teacher } from '@/types/Teacher'; // Pastikan path ini benar
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb', // Sesuaikan dengan kebutuhan Anda
+    },
+  },
+};
+
 // Data guru yang disimpan di memori
 let teachersData: Teacher[] = [
   {

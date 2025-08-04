@@ -4,16 +4,8 @@
 import React, { useState, useEffect, FC } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
-
+import type { Announcement } from '@/types/Announcement';
 // Definisikan tipe untuk pengumuman
-interface Announcement {
-  id: string;
-  title: string;
-  content: string; // Konten penuh, mungkin akan dipotong
-  date: string; // Tanggal pengumuman
-  slug?: string; // Slug untuk link detail (opsional, jika ada)
-  // Tambahkan properti lain yang mungkin ada di objek pengumuman Anda
-}
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 50 },
@@ -48,24 +40,51 @@ const LatestAnnouncement: FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Fungsi untuk memformat tanggal
+  const formatDate = (dateString: string): string => {
+    if (!dateString) {
+      // Jika dateString kosong atau null, kembalikan string kosong atau placeholder
+      return '';
+    }
+    try {
+      const date = new Date(dateString);
+      // Periksa apakah tanggal yang diparsing valid
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid date string');
+      }
+      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('id-ID', options);
+    } catch (e) {
+      console.error("Gagal memformat tanggal:", dateString, e);
+      return dateString; // Kembali ke string asli jika parsing gagal
+    }
+  };
+
   useEffect(() => {
     async function fetchLatestAnnouncement(): Promise<void> {
       try {
-        // Sesuaikan endpoint API Anda. Misalnya, API Anda mungkin punya endpoint
-        // '/api/announcements?limit=1&sortBy=date&order=desc' untuk mengambil yang terbaru.
-        // Jika tidak, Anda perlu memfilter array setelah mengambil semua pengumuman.
+        // Sesuaikan endpoint API Anda untuk mendapatkan pengumuman terbaru.
+        // Asumsi: API '/api/announcements' mengembalikan array pengumuman
+        // yang sudah diurutkan dari yang terbaru ke terlama.
+        // Jika tidak, Anda perlu mengurutkannya di sini:
+        // const sortedData = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         const response = await fetch('/api/announcements'); 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Kesalahan HTTP! status: ${response.status}`);
         }
         const data: Announcement[] = await response.json();
+        
+        // Asumsi API sudah mengembalikan yang terbaru di indeks 0.
+        // Jika tidak, Anda bisa menambahkan logika pengurutan di sini.
         if (data && data.length > 0) {
+          // Anda bisa mengurutkan di sini jika API tidak menjamin urutan:
+          // const latest = data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
           setAnnouncement(data[0]); 
         } else {
           setAnnouncement(null); // Tidak ada pengumuman
         }
       } catch (e: unknown) {
-        console.error("Failed to fetch latest announcement:", e);
+        console.error("Gagal mengambil pengumuman terbaru:", e);
         if (e instanceof Error) {
           setError(`Gagal memuat pengumuman terbaru. Detail: ${e.message}`);
         } else {
@@ -77,16 +96,15 @@ const LatestAnnouncement: FC = () => {
     }
 
     fetchLatestAnnouncement();
-  }, []);
+  }, []); // Dependensi kosong karena kita hanya ingin ini berjalan sekali saat komponen mount
 
-  const formatDate = (dateString: string) => {
-    try {
-      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-      return new Date(dateString).toLocaleDateString('id-ID', options);
-    } catch (e) {
-      console.error("Failed to format date:", dateString, e);
-      return dateString; // Kembali ke string asli jika gagal
+  // Fungsi untuk memotong teks konten agar tidak terlalu panjang di beranda
+  const truncateContent = (content: string, wordLimit: number) => {
+    const words = content.split(' ');
+    if (words.length > wordLimit) {
+      return words.slice(0, wordLimit).join(' ') + '...';
     }
+    return content;
   };
 
   if (loading) {
@@ -127,15 +145,6 @@ const LatestAnnouncement: FC = () => {
     );
   }
 
-  // Fungsi untuk memotong teks konten agar tidak terlalu panjang di beranda
-  const truncateContent = (content: string, wordLimit: number) => {
-    const words = content.split(' ');
-    if (words.length > wordLimit) {
-      return words.slice(0, wordLimit).join(' ') + '...';
-    }
-    return content;
-  };
-
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
       <motion.div
@@ -154,6 +163,7 @@ const LatestAnnouncement: FC = () => {
           initial="hidden"
           whileInView="visible"
           variants={textVariants}
+          transition={{ delay: 0.3 }}
           className="relative z-10 text-xl sm:text-2xl font-extrabold text-blue-800 mb-3 leading-tight drop-shadow-sm"
         >
           Pengumuman Terbaru
@@ -163,11 +173,11 @@ const LatestAnnouncement: FC = () => {
           initial="hidden"
           whileInView="visible"
           variants={textVariants}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.5 }}
           className="relative z-10 p-4 md:p-6 bg-white/70 backdrop-blur-sm rounded-lg border border-blue-100 shadow-inner"
         >
           <p className="text-lg font-semibold text-gray-900 mb-2">{announcement.title}</p>
-          <p className="text-sm text-gray-600 mb-3">{formatDate(announcement.date)}</p>
+          <p className="text-sm text-gray-600 mb-3">{formatDate(announcement.publishDate)}</p>
           <p className="text-base text-gray-700 leading-relaxed mb-4">
             {truncateContent(announcement.content, 30)} {/* Potong konten menjadi 30 kata */}
           </p>

@@ -1,12 +1,11 @@
-// pages/dashboard/articles.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, FC } from 'react';
-import Layout from '../../components/Dashboard/Layout'; // Menggunakan Layout dashboard
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'; // Ikon untuk CRUD
-import ArticleFormModal from '@/components/Dashboard/ArticleFormModal'; // Komponen modal form
-import type { Article } from '@/types/Article'; // Tipe Article
-import type { Notification } from '@/types/Notification'; // Tipe Notification (asumsi ada)
+import Layout from '../../components/Dashboard/Layout';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import ArticleFormModal from '@/components/Dashboard/ArticleFormModal';
+import type { Article } from '@/types/Article';
+import type { Notification } from '@/types/Notification';
 
 const ArticlesPage: FC = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -23,10 +22,13 @@ const ArticlesPage: FC = () => {
     try {
       const response = await fetch('/api/articles');
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
+        // Gunakan pesan error dari backend jika ada, jika tidak, pakai pesan status
+        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+        setNotification({ message: errorMessage, type: 'error' });
+        throw new Error(errorMessage); // Tetap throw untuk menonaktifkan loading dan menampilkan error di halaman
       }
       const data: Article[] = await response.json();
-      // Urutkan artikel berdasarkan publishDate (terbaru pertama)
       const sortedData = data.sort((a, b) => {
         const dateA = new Date(a.publishDate).getTime();
         const dateB = new Date(b.publishDate).getTime();
@@ -54,18 +56,21 @@ const ArticlesPage: FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => { // ID artikel wajib string
+  const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
       try {
         const response = await fetch(`/api/articles?id=${id}`, {
           method: 'DELETE',
         });
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+          const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+          setNotification({ message: errorMessage, type: 'error' });
+          console.error('Backend Error Response for DELETE:', errorData);
+          return; // Hentikan eksekusi
         }
-        // Tidak perlu consume response jika API DELETE hanya mengembalikan pesan
         setNotification({ message: 'Artikel berhasil dihapus!', type: 'success' });
-        fetchArticles(); // Ambil ulang data setelah penghapusan
+        fetchArticles();
       } catch (e: unknown) {
         console.error("Failed to delete article:", e);
         if (e instanceof Error) {
@@ -79,7 +84,7 @@ const ArticlesPage: FC = () => {
 
   const handleSaveArticle = async (newArticle: Article) => {
     try {
-      const method = newArticle.id ? 'PUT' : 'POST'; // Jika ada ID, ini PUT; jika tidak, POST
+      const method = newArticle.id ? 'PUT' : 'POST';
       const response = await fetch('/api/articles', {
         method: method,
         headers: {
@@ -88,13 +93,22 @@ const ArticlesPage: FC = () => {
         body: JSON.stringify(newArticle),
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
+        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
+
+        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
+        if (response.status === 413) {
+          errorMessage = "Gagal menyimpan artikel. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
+        }
+        
+        setNotification({ message: errorMessage, type: 'error' });
+        console.error('Backend Error Response for SAVE:', errorData);
+        return; // Hentikan eksekusi
       }
-      // Tidak perlu consume response jika API POST/PUT hanya mengembalikan pesan
       setNotification({ message: `Artikel berhasil ${newArticle.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
       setIsModalOpen(false);
       setCurrentArticle(null);
-      fetchArticles(); // Ambil ulang data setelah penyimpanan
+      fetchArticles();
     } catch (e: unknown) {
       console.error("Failed to save article:", e);
       if (e instanceof Error) {
@@ -106,7 +120,7 @@ const ArticlesPage: FC = () => {
   };
 
   return (
-    <Layout setNotification={setNotification}> {/* Menggunakan Layout dashboard */}
+    <Layout setNotification={setNotification}>
       <div className="bg-gradient-to-b from-white to-blue-50 rounded-2xl shadow-xl p-8 animate-fade-in max-w-6xl mx-auto mt-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-blue-800 tracking-wide">

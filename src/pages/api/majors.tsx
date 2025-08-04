@@ -5,6 +5,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Major } from '@/types/Major'; // Ensure this path is correct
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb', // Sesuaikan dengan kebutuhan Anda
+    },
+  },
+};
+
 // In-memory data store for majors
 let majorsData: Major[] = [
   {

@@ -51,14 +51,11 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
       // Read file as Data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        // In a real application, you would upload this 'file' object to a storage service
-        // (e.g., Firebase Storage, AWS S3) and then save the returned URL to formData.image.
-        // For this example, we're using the Data URL for preview purposes.
         setFormData(prev => ({ ...prev, image: reader.result as string }));
       };
       reader.readAsDataURL(file); // Converts file to base64 string for preview
     } else {
-      // If no file is selected (e.g., user cancels file dialog)
+
       setFormData(prev => ({ ...prev, image: '' }));
     }
   };
