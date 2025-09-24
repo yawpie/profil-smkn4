@@ -123,13 +123,13 @@ export default function HeroSection() {
 
       <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white px-4 md:px-6">
         <div className="flex flex-col items-center space-y-2 md:space-y-3 lg:space-y-4 animate-fade-in-up">
-          <p className="text-lg md:text-2xl font-semibold drop-shadow-md">
+          <p className="font-dm text-lg md:text-2xl  drop-shadow-md">
             {currentSlide.title}
           </p>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-wide leading-tight drop-shadow-lg">
             {currentSlide.subtitle}
           </h1>
-          <p className="text-sm md:text-lg max-w-2xl font-light opacity-90 leading-relaxed drop-shadow-sm">
+          <p className="text-sm md:text-lg max-w-2xl  opacity-90 leading-relaxed drop-shadow-sm">
             {currentSlide.description}
           </p>
         </div>

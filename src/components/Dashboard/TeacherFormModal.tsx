@@ -19,7 +19,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({ teacher, onSave, onClose 
   });
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB in bytes
+  const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 5 MB in bytes
 
   useEffect(() => {
     // Memastikan form terisi dengan data terbaru saat modal dibuka atau 'teacher' berubah

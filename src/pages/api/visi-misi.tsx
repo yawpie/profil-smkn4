@@ -8,7 +8,7 @@ export default function handler(
 ) {
   if (req.method === 'GET') {
     const visiMisiData: VisiMisiData = {
-      visi: "Mewujudkan lulusan yang beriman, bertakwa, berakhlak mulia, cerdas, terampil, mandiri, dan berwawasan global.",
+      visi: "Menjadi Pusat Pendidikan dan Penelatihan Vokasi yang Berbasis Digital untuk Mewujudkan SDM Unggul Bersaing di Era Global",
       misi: [
         "Mengembangkan karakter siswa yang religius, jujur, disiplin, dan bertanggung jawab.",
         "Melaksanakan pembelajaran yang inovatif dan berpusat pada siswa untuk mengembangkan potensi akademik dan non-akademik.",

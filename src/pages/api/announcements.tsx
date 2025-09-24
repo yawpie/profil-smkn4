@@ -1,4 +1,3 @@
-// src/pages/api/announcements.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 import type { Announcement } from '@/types/Announcement';
 
@@ -79,7 +78,7 @@ export default function handler(
   res: NextApiResponse<Announcement[] | Announcement | { message: string; id?: string }>
 ) {
   if (req.method === 'GET') {
-    const { id, slug } = req.query;
+    const { id, slug, status } = req.query;
 
     if (id && typeof id === 'string') {
       const selectedAnnouncement = announcementsData.find((ann) => ann.id === id);
@@ -95,9 +94,16 @@ export default function handler(
       return res.status(404).json({ message: 'Pengumuman tidak ditemukan.' });
     }
 
-    // Jika tidak ada 'id' atau 'slug', kembalikan semua pengumuman yang Published
-    const publishedAnnouncements = announcementsData.filter(ann => ann.status === 'Published').sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
-    return res.status(200).json(publishedAnnouncements);
+    // --- LOGIKA PERBAIKAN DI SINI ---
+    if (status === 'all') {
+      // Mengembalikan semua pengumuman untuk halaman admin
+      const allAnnouncements = announcementsData.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
+      return res.status(200).json(allAnnouncements);
+    } else {
+      // Default: Mengembalikan hanya pengumuman yang Published untuk halaman publik
+      const publishedAnnouncements = announcementsData.filter(ann => ann.status === 'Published').sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
+      return res.status(200).json(publishedAnnouncements);
+    }
   } else if (req.method === 'POST') {
     const { title, content, summary, publishDate, status, slug } = req.body as Partial<Announcement>;
 

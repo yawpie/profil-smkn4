@@ -1,5 +1,4 @@
-// src/components/Dashboard/ExtracurricularFormModal.tsx
-import React, { useState, useEffect, FC, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
 import type { Extracurricular } from '@/types/Extracurricular';
 
 type ExtracurricularFormModalProps = {
@@ -19,7 +18,7 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
   });
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB in bytes
+  const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 5 MB in bytes
 
   useEffect(() => {
     if (extracurricular) {
@@ -55,7 +54,6 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
       };
       reader.readAsDataURL(file); // Converts file to base64 string for preview
     } else {
-
       setFormData(prev => ({ ...prev, image: '' }));
     }
   };
@@ -78,11 +76,11 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xs p-5 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative">
-        <h2 className="text-lg font-extrabold text-blue-800 mb-4 text-center">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl p-6 md:p-12 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-blue-800 mb-6 text-center">
           {extracurricular ? 'Edit Data Ekstrakurikuler' : 'Tambah Ekstrakurikuler'}
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nama Ekstrakurikuler */}
           <div>
             <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1">
@@ -94,7 +92,7 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
           </div>
@@ -110,9 +108,9 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               name="image"
               accept="image/*" // Restrict to image files
               onChange={handleFileChange} // Use the new file handler
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-            <p className="text-xs text-gray-500 mt-1">Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB</p>
+            <p className="text-sm text-gray-500 mt-1">Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB</p>
           </div>
 
           {/* Preview Gambar */}
@@ -121,10 +119,10 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               <img
                 src={formData.image}
                 alt="Preview Ekstrakurikuler"
-                className="h-20 w-20 object-cover rounded-full border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
-                onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                className="h-24 w-24 object-cover rounded-full border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
+                onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'https://placehold.co/80x80/e0e0e0/555555?text=File+Invalid'; // Smaller placeholder
+                  e.currentTarget.src = 'https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid'; // Smaller placeholder
                 }}
               />
             </div>
@@ -140,8 +138,8 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={3}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
+              rows={6}
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
             ></textarea>
           </div>
 
@@ -156,7 +154,7 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               name="coach"
               value={formData.coach}
               onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
           </div>
@@ -172,23 +170,23 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
               name="schedule"
               value={formData.schedule}
               onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
           </div>
 
           {/* Tombol Aksi */}
-          <div className="flex items-center justify-end gap-2 pt-3">
+          <div className="flex items-center justify-end gap-5 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm"
+              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
+              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
             >
               Simpan
             </button>
@@ -199,7 +197,7 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
       {/* Custom Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-xs w-full text-center animate-fade-in-up">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
             <p className="text-lg font-bold text-red-700 mb-4">{errorMessage}</p>
             <button
               onClick={handleCloseErrorModal}

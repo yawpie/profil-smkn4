@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       "picsum.photos",
       "cdn.pixabay.com",
       "i.pravatar.cc",
+      "via.placeholder.com", // <-- Domain baru ditambahkan di sini
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

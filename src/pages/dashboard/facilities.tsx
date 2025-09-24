@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Dashboard/Layout';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
 import FacilityFormModal from '../../components/Dashboard/FacilityFormModal';
-import type { Facility } from '@/types/Facility'; // Assuming you have a types.ts file for interfaces
-import type { Notification } from '@/types/Notification'; // Asumsikan Anda memiliki type Notification
+import type { Facility } from '@/types/Facility';
+import type { Notification } from '@/types/Notification';
 
 const FacilitiesPage = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentFacility, setCurrentFacility] = useState<Facility | null>(null);
-  const [notification, setNotification] = useState<Notification | null>(null); // Gunakan type Notification
+  const [notification, setNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,15 +18,14 @@ const FacilitiesPage = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/facilities'); // Fetch from your API Route
+      const response = await fetch('/api/facilities');
       if (!response.ok) {
-        // Tangani error dari API dengan lebih baik
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
         throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
       }
       const data: Facility[] = await response.json();
       setFacilities(data);
-    } catch (e: unknown) { // Gunakan unknown untuk type safety
+    } catch (e: unknown) {
       console.error("Failed to fetch facilities:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat data fasilitas. Detail: ${e.message}`);
@@ -39,7 +38,7 @@ const FacilitiesPage = () => {
   };
 
   useEffect(() => {
-    fetchFacilities(); // Call fetchFacilities when the component mounts
+    fetchFacilities();
   }, []);
 
   const handleAddEdit = (facility: Facility | null = null) => {
@@ -57,9 +56,9 @@ const FacilitiesPage = () => {
           const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
           throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
         }
-        await response.json(); // Consume the response
+        await response.json();
         setNotification({ message: 'Fasilitas berhasil dihapus!', type: 'success' });
-        fetchFacilities(); // Re-fetch data after deletion
+        fetchFacilities();
       } catch (e: unknown) {
         console.error("Gagal menghapus fasilitas:", e);
         if (e instanceof Error) {
@@ -86,22 +85,21 @@ const FacilitiesPage = () => {
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
         let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
 
-        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
         if (response.status === 413) {
           errorMessage = "Gagal menyimpan fasilitas. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
         }
         
         setNotification({ message: errorMessage, type: 'error' });
         console.error('Backend Error Response for SAVE:', errorData);
-        return; // Hentikan eksekusi fungsi
+        return;
       }
 
-      await response.json(); // Consume the response
+      await response.json();
       setNotification({ message: `Fasilitas berhasil ${newFacility.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
-      setIsModalOpen(false); // Tutup modal hanya jika berhasil
+      setIsModalOpen(false);
       setCurrentFacility(null);
-      fetchFacilities(); // Re-fetch data after saving
-    } catch (e: unknown) { // Gunakan unknown untuk type safety
+      fetchFacilities();
+    } catch (e: unknown) {
       console.error("Gagal menyimpan fasilitas:", e);
       if (e instanceof Error) {
         setNotification({ message: `Gagal menyimpan fasilitas: ${e.message}`, type: 'error' });
@@ -113,86 +111,184 @@ const FacilitiesPage = () => {
 
   return (
     <Layout setNotification={setNotification}>
-      <div className="bg-gradient-to-b from-white to-blue-50 rounded-2xl shadow-xl p-8 animate-fade-in max-w-6xl mx-auto mt-6">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-800 tracking-wide">
-            🏫 Manajemen Fasilitas
-          </h1>
-          <button
-            onClick={() => handleAddEdit()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-all duration-200 shadow-md"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Tambah Fasilitas
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="text-center text-gray-600 py-8">Memuat data fasilitas...</div>
-        ) : error ? (
-          <div className="text-center py-8 text-red-600">{error}</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-              <thead className="bg-blue-100">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Nama</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Gambar</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Deskripsi</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Lokasi</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-blue-800 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-blue-800 uppercase tracking-wider">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {facilities.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-6 text-center text-gray-500">Belum ada data fasilitas.</td>
-                  </tr>
-                ) : (
-                  facilities.map((item) => (
-                    <tr key={item.id} className="hover:bg-blue-50 transition-colors duration-100">
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{item.name}</td>
-                      <td className="px-6 py-4">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="h-12 w-12 rounded-lg object-cover border border-blue-200 shadow" />
-                        ) : (
-                          <div className="h-12 w-12 rounded-lg bg-gray-300 flex items-center justify-center text-gray-600 text-xs">No Img</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 line-clamp-2">{item.description}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700">{item.location}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.status === 'Tersedia' ? 'bg-green-100 text-green-800' : item.status === 'Digunakan' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm">
-                        <div className="flex justify-end gap-3">
-                          <button onClick={() => handleAddEdit(item)} className="p-2 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors duration-200" title="Edit">
-                            <PencilIcon className="h-5 w-5" />
-                          </button>
-                          <button onClick={() => handleDelete(item.id)} className="p-2 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors duration-200" title="Hapus">
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-100 rounded-xl">
+                  <BuildingOfficeIcon className="h-8 w-8 text-indigo-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Manajemen Fasilitas</h1>
+                  <p className="text-gray-600 mt-1">Kelola dan pantau semua fasilitas institusi</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleAddEdit()}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Tambah Fasilitas
+              </button>
+            </div>
           </div>
-        )}
 
-        {isModalOpen && (
-          <FacilityFormModal
-            facility={currentFacility}
-            onSave={handleSaveFacility}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+          {/* Content Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                  <p className="text-gray-600 font-medium">Memuat data fasilitas...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="p-4 bg-red-100 rounded-full inline-block mb-4">
+                    <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-red-600 font-semibold text-lg mb-2">Terjadi Kesalahan</p>
+                  <p className="text-gray-600">{error}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Fasilitas
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Gambar
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Deskripsi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Lokasi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {facilities.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="p-4 bg-gray-100 rounded-full">
+                              <BuildingOfficeIcon className="h-12 w-12 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-gray-900 font-semibold text-lg">Belum ada fasilitas</p>
+                              <p className="text-gray-500 mt-1">Mulai dengan menambahkan fasilitas pertama Anda</p>
+                            </div>
+                            <button
+                              onClick={() => handleAddEdit()}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200"
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                              Tambah Fasilitas
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      facilities.map((item, index) => (
+                        <tr key={item.id} className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <p className="text-sm font-semibold text-gray-900">{item.name}</p>
+                              <p className="text-xs text-gray-500 mt-1">ID: {item.id}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {item.image ? (
+                              <div className="relative">
+                                <img 
+                                  src={item.image} 
+                                  alt={item.name} 
+                                  className="h-16 w-16 rounded-lg object-cover border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200" 
+                                />
+                              </div>
+                            ) : (
+                              <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-2 border-gray-200">
+                                <BuildingOfficeIcon className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-700 max-w-xs truncate" title={item.description}>
+                              {item.description}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-700 font-medium">{item.location}</p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              item.status === 'Tersedia' 
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                : item.status === 'Digunakan' 
+                                ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                                : 'bg-red-100 text-red-800 border border-red-200'
+                            }`}>
+                              <span className={`w-2 h-2 rounded-full mr-2 ${
+                                item.status === 'Tersedia' 
+                                  ? 'bg-emerald-500' 
+                                  : item.status === 'Digunakan' 
+                                  ? 'bg-amber-500' 
+                                  : 'bg-red-500'
+                              }`}></span>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleAddEdit(item)} 
+                                className="p-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 transition-all duration-200" 
+                                title="Edit Fasilitas"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(item.id)} 
+                                className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all duration-200" 
+                                title="Hapus Fasilitas"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {isModalOpen && (
+        <FacilityFormModal
+          facility={currentFacility}
+          onSave={handleSaveFacility}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </Layout>
   );
 };

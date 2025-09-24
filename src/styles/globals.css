@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* --font-merriweather-sans: "Merriweather Sans", sans-serif; */
 }
 
 @theme inline {
@@ -12,15 +13,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@layer utilities {
+  .font-dm-serif {
+    font-family: var(--font-dm-serif-text);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ededed;
+    --foreground: #0a0a0a;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* font-family: var(--font-sans); */
 }

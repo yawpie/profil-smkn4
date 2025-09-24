@@ -4,15 +4,13 @@ import React, { useState, useEffect, FC, useCallback } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { Article } from '@/types/Article';
 
-
-const getTruncatedText = (content: string, summary?: string, maxLength: number = 150): string => {
+const getTruncatedText = (content: string, summary?: string, maxLength: number = 120): string => {
   if (summary) {
     return summary.length > maxLength ? summary.substring(0, maxLength) + '...' : summary;
   }
   if (content === null || content === undefined) {
     return '';
   }
-  // Pastikan content adalah string sebelum memanggil .length atau .substring
   return String(content).length > maxLength ? String(content).substring(0, maxLength) + '...' : String(content);
 };
 
@@ -20,13 +18,13 @@ const formatDate = (dateString: string): string => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) { // Validasi tanggal tidak valid
+    if (isNaN(date.getTime())) {
       throw new Error('Invalid date string');
     }
     return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch (e) {
     console.error("Error formatting date:", e);
-    return dateString; // Mengembalikan string asli jika parsing gagal
+    return dateString;
   }
 };
 
@@ -35,53 +33,28 @@ const ArticleSection: FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Framer Motion Variants
+  // Simplified Motion Variants
   const sectionHeaderVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const featuredCardVariants: Variants = {
-    hidden: { opacity: 0, y: 50, scale: 0.98, rotateX: 10 },
+  const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
-      rotateX: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.5,
         ease: "easeOut",
-        type: "spring",
-        stiffness: 90,
-        damping: 15,
       }
     },
   };
 
-  const smallCardVariants: Variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.98 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.7,
-        ease: "easeOut",
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
-      }
-    },
-  };
-
-  // Fungsi untuk mengambil artikel dari backend/API
   const fetchArticlesFromBackend = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      // Menggunakan endpoint /api/articles.
-      // API Anda sudah mengembalikan yang terbaru (published) di indeks 0.
-      // Jika Anda hanya ingin mengambil 5, pertimbangkan untuk menambahkan parameter limit ke API jika memungkinkan.
       const response = await fetch('/api/articles');
 
       if (!response.ok) {
@@ -89,8 +62,6 @@ const ArticleSection: FC = () => {
       }
       const data: Article[] = await response.json();
       
-      // API Anda sudah mengurutkan berdasarkan publishDate (terbaru pertama)
-      // dan menyaring yang 'Published'. Jadi kita tinggal ambil 5 teratas.
       setArticles(data.slice(0, 5));
     } catch (e: unknown) {
       console.error("Gagal mengambil artikel:", e);
@@ -112,40 +83,44 @@ const ArticleSection: FC = () => {
   const smallArticles: Article[] = articles.length > 1 ? articles.slice(1, 5) : [];
 
   return (
-    <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 bg-gray-50 rounded-3xl mb-16">
+    <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white border border-gray-200 shadow-lg mb-8">
+      {/* Header */}
       <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.3 }}
         variants={sectionHeaderVariants}
-        className="text-center mb-12"
+        className="border-b border-gray-200 pb-4 mb-6"
       >
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-3">
-          Artikel <span className="text-teal-700">Terbaru</span>
-        </h2>
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 bg-blue-600"></div>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            Artikel Terbaru
+          </h2>
+        </div>
       </motion.div>
 
-      {/* Loading State with Skeleton */}
+      {/* Loading State */}
       {loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           {/* Featured Article Skeleton */}
-          <div className="lg:col-span-1 bg-gray-100 rounded-xl shadow-md overflow-hidden animate-pulse">
-            <div className="w-full h-80 md:h-96 bg-gray-300"></div>
-            <div className="p-6">
-              <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
-              <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+          <div className="lg:col-span-2 bg-gray-100 border border-gray-200 animate-pulse">
+            <div className="w-full h-64 bg-gray-300"></div>
+            <div className="p-4">
+              <div className="h-4 bg-gray-300 w-1/4 mb-2"></div>
+              <div className="h-5 bg-gray-300 w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-300 w-1/2"></div>
             </div>
           </div>
           {/* Small Articles Skeleton */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-100 rounded-xl shadow-md overflow-hidden animate-pulse">
-                <div className="w-full h-40 bg-gray-300"></div>
-                <div className="p-4">
-                  <div className="h-3 bg-gray-300 rounded w-1/3 mb-1"></div>
-                  <div className="h-5 bg-gray-300 rounded w-full mb-2"></div>
-                  <div className="h-3 bg-gray-300 rounded w-2/3"></div>
+              <div key={i} className="bg-gray-100 border border-gray-200 animate-pulse">
+                <div className="w-full h-32 bg-gray-300"></div>
+                <div className="p-3">
+                  <div className="h-3 bg-gray-300 w-1/3 mb-1"></div>
+                  <div className="h-4 bg-gray-300 w-full mb-2"></div>
+                  <div className="h-3 bg-gray-300 w-2/3"></div>
                 </div>
               </div>
             ))}
@@ -155,11 +130,11 @@ const ArticleSection: FC = () => {
 
       {/* Error State */}
       {error && (
-        <div className="text-center py-10 bg-red-50 rounded-xl shadow-lg border border-red-200">
-          <p className="text-xl text-red-700 font-semibold">{error}</p>
+        <div className="text-center py-8 bg-red-50 border border-red-200">
+          <p className="text-red-800 font-medium mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+            className="px-6 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors duration-200"
           >
             Coba Lagi
           </button>
@@ -168,71 +143,94 @@ const ArticleSection: FC = () => {
 
       {/* Empty State */}
       {!loading && !error && articles.length === 0 && (
-        <div className="text-center py-10 bg-blue-50 rounded-xl shadow-lg border border-blue-200">
-          <p className="text-lg text-gray-600">Belum ada artikel yang tersedia saat ini.</p>
+        <div className="text-center py-8 bg-gray-50 border border-gray-200">
+          <p className="text-gray-600 font-medium">Belum ada artikel yang tersedia saat ini.</p>
         </div>
       )}
 
-      {/* Main Article Grid (Featured & Small Articles) */}
+      {/* Main Article Grid */}
       {!loading && !error && articles.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-
-          {/* Render Featured Article (Left Column) */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          
+          {/* Featured Article */}
           {featuredArticle && (
             <motion.div
-              variants={featuredCardVariants}
+              variants={cardVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              className="lg:col-span-1"
+              className="lg:col-span-2"
             >
-              <Link href={`/artikel/${featuredArticle.id}`} className="block group relative overflow-hidden rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.01] border border-transparent hover:border-teal-300">
-                <div className="relative w-full h-80 md:h-96">
+              <Link href={`/artikel/${featuredArticle.id}`} className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <div className="relative w-full h-64">
                   <Image
                     src={featuredArticle.image || '/images/default_article.png'}
                     alt={featuredArticle.title}
-                    fill // Menggunakan fill sebagai pengganti layout="fill"
-                    style={{ objectFit: 'cover' }} // Properti objectFit dipindahkan ke style
-                    className="group-hover:scale-105 transition-transform duration-500 brightness-75 group-hover:brightness-90"
+                    fill
+                    style={{ objectFit: 'cover' }}
+                    className="group-hover:opacity-90 transition-opacity duration-300"
                     quality={80}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-100"></div>
-                  <div className="absolute bottom-0 left-0 p-6 text-white z-10">
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 leading-tight group-hover:text-blue-200 transition-colors duration-300">{featuredArticle.title}</h3>
-                    <p className="text-sm opacity-80">{formatDate(featuredArticle.publishDate)}</p>
+                  <div className="absolute top-3 left-3">
+                    <span className="bg-blue-600 text-white text-xs font-medium px-2 py-1">
+                      FEATURED
+                    </span>
                   </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(featuredArticle.publishDate)}
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
+                    {featuredArticle.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {getTruncatedText(featuredArticle.content, featuredArticle.summary)}
+                  </p>
                 </div>
               </Link>
             </motion.div>
           )}
 
-          {/* Render Small Articles (Two Right Columns) */}
-          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Small Articles */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
               {smallArticles.map((article, index) => (
                 <motion.div
                   key={article.id}
-                  variants={smallCardVariants}
+                  variants={cardVariants}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.1 }}
-                  transition={{ delay: index * 0.12 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <Link href={`/artikel/${article.slug || article.id}`} className="block group relative overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] border border-transparent hover:border-cyan-300">
-                    <div className="relative w-full h-40">
+                  <Link href={`/artikel/${article.slug || article.id}`} className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 h-full">
+                    <div className="relative w-full h-32">
                       <Image
                         src={article.image || '/images/default_article.png'}
                         alt={article.title}
-                        fill // Menggunakan fill sebagai pengganti layout="fill"
-                        style={{ objectFit: 'cover' }} // Properti objectFit dipindahkan ke style
-                        className="group-hover:scale-105 transition-transform duration-500 brightness-75 group-hover:brightness-90"
+                        fill
+                        style={{ objectFit: 'cover' }}
+                        className="group-hover:opacity-90 transition-opacity duration-300"
                         quality={70}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100"></div>
-                      <div className="absolute bottom-0 left-0 p-4 text-white z-10">
-                        <h3 className="text-base font-bold mb-1 leading-tight group-hover:text-blue-200 transition-colors duration-300">{article.title}</h3>
-                        <p className="text-xs opacity-80">{formatDate(article.publishDate)}</p>
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {formatDate(article.publishDate)}
                       </div>
+                      <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200 mb-1">
+                        {article.title}
+                      </h3>
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {getTruncatedText(article.content, article.summary, 80)}
+                      </p>
                     </div>
                   </Link>
                 </motion.div>
@@ -242,11 +240,14 @@ const ArticleSection: FC = () => {
         </div>
       )}
 
-      {/* "View All Articles" Button */}
+      {/* View All Button */}
       {!loading && !error && articles.length > 0 && (
-        <div className="text-center mt-12">
-          <Link href="/artikel" className="inline-block bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 shadow-lg transform hover:scale-105 text-md">
-            Lihat Semua Artikel &rarr;
+        <div className="text-center mt-6 pt-6 border-t border-gray-200">
+          <Link href="/artikel" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200">
+            <span>Lihat Semua Artikel</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
       )}

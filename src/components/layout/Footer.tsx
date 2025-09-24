@@ -1,6 +1,6 @@
 import React, { FC } from 'react'; // Import FC for Functional Component typing
 import Link from 'next/link';
-import { FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp } from 'react-icons/fa';
+import { FaPhone, FaEnvelope, FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp, FaYoutube } from 'react-icons/fa';
 
 const Footer: FC = () => {
   const currentYear: number = new Date().getFullYear(); // Get current year dynamically
@@ -56,7 +56,7 @@ const Footer: FC = () => {
           <div>
             <h3 className="text-xl font-bold mb-5 text-blue-100 border-b border-blue-700 pb-2">Navigasi Cepat</h3>
             <ul className="text-sm space-y-3">
-              <li><Link href="/profil/tentang-kami" className="text-blue-200 hover:text-blue-50 transition-colors duration-300">Tentang Kami</Link></li>
+              <li><Link href="/kontak" className="text-blue-200 hover:text-blue-50 transition-colors duration-300">Tentang Kami</Link></li>
               <li><Link href="/jurusan" className="text-blue-200 hover:text-blue-50 transition-colors duration-300">Pilihan Jurusan</Link></li>
               <li><Link href="/fasilitas" className="text-blue-200 hover:text-blue-50 transition-colors duration-300">Fasilitas</Link></li>
               <li><Link href="/daftar-guru" className="text-blue-200 hover:text-blue-50 transition-colors duration-300">Daftar Guru</Link></li>
@@ -74,8 +74,8 @@ const Footer: FC = () => {
               <a href="https://www.instagram.com/smkn4mtr" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors duration-300 transform hover:scale-110">
                 <FaInstagram size={24} />
               </a>
-              <a href="https://www.tiktok.com/@smeka.media" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors duration-300 transform hover:scale-110">
-                <FaTiktok size={24} />
+              <a href="https://www.youtube.com/@media.smkn4mtr" target="_blank" rel="noopener noreferrer" className="text-blue-200 hover:text-white transition-colors duration-300 transform hover:scale-110">
+                <FaYoutube size={24} />
               </a>
             </div>
             <Link href="/register/login" className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">

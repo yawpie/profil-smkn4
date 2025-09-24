@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, FC } from 'react';
 import Layout from '../../components/Dashboard/Layout';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline';
 import AnnouncementFormModal from '../../components/Dashboard/AnnouncementFormModal';
 import { Announcement } from '@/types/Announcement';
 import type { Notification } from '@/types/Notification';
 
-interface CustomModalProps {
+type CustomModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onConfirm?: () => void;
@@ -21,27 +21,33 @@ interface CustomModalProps {
 const CustomModal: FC<CustomModalProps> = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Ya", cancelText = "Batal", type = 'info' }) => {
   if (!isOpen) return null;
 
-  const bgColor = type === 'error' ? 'bg-red-100' : type === 'confirm' ? 'bg-yellow-100' : 'bg-blue-100';
-  const textColor = type === 'error' ? 'text-red-800' : type === 'confirm' ? 'text-yellow-800' : 'text-blue-800';
-  const buttonConfirmBg = type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700';
-
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className={`bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-fade-in-up relative ${bgColor} border ${type === 'error' ? 'border-red-200' : type === 'confirm' ? 'border-yellow-200' : 'border-blue-200'}`}>
-        <h3 className={`text-xl font-bold mb-4 ${textColor}`}>{title}</h3>
-        <p className={`text-gray-700 mb-6 ${textColor}`}>{message}</p>
-        <div className="flex justify-end space-x-3">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 bg-red-100 rounded-full">
+            <TrashIcon className="h-6 w-6 text-red-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <p className="text-gray-600 text-sm mt-1">Tindakan ini tidak dapat dibatalkan</p>
+          </div>
+        </div>
+        
+        <p className="text-gray-700 mb-6">{message}</p>
+        
+        <div className="flex justify-end gap-3">
           {type === 'confirm' && (
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-100 transition"
+              className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
             >
               {cancelText}
             </button>
           )}
           <button
             onClick={onConfirm || onClose}
-            className={`px-5 py-2 rounded-lg text-white font-medium transition shadow ${buttonConfirmBg}`}
+            className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
           >
             {confirmText}
           </button>
@@ -61,26 +67,21 @@ const AnnouncementsPage: FC = () => {
 
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
   const [confirmActionId, setConfirmActionId] = useState<string | null>(null);
-  // State isErrorModalOpen dan errorModalMessage bisa dihapus, karena kita akan menggunakan notifikasi
-  const [isErrorModalOpen, setIsErrorModalOpen] = useState<boolean>(false);
-  const [errorModalMessage, setErrorModalMessage] = useState<string>('');
 
-
-  // Function to fetch announcement data from API
   const fetchAnnouncements = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/announcements');
+      const response = await fetch('/api/announcements?status=all');
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
         const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
         setNotification({ message: errorMessage, type: 'error' });
-        throw new Error(errorMessage); // Ini akan menangani error di `catch` block di bawah
+        throw new Error(errorMessage);
       }
       const data: Announcement[] = await response.json();
       setAnnouncements(data);
-    } catch (e: unknown) { // Gunakan 'unknown' untuk type safety
+    } catch (e: unknown) {
       console.error("Failed to fetch announcements:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat data pengumuman. Detail: ${e.message}`);
@@ -118,12 +119,12 @@ const AnnouncementsPage: FC = () => {
         const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
         setNotification({ message: errorMessage, type: 'error' });
         console.error('Backend Error Response for DELETE:', errorData);
-        return; // Hentikan eksekusi
+        return;
       }
       await response.json();
       setNotification({ message: 'Pengumuman berhasil dihapus!', type: 'success' });
       fetchAnnouncements();
-    } catch (e: unknown) { // Gunakan 'unknown' untuk type safety
+    } catch (e: unknown) {
       console.error("Gagal menghapus pengumuman:", e);
       if (e instanceof Error) {
         setNotification({ message: `Gagal menghapus pengumuman: ${e.message}`, type: 'error' });
@@ -151,21 +152,20 @@ const AnnouncementsPage: FC = () => {
         const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
         let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
 
-        // Cek apakah error 413, lalu berikan pesan yang lebih jelas
         if (response.status === 413) {
           errorMessage = "Gagal menyimpan pengumuman. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
         }
         
         setNotification({ message: errorMessage, type: 'error' });
         console.error('Backend Error Response for SAVE:', errorData);
-        return; // Hentikan eksekusi
+        return;
       }
       await response.json();
       setNotification({ message: `Pengumuman berhasil ${newAnnouncement.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
       setIsModalOpen(false);
       setCurrentAnnouncement(null);
       fetchAnnouncements();
-    } catch (e: unknown) { // Ganti 'any' dengan 'unknown'
+    } catch (e: unknown) {
       console.error("Failed to save announcement:", e);
       if (e instanceof Error) {
         setNotification({ message: `Gagal menyimpan pengumuman: ${e.message}`, type: 'error' });
@@ -175,110 +175,198 @@ const AnnouncementsPage: FC = () => {
     }
   };
 
+  // Fungsi helper untuk mendapatkan kelas warna status
+  const getStatusColorClass = (status: string) => {
+    if (status === 'Published') {
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    }
+    return 'bg-amber-100 text-amber-800 border-amber-200';
+  };
+
+  const getStatusDot = (status: string) => {
+    if (status === 'Published') {
+      return 'bg-emerald-500';
+    }
+    return 'bg-amber-500';
+  };
+
   return (
     <Layout setNotification={setNotification}>
-      <div className="p-6 animate-fade-in">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-            <span>📢</span>
-            <span className="text-3xl font-bold text-blue-800 tracking-wide">Manajemen Pengumuman</span>
-          </h1>
-
-          <button
-            onClick={() => handleAddEdit()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-all shadow-md"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Tambah Pengumuman
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-10 text-gray-600 text-sm">Memuat data pengumuman...</div>
-        ) : error ? (
-          <div className="text-center py-10 text-red-600">{error}</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
-              <thead className="bg-blue-100 text-blue-800 uppercase text-xs font-semibold tracking-wider">
-                <tr>
-                  <th className="px-6 py-3 text-left">Judul</th>
-                  <th className="px-6 py-3 text-left">Konten</th>
-                  <th className="px-6 py-3 text-left">Tanggal Publikasi</th>
-                  <th className="px-6 py-3 text-left">Status</th>
-                  <th className="px-6 py-3 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {announcements.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-6 text-center text-gray-500 bg-gray-50">
-                      Belum ada data pengumuman.
-                    </td>
-                  </tr>
-                ) : (
-                  announcements.map((item, index) => (
-                    <tr
-                      key={item.id || `announcement-${index}`}
-                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50 hover:bg-gray-100"}
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.title}</td>
-                      <td className="px-6 py-4 text-sm text-gray-700 line-clamp-2">{item.content}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
-                        {item.publishDate}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        {/* Status logic needs to be implemented */}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleAddEdit(item)}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full transition"
-                            title="Edit"
-                          >
-                            <PencilIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(item.id!)}
-                            className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-full transition"
-                            title="Hapus"
-                          >
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-100 rounded-xl">
+                  <SpeakerWaveIcon className="h-8 w-8 text-orange-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Manajemen Pengumuman</h1>
+                  <p className="text-gray-600 mt-1">Kelola dan publikasikan pengumuman penting</p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleAddEdit()}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Tambah Pengumuman
+              </button>
+            </div>
           </div>
-        )}
 
-        {isModalOpen && (
-          <AnnouncementFormModal
-            announcement={currentAnnouncement}
-            onSave={handleSaveAnnouncement}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
-
-        {/* Confirmation Modal for Delete */}
-        <CustomModal
-          isOpen={isConfirmModalOpen}
-          onClose={() => setIsConfirmModalOpen(false)}
-          onConfirm={confirmDelete}
-          title="Konfirmasi Penghapusan"
-          message="Apakah Anda yakin ingin menghapus pengumuman ini secara permanen?"
-          confirmText="Hapus"
-          cancelText="Batal"
-          type="confirm"
-        />
-
-        {/* Error Modal */}
-        {/* Hapus CustomModal ini, karena kita akan menggunakan setNotification yang sudah terintegrasi dengan Layout */}
+          {/* Content Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                  <p className="text-gray-600 font-medium">Memuat data pengumuman...</p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="text-center">
+                  <div className="p-4 bg-red-100 rounded-full inline-block mb-4">
+                    <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-red-600 font-semibold text-lg mb-2">Terjadi Kesalahan</p>
+                  <p className="text-gray-600">{error}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Pengumuman
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Konten
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Tanggal Publikasi
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Aksi
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {announcements.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-6 py-16 text-center">
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="p-4 bg-gray-100 rounded-full">
+                              <SpeakerWaveIcon className="h-12 w-12 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-gray-900 font-semibold text-lg">Belum ada pengumuman</p>
+                              <p className="text-gray-500 mt-1">Mulai dengan menambahkan pengumuman pertama Anda</p>
+                            </div>
+                            <button
+                              onClick={() => handleAddEdit()}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors duration-200"
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                              Tambah Pengumuman
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      announcements.map((item, index) => (
+                        <tr key={item.id || `announcement-${index}`} className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <p className="text-sm font-semibold text-gray-900 line-clamp-2" title={item.title}>
+                                {item.title}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">ID: {item.id}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm text-gray-700 max-w-xs truncate" title={item.content}>
+                              {item.content}
+                            </p>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-col">
+                              <p className="text-sm text-gray-700 font-medium">
+                                {new Date(item.publishDate).toLocaleDateString('id-ID', { 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(item.publishDate).toLocaleDateString('id-ID', { 
+                                  weekday: 'long' 
+                                })}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColorClass(item.status)}`}>
+                              <span className={`w-2 h-2 rounded-full mr-2 ${getStatusDot(item.status)}`}></span>
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                onClick={() => handleAddEdit(item)} 
+                                className="p-2 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 transition-all duration-200" 
+                                title="Edit Pengumuman"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteClick(item.id!)} 
+                                className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all duration-200" 
+                                title="Hapus Pengumuman"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {isModalOpen && (
+        <AnnouncementFormModal
+          announcement={currentAnnouncement}
+          onSave={handleSaveAnnouncement}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
+
+      {/* Confirmation Modal for Delete */}
+      <CustomModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Konfirmasi Penghapusan"
+        message="Apakah Anda yakin ingin menghapus pengumuman ini secara permanen?"
+        confirmText="Hapus Pengumuman"
+        cancelText="Batal"
+        type="confirm"
+      />
     </Layout>
   );
 };

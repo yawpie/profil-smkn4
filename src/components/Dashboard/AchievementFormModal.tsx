@@ -1,52 +1,50 @@
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
-import type { Article } from '@/types/Article'; // Import tipe Article
+import type { Achievement } from '@/types/Achievement';
 
-type ArticleFormModalProps = {
-  article: Article | null; // Artikel yang sedang diedit (bisa null jika menambah baru)
-  onSave: (article: Article) => void; // Fungsi onSave menerima objek Article yang lengkap
+type AchievementFormModalProps = {
+  achievement: Achievement | null; // Prestasi yang sedang diedit (bisa null jika menambah baru)
+  onSave: (achievement: Achievement, imageFile: File | null) => void; // Mengirimkan objek Achievement dan file gambar
   onClose: () => void;
 };
 
-const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose }) => {
-  // Inisialisasi formData dengan Article
-  const [formData, setFormData] = useState<Article>({
-    id: article?.id || '',
-    title: article?.title || '',
-    image: article?.image || '',
-    content: article?.content || '',
-    author: article?.author || '',
-    publishDate: article?.publishDate || new Date().toISOString().slice(0, 10),
-    summary: article?.summary || '',
+const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSave, onClose }) => {
+  const [formData, setFormData] = useState<Achievement>({
+    id: achievement?.id || '',
+    title: achievement?.title || '',
+    image: achievement?.image || '',
+    description: achievement?.description || '',
+    content: achievement?.content || '',
+    publishDate: achievement?.publishDate?.split('T')[0] || new Date().toISOString().slice(0, 10),
   });
-
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB in bytes
+  const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB in bytes
 
   useEffect(() => {
-    if (article) {
+    if (achievement) {
       setFormData({
-        id: article.id,
-        title: article.title,
-        image: article.image || '',
-        content: article.content,
-        author: article.author,
-        publishDate: article.publishDate,
-        summary: article.summary || '',
+        id: achievement.id,
+        title: achievement.title,
+        image: achievement.image || '',
+        description: achievement.description,
+        content: achievement.content,
+        publishDate: achievement.publishDate?.split('T')[0] || '',
       });
+      setImageFile(null); // Reset file saat beralih ke mode edit
     } else {
       setFormData({
         id: '',
         title: '',
         image: '',
+        description: '',
         content: '',
-        author: '',
         publishDate: new Date().toISOString().slice(0, 10),
-        summary: '',
       });
+      setImageFile(null);
     }
     setErrorMessage('');
-  }, [article]);
+  }, [achievement]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -60,40 +58,38 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
         setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
         setShowErrorModal(true);
         e.target.value = '';
-        setFormData(prev => ({ ...prev, image: '' }));
+        setImageFile(null);
         return;
       }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      setImageFile(file);
+      // Buat URL sementara untuk preview
+      const previewURL = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, image: previewURL }));
     } else {
-      setFormData(prev => ({ ...prev, image: '' }));
+      setImageFile(null);
+      setFormData(prev => ({ ...prev, image: achievement?.image || '' }));
     }
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.content || !formData.author || !formData.publishDate) {
-      setErrorMessage('Judul, Konten, Penulis, dan Tanggal Publikasi wajib diisi!');
+    if (!formData.title || !formData.description || !formData.content || !formData.publishDate) {
+      setErrorMessage('Judul, Ringkasan, Konten, dan Tanggal Publikasi wajib diisi!');
       setShowErrorModal(true);
       return;
     }
 
-    const articleToSave: Article = {
+    const achievementToSave: Achievement = {
       id: formData.id ?? '',
       title: formData.title,
-      image: formData.image,
+      image: formData.image, // URL sementara
+      description: formData.description,
       content: formData.content,
-      author: formData.author,
       publishDate: formData.publishDate,
-      summary: formData.summary,
     };
 
-    onSave(articleToSave);
+    onSave(achievementToSave, imageFile);
   };
 
   const handleCloseErrorModal = () => {
@@ -101,18 +97,18 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
     setErrorMessage('');
   };
 
+  const imageUrl = imageFile ? URL.createObjectURL(imageFile) : formData.image;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-7xl p-4 md:p-8 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative max-h-[90vh] overflow-y-auto">
-        {/* Mengubah ukuran judul */}
-        <h2 className="text-lg sm:text-xl font-extrabold text-blue-800 mb-6 text-center">
-          {article ? 'Edit Data Artikel' : 'Tambah Artikel Baru'}
+        <h2 className="text-lg sm:text-xl font-extrabold text-green-800 mb-6 text-center">
+          {achievement ? 'Edit Data Prestasi' : 'Tambah Prestasi Baru'}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Judul Artikel */}
           <div>
             <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">
-              Judul Artikel:
+              Judul Prestasi:
             </label>
             <input
               type="text"
@@ -120,15 +116,14 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400"
               required
             />
           </div>
 
-          {/* Unggah Gambar Artikel */}
           <div>
             <label htmlFor="image" className="block text-sm font-semibold text-gray-700 mb-1">
-              Unggah Gambar Artikel:
+              Unggah Gambar Prestasi:
             </label>
             <input
               type="file"
@@ -136,19 +131,17 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
               name="image"
               accept="image/*"
               onChange={handleFileChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              required
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
             />
             <p className="text-sm text-gray-500 mt-1">Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB</p>
           </div>
 
-          {/* Preview Gambar */}
-          {formData.image && (
+          {imageUrl && (
             <div className="mt-1 flex justify-center">
               <img
-                src={formData.image}
-                alt="Preview Artikel"
-                className="h-24 w-24 object-cover rounded-xl border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
+                src={imageUrl}
+                alt="Preview Prestasi"
+                className="h-24 w-24 object-cover rounded-xl border-4 border-green-200 shadow-lg transition transform hover:scale-105 duration-200"
                 onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src = 'https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid';
@@ -157,10 +150,24 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
             </div>
           )}
 
-          {/* Isi Artikel */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+              Ringkasan Prestasi:
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400 resize-y"
+              required
+            ></textarea>
+          </div>
+
           <div>
             <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-1">
-              Isi Artikel:
+              Isi Prestasi:
             </label>
             <textarea
               id="content"
@@ -168,29 +175,12 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
               value={formData.content}
               onChange={handleChange}
               rows={6}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400 resize-y"
               required
             ></textarea>
           </div>
           
-          {/* Penulis & Tanggal Publikasi (Side-by-side on larger screens) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Penulis */}
-            <div>
-              <label htmlFor="author" className="block text-sm font-semibold text-gray-700 mb-1">
-                Penulis:
-              </label>
-              <input
-                type="text"
-                id="author"
-                name="author"
-                value={formData.author}
-                onChange={handleChange}
-                className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
-                required
-              />
-            </div>
-            {/* Tanggal Publikasi */}
             <div>
               <label htmlFor="publishDate" className="block text-sm font-semibold text-gray-700 mb-1">
                 Tanggal Publikasi:
@@ -201,13 +191,12 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
                 name="publishDate"
                 value={formData.publishDate}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+                className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400"
                 required
               />
             </div>
           </div>
 
-          {/* Tombol Aksi */}
           <div className="flex items-center justify-end gap-5 pt-4">
             <button
               type="button"
@@ -218,7 +207,7 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
+              className="px-6 py-2 rounded-xl bg-green-700 text-white hover:bg-green-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
             >
               Simpan
             </button>
@@ -226,7 +215,6 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
         </form>
       </div>
 
-      {/* Custom Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
@@ -244,4 +232,4 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
   );
 };
 
-export default ArticleFormModal;
+export default AchievementFormModal;

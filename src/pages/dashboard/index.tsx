@@ -1,4 +1,3 @@
-// src/pages/dashboard/index.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -34,9 +33,9 @@ import type {
   MajorDistributionItem,
   DataCardProps,
   AnimatedCounterProps
-} from '@/types/index'; // Pastikan path ini benar
+} from '@/types/index';
 
-// --- Komponen Animated Counter (Digunakan untuk efek angka berjalan) ---
+// --- Komponen Animated Counter ---
 const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ from, to, duration = 1.5, suffix = '', prefix = '' }) => {
   const [count, setCount] = useState<number>(from);
   const ref = React.useRef<HTMLSpanElement>(null);
@@ -78,25 +77,34 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({ from, to, duration = 
   );
 };
 
-// --- Komponen DataCard (untuk card total) ---
+// --- Komponen DataCard ---
 const DataCard: React.FC<DataCardProps & { variants: Variants }> = ({ title, value, icon: Icon, gradient, iconBg, shadowColor, variants }) => (
   <motion.div
     variants={variants}
-    className={`relative bg-gradient-to-br ${gradient} p-4 rounded-xl shadow-lg flex items-center space-x-3
-                 transform hover:scale-[1.03] transition-transform duration-300 ease-in-out
-                 overflow-hidden group ${shadowColor} border border-opacity-20 border-white/30`}
+    className={`relative bg-gradient-to-br ${gradient} p-6 shadow-2xl flex items-center space-x-4
+                 transform hover:scale-[1.02] transition-all duration-300 ease-out
+                 overflow-hidden group ${shadowColor} border-l-4 border-white/40
+                 backdrop-blur-sm hover:shadow-3xl`}
   >
-    <div className="absolute inset-0 bg-black opacity-10 group-hover:opacity-15 transition-opacity duration-300 rounded-xl"></div>
-    <div className={`p-2 rounded-full ${iconBg} bg-opacity-70 backdrop-blur-sm relative z-10 flex-shrink-0
-                     shadow-inner `}> {/* Added shadow-inner for depth */}
-      {Icon && <Icon className="h-6 w-6 text-white" />} {/* Ensure icon color is white for premium look */}
+    {/* Glassmorphism overlay */}
+    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    
+    {/* Geometric accent */}
+    <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 transform rotate-45 translate-x-10 -translate-y-10"></div>
+    
+    <div className={`p-4 ${iconBg} bg-opacity-80 backdrop-blur-sm relative z-10 flex-shrink-0
+                     shadow-lg border border-white/20`}>
+      {Icon && <Icon className="h-7 w-7 text-white drop-shadow-sm" />}
     </div>
-    <div className="relative z-10">
-      <h3 className="text-sm font-semibold text-white opacity-90">{title}</h3>
-      <p className="text-2xl font-extrabold text-white mt-0.5 drop-shadow-md">
+    <div className="relative z-10 flex-1">
+      <h3 className="text-sm font-bold text-white/90 uppercase tracking-wider mb-1">{title}</h3>
+      <p className="text-3xl font-black text-white drop-shadow-lg">
         <AnimatedCounter from={0} to={value} />
       </p>
     </div>
+    
+    {/* Modern accent line */}
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-white/30 to-transparent"></div>
   </motion.div>
 );
 
@@ -113,18 +121,17 @@ const DashboardOverviewPage: React.FC = () => {
   const [loadingTotals, setLoadingTotals] = useState<boolean>(true);
   const [errorTotals, setErrorTotals] = useState<string | null>(null);
 
-  // Recharts Data (bisa juga diambil dari API jika ada)
   const monthlyData: MonthlyDataItem[] = [
     { name: 'Jan', students: 50, teachers: 10, articles: 5 },
     { name: 'Feb', students: 70, teachers: 12, articles: 7 },
     { name: 'Mar', students: 60, teachers: 11, articles: 6 },
     { name: 'Apr', students: 80, teachers: 13, articles: 8 },
-    { name: 'Mei', students: 90, teachers: 14, articles: 9 }, // Changed May to Mei
+    { name: 'Mei', students: 90, teachers: 14, articles: 9 },
     { name: 'Jun', students: 100, teachers: 15, articles: 10 },
   ];
 
   const majorsDistribution: MajorDistributionItem[] = [
-    { name: 'Rekayasa Perangkat Lunak', value: 350 }, // More descriptive names
+    { name: 'Rekayasa Perangkat Lunak', value: 350 },
     { name: 'Teknik Komputer & Jaringan', value: 280 },
     { name: 'Desain Komunikasi Visual', value: 180 },
     { name: 'Akuntansi & Keuangan', value: 120 },
@@ -132,19 +139,11 @@ const DashboardOverviewPage: React.FC = () => {
     { name: 'Teknik Kendaraan Ringan', value: 140 },
   ];
 
-  // Palet warna yang lebih kaya dan premium untuk Pie Chart
   const PIE_COLORS: string[] = [
-    '#6366F1', // Indigo
-    '#0EA5E9', // Sky Blue
-    '#EC4899', // Pink
-    '#10B981', // Emerald
-    '#F59E0B', // Amber
-    '#EF4444', // Red
-    '#A855F7', // Purple
-    '#22C55E', // Green
+    '#6366F1', '#0EA5E9', '#EC4899', '#10B981', 
+    '#F59E0B', '#EF4444', '#A855F7', '#22C55E',
   ];
 
-  // --- Fetching Data for Totals ---
   useEffect(() => {
     async function fetchDashboardTotals() {
       setLoadingTotals(true);
@@ -166,53 +165,51 @@ const DashboardOverviewPage: React.FC = () => {
     fetchDashboardTotals();
   }, []);
 
-  // Data Cards untuk dirender dengan warna premium
   const dataCards: DataCardProps[] = [
     {
       title: 'Total Siswa', value: totals.students, icon: UsersIcon,
-      gradient: 'from-blue-700 to-blue-900', iconBg: 'bg-blue-500', // Solid, richer iconBg
-      shadowColor: 'shadow-blue-600/60' // Deeper shadow
+      gradient: 'from-slate-800 via-blue-900 to-slate-900', iconBg: 'bg-blue-600',
+      shadowColor: 'shadow-blue-900/50'
     },
     {
       title: 'Total Guru', value: totals.teachers, icon: AcademicCapIcon,
-      gradient: 'from-purple-700 to-purple-900', iconBg: 'bg-purple-500',
-      shadowColor: 'shadow-purple-600/60'
+      gradient: 'from-slate-800 via-purple-900 to-slate-900', iconBg: 'bg-purple-600',
+      shadowColor: 'shadow-purple-900/50'
     },
     {
       title: 'Total Jurusan', value: totals.majors, icon: BuildingOfficeIcon,
-      gradient: 'from-teal-700 to-teal-900', iconBg: 'bg-teal-500',
-      shadowColor: 'shadow-teal-600/60'
+      gradient: 'from-slate-800 via-teal-900 to-slate-900', iconBg: 'bg-teal-600',
+      shadowColor: 'shadow-teal-900/50'
     },
     {
       title: 'Total Artikel', value: totals.articles, icon: DocumentTextIcon,
-      gradient: 'from-orange-700 to-orange-900', iconBg: 'bg-orange-500',
-      shadowColor: 'shadow-orange-600/60'
+      gradient: 'from-slate-800 via-orange-900 to-slate-900', iconBg: 'bg-orange-600',
+      shadowColor: 'shadow-orange-900/50'
     },
     {
       title: 'Total Ekstrakurikuler', value: totals.extracurriculars, icon: GlobeAltIcon,
-      gradient: 'from-emerald-700 to-emerald-900', iconBg: 'bg-emerald-500',
-      shadowColor: 'shadow-emerald-600/60'
+      gradient: 'from-slate-800 via-emerald-900 to-slate-900', iconBg: 'bg-emerald-600',
+      shadowColor: 'shadow-emerald-900/50'
     },
     {
-      title: 'Total Fasilitas', value: totals.facilities, icon: BuildingOfficeIcon, // Using BuildingOfficeIcon twice, consider another icon if available
-      gradient: 'from-rose-700 to-rose-900', iconBg: 'bg-rose-500',
-      shadowColor: 'shadow-rose-600/60'
+      title: 'Total Fasilitas', value: totals.facilities, icon: BuildingOfficeIcon,
+      gradient: 'from-slate-800 via-rose-900 to-slate-900', iconBg: 'bg-rose-600',
+      shadowColor: 'shadow-rose-900/50'
     },
     {
       title: 'Total Pengumuman', value: totals.announcements, icon: MegaphoneIcon,
-      gradient: 'from-cyan-700 to-cyan-900', iconBg: 'bg-cyan-500',
-      shadowColor: 'shadow-cyan-600/60'
+      gradient: 'from-slate-800 via-cyan-900 to-slate-900', iconBg: 'bg-cyan-600',
+      shadowColor: 'shadow-cyan-900/50'
     },
   ];
 
-  // Framer Motion Variants for section components
   const sectionVariants: Variants = {
-    hidden: { opacity: 0, y: 50 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: "easeOut",
         staggerChildren: 0.1
       }
@@ -220,82 +217,99 @@ const DashboardOverviewPage: React.FC = () => {
   };
 
   const cardItemVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.8, y: 20 },
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
     visible: {
       opacity: 1,
       scale: 1,
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 12
+        stiffness: 120,
+        damping: 15
       }
     },
   };
 
   return (
     <Layout setNotification={() => {}}>
-      {/* Header Section - Dashboard Overview */}
+      {/* Header Section */}
       <motion.div
         initial="hidden"
         animate="visible"
         variants={sectionVariants}
-        className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl p-6 mb-6 text-white relative overflow-hidden"
+        className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 shadow-2xl p-8 mb-8 text-white relative overflow-hidden border-b-4 border-purple-500"
       >
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("/images/abstract-bg.svg")', backgroundSize: 'cover', backgroundPosition: 'center' }}></div> {/* Add a subtle background texture */}
+        {/* Geometric background pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-40 h-40 bg-white transform rotate-45 -translate-x-20 -translate-y-20"></div>
+          <div className="absolute bottom-0 right-0 w-60 h-60 bg-white transform rotate-12 translate-x-30 translate-y-30"></div>
+        </div>
+        
+        {/* Glassmorphism overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent backdrop-blur-sm"></div>
+        
         <div className="relative z-10">
-          <motion.h1
+          <motion.div
             variants={cardItemVariants}
-            className="text-3xl md:text-4xl font-extrabold mb-3 tracking-tight drop-shadow-lg"
+            className="flex items-center space-x-4 mb-6"
           >
-            Dashboard Admin
-          </motion.h1>
+            <div className="w-2 h-16 bg-gradient-to-b from-purple-400 to-pink-400"></div>
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-tight">
+                DASHBOARD ADMIN
+              </h1>
+              <div className="w-32 h-1 bg-gradient-to-r from-purple-400 to-pink-400"></div>
+            </div>
+          </motion.div>
+          
           <motion.p
             variants={cardItemVariants}
-            className="text-md md:text-lg text-gray-300 mb-6 max-w-2xl leading-relaxed"
+            className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed font-medium"
           >
             Selamat datang kembali! Dapatkan ringkasan cepat dan visualisasi data penting sekolah Anda di sini.
           </motion.p>
         </div>
       </motion.div>
 
-      {/* Main Content Area */}
-      <div className="space-y-6"> {/* Adjusted for better overall spacing */}
+      {/* Main Content */}
+      <div className="space-y-8">
         {/* Total Data Cards Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={sectionVariants}
-          className="bg-white rounded-xl shadow-lg p-6"
+          className="bg-white shadow-2xl p-8 border-t-4 border-blue-600"
         >
-          {/* Judul dengan 'Frame' Premium */}
           <motion.div
             variants={cardItemVariants}
-            className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3 rounded-lg mb-6 shadow-xl flex items-center justify-between"
+            className="bg-gradient-to-r from-slate-900 to-blue-900 text-white p-6 mb-8 shadow-xl flex items-center justify-between border-l-4 border-blue-400"
           >
-            <h2 className="text-xl font-bold tracking-wide">Ringkasan Data Sekolah</h2>
-            <AcademicCapIcon className="h-7 w-7 text-white opacity-80" />
+            <div className="flex items-center space-x-4">
+              <div className="w-3 h-12 bg-gradient-to-b from-blue-400 to-cyan-400"></div>
+              <h2 className="text-2xl font-black tracking-wide uppercase">Ringkasan Data Sekolah</h2>
+            </div>
+            <AcademicCapIcon className="h-8 w-8 text-blue-300" />
           </motion.div>
 
           {loadingTotals ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(dataCards.length)].map((_, i) => (
-                <div key={i} className="bg-gray-100 p-4 rounded-xl shadow-lg animate-pulse h-32 flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-300"></div>
-                  <div className="flex-1 space-y-1">
-                    <div className="h-3 bg-gray-300 rounded w-3/4"></div>
-                    <div className="h-7 bg-gray-300 rounded w-1/2"></div>
+                <div key={i} className="bg-gradient-to-br from-slate-200 to-slate-300 p-6 shadow-xl animate-pulse h-36 flex items-center space-x-4">
+                  <div className="h-12 w-12 bg-slate-400"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-slate-400 w-3/4"></div>
+                    <div className="h-8 bg-slate-400 w-1/2"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : errorTotals ? (
-            <div className="text-center py-8 bg-red-50 rounded-xl shadow-lg border border-red-200">
-              <ExclamationCircleIcon className="h-10 w-10 text-red-500 mx-auto mb-3" />
-              <p className="text-lg text-red-700 font-semibold mb-2">{errorTotals}</p>
+            <div className="text-center py-12 bg-red-50 shadow-xl border-l-4 border-red-500">
+              <ExclamationCircleIcon className="h-12 w-12 text-red-600 mx-auto mb-4" />
+              <p className="text-xl text-red-800 font-bold mb-4">{errorTotals}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-3 px-5 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md text-sm"
+                className="px-8 py-3 bg-red-600 text-white hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-bold uppercase tracking-wide"
               >
                 Coba Lagi
               </button>
@@ -314,85 +328,100 @@ const DashboardOverviewPage: React.FC = () => {
           initial="hidden"
           animate="visible"
           variants={sectionVariants}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-8"
         >
-          {/* Aktivitas Bulanan Chart (Bar Chart) */}
-          <motion.div variants={cardItemVariants} className="bg-white rounded-xl shadow-lg p-6">
-            {/* Judul dengan 'Frame' Premium */}
-            <div className="bg-gradient-to-r from-green-600 to-teal-700 text-white p-3 rounded-lg mb-5 shadow-xl flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-wide">Aktivitas Bulanan</h2>
-              <DocumentTextIcon className="h-7 w-7 text-white opacity-80" />
+          {/* Bar Chart */}
+          <motion.div variants={cardItemVariants} className="bg-white shadow-2xl p-8 border-t-4 border-green-600">
+            <div className="bg-gradient-to-r from-slate-900 to-green-900 text-white p-6 mb-6 shadow-xl flex items-center justify-between border-l-4 border-green-400">
+              <div className="flex items-center space-x-4">
+                <div className="w-3 h-12 bg-gradient-to-b from-green-400 to-teal-400"></div>
+                <h2 className="text-xl font-black tracking-wide uppercase">Aktivitas Bulanan</h2>
+              </div>
+              <DocumentTextIcon className="h-8 w-8 text-green-300" />
             </div>
-            <p className="text-gray-600 text-sm mb-3">Tren jumlah siswa, guru, dan artikel per bulan.</p>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart
-                data={monthlyData}
-                margin={{ top: 15, right: 20, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.1} vertical={false} /> {/* Lighter grid lines */}
-                <XAxis dataKey="name" stroke="#6b7280" className="text-xs" />
-                <YAxis stroke="#6b7280" className="text-xs" />
+            <p className="text-slate-600 font-medium mb-6 text-lg">Tren jumlah siswa, guru, dan artikel per bulan.</p>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                <XAxis dataKey="name" stroke="#475569" className="font-bold" />
+                <YAxis stroke="#475569" className="font-bold" />
                 <Tooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }} // Lighter tooltip cursor
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', boxShadow: '0px 4px 15px rgba(0,0,0,0.08)' }}
-                  labelStyle={{ color: '#334155', fontWeight: 'bold', fontSize: '14px' }}
-                  itemStyle={{ color: '#475569', fontSize: '13px' }}
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    border: 'none', 
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                  }}
                 />
-                <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '13px' }} />
-                <Bar dataKey="students" fill="#6366F1" name="Jumlah Siswa" barSize={25} radius={[6, 6, 0, 0]} /> {/* Wider bars, softer radius */}
-                <Bar dataKey="teachers" fill="#0EA5E9" name="Jumlah Guru" barSize={25} radius={[6, 6, 0, 0]} />
-                <Bar dataKey="articles" fill="#10B981" name="Jumlah Artikel" barSize={25} radius={[6, 6, 0, 0]} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                <Bar dataKey="students" fill="#6366F1" name="Jumlah Siswa" barSize={30} />
+                <Bar dataKey="teachers" fill="#0EA5E9" name="Jumlah Guru" barSize={30} />
+                <Bar dataKey="articles" fill="#10B981" name="Jumlah Artikel" barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Distribusi Jurusan Chart (Pie Chart) */}
-          <motion.div variants={cardItemVariants} className="bg-white rounded-xl shadow-lg p-6">
-            {/* Judul dengan 'Frame' Premium */}
-            <div className="bg-gradient-to-r from-orange-600 to-red-700 text-white p-3 rounded-lg mb-5 shadow-xl flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-wide">Distribusi Jurusan</h2>
-              <BuildingOfficeIcon className="h-7 w-7 text-white opacity-80" />
+          {/* Pie Chart */}
+          <motion.div variants={cardItemVariants} className="bg-white shadow-2xl p-8 border-t-4 border-orange-600">
+            <div className="bg-gradient-to-r from-slate-900 to-orange-900 text-white p-6 mb-6 shadow-xl flex items-center justify-between border-l-4 border-orange-400">
+              <div className="flex items-center space-x-4">
+                <div className="w-3 h-12 bg-gradient-to-b from-orange-400 to-red-400"></div>
+                <h2 className="text-xl font-black tracking-wide uppercase">Distribusi Jurusan</h2>
+              </div>
+              <BuildingOfficeIcon className="h-8 w-8 text-orange-300" />
             </div>
-            <p className="text-gray-600 text-sm mb-3">Persebaran siswa di berbagai jurusan.</p>
-            <ResponsiveContainer width="100%" height={280}>
+            <p className="text-slate-600 font-medium mb-6 text-lg">Persebaran siswa di berbagai jurusan.</p>
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={majorsDistribution}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  outerRadius={90}
+                  outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }: { name?: string; percent?: number }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }: { name?: string; percent?: number }) => 
+                    `${name} ${((percent || 0) * 100).toFixed(0)}%`
+                  }
                 >
                   {majorsDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', boxShadow: '0px 4px 15px rgba(0,0,0,0.08)' }}
-                  labelStyle={{ color: '#334155', fontWeight: 'bold', fontSize: '14px' }}
-                  itemStyle={{ color: '#475569', fontSize: '13px' }}
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    border: 'none', 
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+                  }}
                 />
-                <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '13px' }} />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
               </PieChart>
             </ResponsiveContainer>
           </motion.div>
 
-          {/* Laporan & Analisis Lainnya */}
-          <motion.div variants={cardItemVariants} className="bg-white rounded-xl shadow-lg p-6 lg:col-span-2">
-            {/* Judul dengan 'Frame' Premium */}
-            <div className="bg-gradient-to-r from-gray-700 to-gray-900 text-white p-3 rounded-lg mb-5 shadow-xl flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-wide">Laporan & Analisis Mendalam</h2>
-              <MegaphoneIcon className="h-7 w-7 text-white opacity-80" />
+          {/* Analysis Section */}
+          <motion.div variants={cardItemVariants} className="bg-white shadow-2xl p-8 lg:col-span-2 border-t-4 border-slate-600">
+            <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 mb-6 shadow-xl flex items-center justify-between border-l-4 border-slate-400">
+              <div className="flex items-center space-x-4">
+                <div className="w-3 h-12 bg-gradient-to-b from-slate-400 to-gray-600"></div>
+                <h2 className="text-xl font-black tracking-wide uppercase">Laporan & Analisis Mendalam</h2>
+              </div>
+              <MegaphoneIcon className="h-8 w-8 text-slate-300" />
             </div>
-            <p className="text-gray-600 text-sm">
+            <p className="text-slate-600 font-medium text-lg mb-8">
               Bagian ini dapat diperluas untuk menyajikan lebih banyak metrik, tabel, atau laporan detail.
               Misalnya, tingkat kehadiran guru, popularitas ekstrakurikuler, atau kinerja siswa secara spesifik.
             </p>
-            <div className="mt-5 p-5 bg-gray-50 rounded-xl border border-gray-200 text-gray-500 italic flex items-center justify-center h-36">
-              <p className="text-center text-md font-medium">Area untuk laporan dan analisis mendalam di masa mendatang.</p>
+            <div className="bg-gradient-to-br from-slate-100 to-slate-200 p-8 border-l-4 border-slate-400 text-slate-600 flex items-center justify-center h-40">
+              <div className="text-center">
+                <div className="w-16 h-1 bg-slate-400 mx-auto mb-4"></div>
+                <p className="text-xl font-bold uppercase tracking-wide">Area untuk laporan dan analisis mendalam di masa mendatang</p>
+              </div>
             </div>
           </motion.div>
         </motion.div>

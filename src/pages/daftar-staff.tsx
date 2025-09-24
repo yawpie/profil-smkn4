@@ -3,10 +3,10 @@ import MainLayout from '../components/layout/MainLayout';
 import Image from 'next/image';
 import { motion, type Variants } from 'framer-motion';
 
-import type { Teacher } from '@/types/Teacher';
+import type { Staff } from '@/types/Staff';
 
-const DaftarGuruPage: FC = () => {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+const DaftarStaffPage: FC = () => {
+  const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,23 +35,23 @@ const DaftarGuruPage: FC = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const fetchTeachers = async (): Promise<void> => {
+  const fetchStaff = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/teachers');
+      const response = await fetch('/api/staffs');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Teacher[] = await response.json();
-      setTeachers(data);
+      const data: Staff[] = await response.json();
+      setStaffList(data);
       setCurrentPage(1);
     } catch (err: unknown) {
-      console.error("Failed to load teacher list:", err);
+      console.error("Failed to load staff list:", err);
       if (err instanceof Error) {
-        setError(`Gagal memuat daftar guru. Detail: ${err.message}`);
+        setError(`Gagal memuat daftar staff. Detail: ${err.message}`);
       } else {
-        setError("Gagal memuat daftar guru. Silakan coba lagi nanti.");
+        setError("Gagal memuat daftar staff. Silakan coba lagi nanti.");
       }
     } finally {
       setLoading(false);
@@ -59,13 +59,13 @@ const DaftarGuruPage: FC = () => {
   };
 
   useEffect(() => {
-    fetchTeachers();
+    fetchStaff();
   }, []);
 
   // Pagination Logic
-  const totalPages: number = Math.ceil(teachers.length / itemsPerPage);
+  const totalPages: number = Math.ceil(staffList.length / itemsPerPage);
   const startIndex: number = (currentPage - 1) * itemsPerPage;
-  const currentTeachers: Teacher[] = teachers.slice(startIndex, startIndex + itemsPerPage);
+  const currentStaff: Staff[] = staffList.slice(startIndex, startIndex + itemsPerPage);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -92,7 +92,7 @@ const DaftarGuruPage: FC = () => {
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="relative text-3xl md:text-4xl font-bold text-center text-white mb-4"
           >
-            Daftar Guru
+            Daftar Staff
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -100,7 +100,7 @@ const DaftarGuruPage: FC = () => {
             transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
             className="relative text-slate-300 text-center"
           >
-            Memuat data pendidik...
+            Memuat data staff...
           </motion.p>
           <div className="mt-6 w-8 h-8 border-2 border-slate-400 border-t-white animate-spin"></div>
         </section>
@@ -132,7 +132,7 @@ const DaftarGuruPage: FC = () => {
             </motion.p>
             <div className="text-center">
               <button
-                onClick={fetchTeachers}
+                onClick={fetchStaff}
                 className="px-6 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors duration-200"
               >
                 Coba Lagi
@@ -173,7 +173,7 @@ const DaftarGuruPage: FC = () => {
                 <div className="w-1 h-16 bg-blue-500 mr-6"></div>
                 <div className="text-center">
                   <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight">
-                    Daftar <span className="text-blue-400">Guru</span>
+                    Daftar <span className="text-blue-400">Staff</span>
                   </h1>
                 </div>
                 <div className="w-1 h-16 bg-blue-500 ml-6"></div>
@@ -186,46 +186,18 @@ const DaftarGuruPage: FC = () => {
               animate="visible"
               variants={textVariants}
               transition={{ delay: 0.2 }}
-              className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-              Para pendidik profesional yang berdedikasi membentuk generasi unggul
+              className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed"
+            >
+              Tenaga administrasi dan kependidikan yang mendukung operasional institusi
             </motion.p>
           </div>
         </div>
       </section>
 
-      {/* Organizational Chart Section */}
+      {/* Main Content Section */}
       <section className="bg-slate-50 py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-12"
-          >
-            <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
-                Struktur Organisasi
-              </h2>
-              <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
-            </div>
-            <div className="relative w-full bg-white shadow-lg border border-slate-200 p-4">
-              <Image
-                src="/images/Organisasi.png"
-                alt="Struktur Organisasi SMKN 4 Mataram"
-                width={1600}
-                height={900}
-                layout="responsive"
-                objectFit="contain"
-              />
-            </div>
-          </motion.div>
-        </div>
-      </section>
-      
-      {/* Main Content Section */}
-      <section className="bg-white py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {teachers.length === 0 ? (
+          {staffList.length === 0 ? (
             <motion.div
               initial="hidden"
               animate="visible"
@@ -233,7 +205,7 @@ const DaftarGuruPage: FC = () => {
               className="max-w-2xl mx-auto bg-slate-50 border-l-4 border-slate-400 p-8 text-center"
             >
               <p className="text-lg font-semibold text-slate-800 mb-2">
-                Belum ada data guru tersedia
+                Belum ada data staff tersedia
               </p>
               <p className="text-slate-600">
                 Data sedang dalam proses pembaruan
@@ -244,19 +216,19 @@ const DaftarGuruPage: FC = () => {
               {/* Section Header */}
               <div className="text-center mb-12">
                 <h2 className="text-2xl font-bold text-slate-900 mb-4">
-                  Tim Pendidik Profesional
+                  Tim Administrasi & Kependidikan
                 </h2>
                 <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
                 <p className="text-slate-600 max-w-2xl mx-auto">
-                  Menampilkan {teachers.length} pendidik berkualitas yang berkomitmen pada keunggulan pendidikan
+                  Menampilkan {staffList.length} staff yang berkomitmen mendukung kelancaran operasional sekolah
                 </p>
               </div>
 
-              {/* Teachers Grid */}
+              {/* Staff Grid */}
               <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-                {currentTeachers.map((teacher, index) => (
+                {currentStaff.map((staff, index) => (
                   <motion.div
-                    key={teacher.id}
+                    key={staff.id}
                     variants={cardVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -267,31 +239,29 @@ const DaftarGuruPage: FC = () => {
                   >
                     {/* Image Container */}
                     <div className="w-full h-48 relative overflow-hidden bg-slate-100">
-                      <Image
-                        src={teacher.image || '/images/default_avatar.png'}
-                        alt={teacher.name}
-                        layout="fill"
-                        objectFit="cover"
-                        className="transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-3 left-3">
-                        <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
-                          {teacher.position || 'Guru'}
-                        </span>
-                      </div>
+                    <Image
+                      src={staff.image || '/images/default_avatar.png'}
+                      alt={staff.name}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-300 group-hover:scale-105"
+                      unoptimized
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-3 left-3">
+                      <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
+                        {staff.position || 'Staff'}
+                      </span>
                     </div>
+                  </div>
 
                     {/* Content */}
                     <div className="p-6">
                     <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
-                      {teacher.name}
+                      {staff.name}
                     </h3>
-                    <p className="text-blue-700 font-semibold text-sm mb-2">
-                      {teacher.subject}
-                    </p>
                     <p className="text-xs text-slate-500 uppercase tracking-wide">
-                      NIP: {teacher.nip || 'Tidak Tersedia'}
+                      NIP: {staff.nip || 'Tidak Tersedia'}
                     </p>
                   </div>
                 </motion.div>
@@ -356,4 +326,4 @@ const DaftarGuruPage: FC = () => {
   );
 };
 
-export default DaftarGuruPage;
+export default DaftarStaffPage;

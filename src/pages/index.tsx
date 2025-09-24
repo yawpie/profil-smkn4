@@ -1,60 +1,270 @@
-// pages/index.tsx
+// src/pages/index.tsx
+import React, { useState, useEffect } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import HeroSection from '../components/Beranda/HeroSection';
 import DaftarGuru from '../components/layout/DaftarGuru';
 import ArticleSection from '../components/layout/ArticleSection';
 import StatsSection from '../components/Beranda/StatsSection';
-import LatestAnnouncement from '../components/layout/LatestAnnouncement'; 
+import LatestAnnouncement from '../components/layout/LatestAnnouncement';
+import LatestAchievement from '../components/layout/LatestAchievement'; 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+
+// Impor semua tipe data yang telah Anda berikan
+import type { Teacher } from '../types/Teacher';
+import type { Extracurricular } from '../types/Extracurricular';
+import type { Major } from '../types/Major';
+import type { Facility } from '../types/Facility';
+import type { Staff } from '../types/Staff';
 
 export default function HomePage() {
+  const [statsData, setStatsData] = useState({
+    totalSiswa: "800", 
+    totalGuru: 0,
+    totalStaff: 0,
+    totalEkstrakurikuler: 0,
+    totalJurusan: 0,
+    totalFasilitas: 0,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          guruResponse,
+          staffResponse, // Panggilan API baru untuk staff
+          ekstraResponse,
+          jurusanResponse,
+          fasilitasResponse,
+        ] = await Promise.all([
+          fetch("/api/teachers"),
+          fetch("/api/staffs"),
+          fetch("/api/extracurriculars"),
+          fetch("/api/majors"),
+          fetch("/api/facilities"),
+        ]);
+
+        // Periksa status respons untuk menangani kegagalan
+        if (!guruResponse.ok || !staffResponse.ok || !ekstraResponse.ok || !jurusanResponse.ok || !fasilitasResponse.ok) {
+           console.error("Gagal mengambil data dari API.");
+           return; // Hentikan eksekusi jika ada yang gagal
+        }
+
+        // Gunakan tipe data yang diimpor untuk validasi
+        const guruData: Teacher[] = await guruResponse.json();
+        const staffData: Staff[] = await staffResponse.json();
+        const ekstraData: Extracurricular[] = await ekstraResponse.json();
+        const jurusanData: Major[] = await jurusanResponse.json();
+        const fasilitasData: Facility[] = await fasilitasResponse.json();
+
+        // Hitung total dari data yang sudah di-fetch
+        setStatsData({
+          totalSiswa: "800",
+          totalGuru: guruData.length,
+          totalStaff: staffData.length,
+          totalEkstrakurikuler: ekstraData.length,
+          totalJurusan: jurusanData.length,
+          totalFasilitas: fasilitasData.length,
+        });
+      } catch (error) {
+        console.error("Gagal mengambil data statistik:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <MainLayout>
       <HeroSection />
 
-      {/* --- Bagian Sambutan Selamat Datang --- */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 font-sans">
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95, rotateX: 5 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{
-            duration: 0.9,
-            ease: "easeOut",
-            type: "spring",
-            stiffness: 70,
-            damping: 10
-          }}
-          className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl shadow-xl p-8 md:p-12 text-center border border-blue-200 relative overflow-hidden"
-        >
-          {/* Latar belakang dekoratif blob/partikel */}
-          <div className="absolute inset-0 opacity-40 pointer-events-none">
-            <div className="absolute -top-10 -left-10 w-36 h-36 bg-blue-300 rounded-full mix-blend-multiply filter blur-2xl animate-blob"></div>
-            <div className="absolute -bottom-10 -right-10 w-44 h-44 bg-indigo-300 rounded-full mix-blend-multiply filter blur-2xl animate-blob animation-delay-2000"></div>
-          </div>
+      {/* Principal's Welcome Section - Professional Design */}
+      <section className="bg-slate-50 py-16 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="bg-white shadow-lg border border-slate-200 p-8 md:p-12 lg:p-16 relative overflow-hidden"
+          >
+            {/* Geometric Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 left-0 w-32 h-32 bg-blue-600 transform rotate-12"></div>
+              <div className="absolute bottom-0 right-0 w-24 h-24 bg-slate-600 transform -rotate-12"></div>
+              <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-blue-500 transform rotate-45"></div>
+            </div>
 
-          <h2 className="relative z-10 text-2xl sm:text-3xl font-extrabold text-gray-800 mb-3 leading-tight drop-shadow-sm">
-            Selamat Datang di Website Resmi <br className="hidden sm:inline" /> <span className="text-blue-700">SMKN 4 Mataram</span>
-          </h2>
-          <p className="relative z-10 text-sm sm:text-base text-gray-700 max-w-2xl mx-auto leading-relaxed opacity-90">
-            Temukan informasi terbaru, pengumuman, program unggulan, dan kegiatan seru sekolah kami di sini. Mari bergabung dalam perjalanan edukasi yang inspiratif!
-          </p>
-        </motion.div>
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-16">
+              {/* Principal Photo */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="flex justify-center md:justify-start order-2 md:order-1"
+              >
+                <div className="w-64 h-64 md:w-72 md:h-72 bg-slate-100 shadow-xl border border-slate-200 overflow-hidden">
+                  <Image
+                    src="/images/kepala-sekolah.jpg"
+                    alt="Kepala Sekolah SMKN 4 Mataram"
+                    width={288}
+                    height={288}
+                    layout="responsive"
+                    objectFit="cover"
+                    className="w-full h-full hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Principal's Message */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-center md:text-left order-1 md:order-2"
+              >
+                <div className="mb-6">
+                  <div className="flex items-center justify-center md:justify-start mb-4">
+                    <div className="w-3 h-3 bg-blue-600 mr-4"></div>
+                    <span className="text-sm text-slate-500 uppercase tracking-wider font-medium">
+                      Sambutan Kepala Sekolah
+                    </span>
+                  </div>
+                  <div className="w-16 h-1 bg-blue-600 mx-auto md:mx-0 mb-6"></div>
+                </div>
+
+                <blockquote className="text-lg md:text-xl font-semibold text-slate-800 mb-6 leading-relaxed">
+                  "Pendidikan adalah investasi terbaik untuk masa depan. Kami berkomitmen menghasilkan lulusan yang kompeten, berkarakter, dan siap menghadapi tantangan dunia industri."
+                </blockquote>
+
+                <div className="border-l-4 border-blue-600 pl-6 mb-6">
+                  <p className="text-slate-600 leading-relaxed">
+                    SMKN 4 Mataram terus berinovasi dalam menyediakan pendidikan vokasi berkualitas tinggi yang sesuai dengan kebutuhan industri dan perkembangan teknologi terkini.
+                  </p>
+                </div>
+
+                <div className="bg-slate-50 p-4 border-l-2 border-slate-300">
+                  <p className="font-semibold text-slate-900 mb-1">
+                    Dr. [Nama Lengkap Kepala Sekolah]
+                  </p>
+                  <p className="text-sm text-slate-600 uppercase tracking-wide">
+                    Kepala Sekolah SMKN 4 Mataram
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
-      {/* --- Bagian Statistik Sekolah --- */}
-      <StatsSection />
-
-      {/* --- Bagian Pengumuman Terbaru --- */}
+      {/* Other Sections */}
+      <StatsSection stats={statsData} /> 
       <LatestAnnouncement />
+      <LatestAchievement />
+      <DaftarGuru />
+      <ArticleSection />
+      
+      {/* School Profile Video Section - Professional Design */}
+      <section className="bg-slate-100 py-16 md:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="bg-white shadow-lg border border-slate-200 p-8 md:p-12 relative overflow-hidden"
+          >
+            {/* Geometric Background Pattern */}
+            <div className="absolute inset-0 opacity-5">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600 transform rotate-45"></div>
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-slate-600 transform -rotate-45"></div>
+              <div className="absolute top-1/2 right-1/4 w-20 h-20 bg-blue-500 transform rotate-12"></div>
+            </div>
 
-      {/* Tampilkan Daftar Guru secara sekilas */}
-      <DaftarGuru/>
+            <div className="relative z-10">
+              {/* Section Header */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.5 }}
+                className="text-center mb-12"
+              >
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-3 h-3 bg-blue-600 mr-4"></div>
+                  <span className="text-sm text-slate-500 uppercase tracking-wider font-medium">
+                    Profil Institusi
+                  </span>
+                  <div className="w-3 h-3 bg-blue-600 ml-4"></div>
+                </div>
+                <div className="w-24 h-1 bg-blue-600 mx-auto mb-6"></div>
 
-      {/* Tampilkan Artikel secara sekilas */}
-      <ArticleSection/>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                  Video Profil <span className="text-blue-600">SMKN 4 Mataram</span>
+                </h2>
+                <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                  Mengenal lebih dekat fasilitas modern, program unggulan, dan suasana pembelajaran di sekolah menengah kejuruan terdepan di Mataram.
+                </p>
+              </motion.div>
 
-      {/* Anda bisa menambahkan bagian lain seperti Galeri Preview, Testimoni, dll. */}
+              {/* Video Container */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="relative mx-auto w-full max-w-5xl bg-slate-900 shadow-2xl border border-slate-300 overflow-hidden"
+                style={{ paddingBottom: '56.25%' }}
+              >
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full"
+                  src="https://www.youtube.com/embed/VaswBn3SVIQ?rel=0"
+                  title="Video Profil SMKN 4 Mataram"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </motion.div>
+
+              {/* Video Description */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6"
+              >
+                <div className="bg-slate-50 p-6 border-l-4 border-blue-600">
+                  <h4 className="font-bold text-slate-900 mb-2 uppercase tracking-wide">
+                    Fasilitas Modern
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    Laboratorium dan workshop terlengkap dengan teknologi terkini
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-6 border-l-4 border-slate-600">
+                  <h4 className="font-bold text-slate-900 mb-2 uppercase tracking-wide">
+                    Program Unggulan
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    Kurikulum selaras industri dengan sertifikasi internasional
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-6 border-l-4 border-blue-600">
+                  <h4 className="font-bold text-slate-900 mb-2 uppercase tracking-wide">
+                    Prestasi Terbaik
+                  </h4>
+                  <p className="text-sm text-slate-600">
+                    Lulusan berprestasi dengan tingkat serapan kerja tinggi
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
     </MainLayout>
   );
 }

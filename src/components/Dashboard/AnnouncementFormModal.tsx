@@ -1,4 +1,3 @@
-// src/components/Dashboard/AnnouncementFormModal.tsx
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent } from 'react';
 import type { Announcement } from '@/types/Announcement';
 
@@ -42,7 +41,7 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
         summary: '',
       });
     }
-    setErrorMessage(''); // Clear previous errors on prop change
+    setErrorMessage('');
   }, [announcement]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -53,27 +52,19 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file size
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
         setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
         setShowErrorModal(true);
-        // Clear the file input and preview
-        e.target.value = ''; // Resets the file input
-        setFormData(prev => ({ ...prev, image: '' })); // Clear preview
+        e.target.value = '';
+        setFormData(prev => ({ ...prev, image: '' }));
         return;
       }
-
-      // Read file as Data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        // In a real application, you would upload this 'file' object to a storage service
-        // (e.g., Firebase Storage, AWS S3) and then save the returned URL to formData.image.
-        // For this example, we're using the Data URL for preview purposes.
         setFormData(prev => ({ ...prev, image: reader.result as string }));
       };
-      reader.readAsDataURL(file); // Converts file to base64 string for preview
+      reader.readAsDataURL(file);
     } else {
-      // If no file is selected (e.g., user cancels file dialog)
       setFormData(prev => ({ ...prev, image: '' }));
     }
   };
@@ -88,13 +79,13 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
     }
 
     const announcementToSave: Announcement = {
-      id: formData.id ?? '', // konversi ke string jika tidak null
+      id: formData.id ?? '',
       title: formData.title,
       content: formData.content,
       publishDate: formData.publishDate,
       status: formData.status,
       summary: formData.summary,
-    } as Announcement; // Type assertion to ensure it matches Announcement type
+    } as Announcement;
 
     onSave(announcementToSave);
   };
@@ -106,14 +97,15 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xs p-4 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative">
-        <h2 className="text-base font-extrabold text-blue-800 mb-3 text-center">
+      {/* Modal yang dioptimalkan ukurannya */}
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-7xl p-6 md:p-12 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-blue-800 mb-6 text-center">
           {announcement ? 'Edit Data Pengumuman' : 'Tambah Pengumuman Baru'}
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Judul Pengumuman */}
           <div>
-            <label htmlFor="title" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">
               Judul Pengumuman:
             </label>
             <input
@@ -122,13 +114,13 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-2 py-1 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
           </div>
           {/* Isi Pengumuman */}
           <div>
-            <label htmlFor="content" className="block text-xs font-semibold text-gray-700 mb-1">
+            <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-1">
               Isi Pengumuman:
             </label>
             <textarea
@@ -136,73 +128,60 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
               name="content"
               value={formData.content}
               onChange={handleChange}
-              rows={3} // Adjusted rows for compactness
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-2 py-1 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
+              rows={6}
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
               required
             ></textarea>
           </div>
 
-          {/* Ringkasan */}
-          <div>
-            <label htmlFor="summary" className="block text-xs font-semibold text-gray-700 mb-1">
-              Ringkasan: <span className="text-gray-500 font-normal">(Opsional)</span>
-            </label>
-            <textarea
-              id="summary"
-              name="summary"
-              value={formData.summary || ''}
-              onChange={handleChange}
-              rows={1} // Adjusted rows for compactness
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-2 py-1 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 resize-y"
-            ></textarea>
-          </div>
-
-          {/* Tanggal Publikasi */}
-          <div>
-            <label htmlFor="publishDate" className="block text-xs font-semibold text-gray-700 mb-1">
-              Tanggal Publikasi:
-            </label>
-            <input
-              type="date"
-              id="publishDate"
-              name="publishDate"
-              value={formData.publishDate}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-2 py-1 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
-              required
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-xs font-semibold text-gray-700 mb-1">
-              Status:
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-2 py-1 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
-              required
-            >
-              <option value="Draft">Draft</option>
-              <option value="Published">Published</option>
-            </select>
+          {/* Tanggal Publikasi dan Status (Side-by-side on larger screens) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Tanggal Publikasi */}
+            <div>
+              <label htmlFor="publishDate" className="block text-sm font-semibold text-gray-700 mb-1">
+                Tanggal Publikasi:
+              </label>
+              <input
+                type="date"
+                id="publishDate"
+                name="publishDate"
+                value={formData.publishDate}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+                required
+              />
+            </div>
+            {/* Status */}
+            <div>
+              <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-1">
+                Status:
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+                required
+              >
+                <option value="Draft">Draft</option>
+                <option value="Published">Published</option>
+              </select>
+            </div>
           </div>
 
           {/* Tombol Aksi */}
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center justify-end gap-5 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-2.5 py-1 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-xs"
+              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-3 py-1 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-xs"
+              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
             >
               Simpan
             </button>
@@ -213,11 +192,11 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
       {/* Custom Error Modal */}
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-xs w-full text-center animate-fade-in-up">
-            <p className="text-base font-bold text-red-700 mb-3">{errorMessage}</p>
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
+            <p className="text-lg font-bold text-red-700 mb-4">{errorMessage}</p>
             <button
               onClick={handleCloseErrorModal}
-              className="px-5 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition duration-200 ease-in-out shadow-md text-sm"
+              className="px-6 py-2.5 bg-red-700 text-white rounded-lg hover:bg-red-800 transition duration-200 ease-in-out shadow-md text-base"
             >
               Tutup
             </button>

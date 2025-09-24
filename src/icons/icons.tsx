@@ -1,5 +1,3 @@
-// src/icons/icons.tsx
-
 import React from 'react';
 
 // Ikon-ikon yang sudah Anda definisikan:
@@ -59,6 +57,17 @@ export const ImageIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L20 20m-6-6l2 2m-2-2l-2-2m2-2L14 8m-4-4h4m-4 0h-4M4 4h-.5a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z" /></svg>
 );
 
+export const StaffIcon = (props: React.SVGProps<SVGSVGElement>) => (
+<svg {...props} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L20 20m-6-6l2 2m-2-2l-2-2m2-2L14 8m-4-4h4m-4 0h-4M4 4h-.5a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z" /></svg>
+);
+
+// Ikon baru untuk Prestasi
+export const TrophyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13a6 6 0 110-12 6 6 0 010 12zM12 2a10 10 0 100 20 10 10 0 000-20zM12 18h.01" />
+  </svg>
+);
+
 export const iconsSvg = {
   MenuIcon,
   ChevronLeftIcon,
@@ -73,26 +82,27 @@ export const iconsSvg = {
   MegaphoneIcon,
   ArticleIcon,
   BellIcon,
-  ImageIcon, // Menambahkan ikon baru ke objek ekspor
+  ImageIcon,
+  StaffIcon,
+  TrophyIcon, // Menambahkan ikon baru ke objek ekspor
 };
 
 // Objek Icons untuk kompatibilitas jika Anda masih menggunakannya di tempat lain
-// Ini memetakan nama yang Anda gunakan sebelumnya (misalnya `Icons.dashboard`)
-// ke komponen SVG yang sesuai.
 const Icons: { [key: string]: React.FC<React.SVGProps<SVGSVGElement>> } = {
   dashboard: DashboardIcon,
   user: UserIcon,
-  people: TeacherIcon,      // Asumsi TeacherIcon cocok untuk "people" (guru)
-  home: BuildingIcon,       // Asumsi BuildingIcon cocok untuk "home" (fasilitas)
-  star: SportIcon,          // Asumsi SportIcon cocok untuk "star" (ekstrakurikuler)
-  bell: MegaphoneIcon,      // Menggunakan MegaphoneIcon untuk "bell"
+  people: TeacherIcon,
+  home: BuildingIcon,
+  star: SportIcon,
+  bell: MegaphoneIcon,
   article: ArticleIcon,
   rightArrow: ChevronRightIcon,
   leftArrow: ChevronLeftIcon,
   logout: LogoutIcon,
   menu: MenuIcon,
   image: ImageIcon,
-
+  staff: StaffIcon,
+  achievement: TrophyIcon, // Menambahkan key baru untuk TrophyIcon
 };
 
 export default Icons;

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, FC, useCallback } from 'react';
 import Head from 'next/head';
 import { motion, type Variants } from 'framer-motion';
@@ -50,25 +52,35 @@ const JurusanPage: FC = () => {
   if (loading) {
     return (
       <MainLayout>
-        <section className="relative container mx-auto px-4 py-20 min-h-[calc(100vh-120px)] flex flex-col justify-center items-center overflow-hidden font-sans">
-          {/* Background gradient for loading state */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-cyan-100 animate-gradient-xy"></div>
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative text-3xl sm:text-4xl font-extrabold text-center text-blue-700 mb-4 animate-pulse drop-shadow-lg"
-          >
-            Jurusan
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
-            className="relative text-sm sm:text-base text-center text-gray-700"
-          >
-            Mempersiapkan masa depanmu dengan pilihan terbaik...
-          </motion.p>
+        <section className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center items-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-indigo-600/5"></div>
+          
+          {/* Geometric Loading Elements */}
+          <div className="relative z-10 text-center space-y-8">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-4 h-4 bg-blue-600 animate-pulse"></div>
+              <div className="w-4 h-4 bg-indigo-600 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-4 h-4 bg-blue-600 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="space-y-4"
+            >
+              <h1 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
+                Loading Programs
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 font-medium max-w-md mx-auto">
+                Preparing your future career pathways...
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Decorative Elements */}
+          <div className="absolute top-20 left-20 w-32 h-32 border-l-4 border-t-4 border-blue-600/20"></div>
+          <div className="absolute bottom-20 right-20 w-32 h-32 border-r-4 border-b-4 border-indigo-600/20"></div>
         </section>
       </MainLayout>
     );
@@ -77,56 +89,41 @@ const JurusanPage: FC = () => {
   if (error) {
     return (
       <MainLayout>
-        <section className="relative container mx-auto px-4 py-20 min-h-[calc(100vh-120px)] flex flex-col justify-center items-center bg-red-50 overflow-hidden font-sans">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-orange-100 animate-gradient-xy"></div>
-          <motion.h1
+        <section className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center items-center bg-gradient-to-br from-red-50 via-white to-orange-50">
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600/5 to-orange-600/5"></div>
+          
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative text-3xl sm:text-4xl font-extrabold text-center text-red-800 mb-3 drop-shadow-md"
+            className="relative z-10 text-center space-y-6 max-w-md mx-auto px-6"
           >
-            Terjadi Kesalahan
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-            className="relative text-sm sm:text-base text-center text-red-700"
-          >
-            Terjadi kesalahan: Gagal memuat jurusan. Silakan coba lagi nanti. ({error})
-          </motion.p>
-          <button
-            onClick={fetchJurusan}
-            className="mt-5 px-5 py-2 bg-red-600 text-white font-semibold text-sm rounded-full hover:bg-red-700 transition-colors duration-300 transform hover:scale-105 shadow-lg"
-          >
-            Coba Lagi
-          </button>
-        </section>
-      </MainLayout>
-    );
-  }
-
-  if (jurusan.length === 0) {
-    return (
-      <MainLayout>
-        <section className="relative container mx-auto px-4 py-20 min-h-[calc(100vh-120px)] flex flex-col justify-center items-center overflow-hidden font-sans">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-100 animate-gradient-xy"></div>
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="relative text-3xl sm:text-4xl font-extrabold text-center text-blue-700 mb-3 drop-shadow-lg"
-          >
-            Jurusan
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }}
-            className="relative text-sm sm:text-base text-center text-gray-700"
-          >
-            Belum ada informasi jurusan yang tersedia saat ini.
-          </motion.p>
+            <div className="w-16 h-16 bg-red-600 mx-auto flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-black text-red-800 tracking-tight">
+              System Error
+            </h1>
+            
+            <div className="bg-red-100 border-l-4 border-red-600 p-4 text-left">
+              <p className="text-sm text-red-700 font-medium">
+                {error}
+              </p>
+            </div>
+            
+            <button
+              onClick={fetchJurusan}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              Retry Connection
+            </button>
+          </motion.div>
         </section>
       </MainLayout>
     );
@@ -135,59 +132,129 @@ const JurusanPage: FC = () => {
   return (
     <MainLayout>
       <Head>
-        <title>Jurusan - SMKN 4 Mataram</title>
-        <meta name="description" content="Temukan daftar pilihan jurusan unggulan di SMKN 4 Mataram untuk masa depan karirmu." />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Academic Programs - SMKN 4 Mataram</title>
+        <meta name="description" content="Discover our flagship academic programs at SMKN 4 Mataram designed for your future career success." />
+        <meta name="keywords" content="SMKN 4 Mataram, jurusan, program keahlian, pendidikan vokasi" />
+        <meta property="og:title" content="Academic Programs - SMKN 4 Mataram" />
+        <meta property="og:description" content="Explore our comprehensive vocational programs designed for industry readiness." />
       </Head>
 
-      {/* Hero Section with Gradient Background */}
-      <section className="relative w-full py-14 md:py-20 lg:py-28 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100 font-sans">
-        <div className="absolute inset-0 opacity-40 animate-blob-pulse">
-          <div className="absolute -top-8 -left-8 w-36 h-36 bg-sky-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-8 -right-8 w-48 h-48 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/3 w-40 h-40 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      {/* Hero Section - Modern & Sharp */}
+      <section className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+        {/* Geometric Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-black/50 to-transparent"></div>
+          <div className="absolute top-20 right-20 w-64 h-64 border-4 border-blue-400/20 transform rotate-45"></div>
+          <div className="absolute bottom-20 left-20 w-48 h-48 border-4 border-indigo-400/20"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 border border-white/10"></div>
         </div>
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h1
+
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-800 leading-tight mb-2 drop-shadow-xl"
-          >
-            <span className="text-cyan-600">Jurusan</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
-            className="text-sm sm:text-base text-gray-800 max-w-xl mx-auto mb-6 leading-relaxed"
-          >
-            Temukan jalur pendidikan yang sesuai dengan minat dan bakatmu di SMKN 4 Mataram, siapkan dirimu untuk masa depan yang cerah.
-          </motion.p>
+            className="space-y-8"
+             >
+            {/* Main Heading */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white leading-tight tracking-tight">
+                Future Ready
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  Program Jurusan
+                </span>
+              </h1>
+            </div>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+              className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium"
+            >
+              Discover industry-aligned vocational programs designed to launch your career in hospitality, culinary arts, and fashion technology.
+            </motion.p>
+
+            {/* CTA Elements */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6"
+            >
+              <div className="flex items-center space-x-4 text-white/80 text-sm font-medium">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400"></div>
+                  <span>Industry Certified</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-400"></div>
+                  <span>Career Ready</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-400"></div>
+                  <span>Future Focused</span>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
+
+        {/* Bottom Accent */}
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600"></div>
       </section>
 
-      {/* Main Content Section */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
-          {jurusan.map((item: Major, index: number) => (
-            <motion.div
-              key={item.id}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <JurusanCard
-                id={item.id}
-                name={item.name}
-                description={item.description}
-                image={item.image}
-              />
-            </motion.div>
-          ))}
+      {/* Programs Grid Section */}
+      <section className="relative bg-gradient-to-br from-slate-50 via-white to-blue-50 py-20 lg:py-28">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            className="text-center mb-16 space-y-6"
+          >
+          </motion.div>
+
+          {/* Programs Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
+            {jurusan.map((item: Major, index: number) => (
+              <motion.div
+                key={item.id}
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: index * 0.1 }}
+                className="group"
+              >
+                <JurusanCard
+                  id={item.id}
+                  name={item.name}
+                  description={item.description}
+                  image={item.image}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Bottom CTA Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-center mt-20 space-y-8"
+          >
+          </motion.div>
         </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-20 left-0 w-64 h-64 bg-gradient-to-br from-blue-600/5 to-transparent"></div>
+        <div className="absolute bottom-20 right-0 w-64 h-64 bg-gradient-to-tl from-indigo-600/5 to-transparent"></div>
       </section>
     </MainLayout>
   );

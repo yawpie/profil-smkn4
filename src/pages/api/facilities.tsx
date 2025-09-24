@@ -9,7 +9,7 @@ import type { Facility } from '@/types/Facility'; // Ensure this path is correct
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '5mb', // Sesuaikan dengan kebutuhan Anda
+      sizeLimit: '10mb', // Sesuaikan dengan kebutuhan Anda
     },
   },
 };

@@ -3,7 +3,8 @@
 import React, { useState, useEffect, FC } from 'react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
-import type { Announcement } from '@/types/Announcement';
+import Image from 'next/image';
+import type { Achievement } from '@/types/Achievement';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -29,8 +30,8 @@ const textVariants: Variants = {
   },
 };
 
-const LatestAnnouncement: FC = () => {
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+const LatestAchievement: FC = () => {
+  const [achievement, setAchievement] = useState<Achievement | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,41 +53,34 @@ const LatestAnnouncement: FC = () => {
   };
 
   useEffect(() => {
-    async function fetchLatestAnnouncement(): Promise<void> {
+    async function fetchLatestAchievement(): Promise<void> {
       try {
-        const response = await fetch('/api/announcements'); 
+        const response = await fetch('/api/achievements');
         if (!response.ok) {
           throw new Error(`Kesalahan HTTP! status: ${response.status}`);
         }
-        const data: Announcement[] = await response.json();
+        const data: Achievement[] = await response.json();
         
         if (data && data.length > 0) {
-          setAnnouncement(data[0]); 
+          const latest = data.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime())[0];
+          setAchievement(latest); 
         } else {
-          setAnnouncement(null);
+          setAchievement(null);
         }
       } catch (e: unknown) {
-        console.error("Gagal mengambil pengumuman terbaru:", e);
+        console.error("Gagal mengambil prestasi terbaru:", e);
         if (e instanceof Error) {
-          setError(`Gagal memuat pengumuman terbaru. Detail: ${e.message}`);
+          setError(`Gagal memuat prestasi terbaru. Detail: ${e.message}`);
         } else {
-          setError("Gagal memuat pengumuman terbaru. Silakan coba lagi nanti.");
+          setError("Gagal memuat prestasi terbaru. Silakan coba lagi nanti.");
         }
       } finally {
         setLoading(false);
       }
     }
 
-    fetchLatestAnnouncement();
+    fetchLatestAchievement();
   }, []);
-
-  const truncateContent = (content: string, wordLimit: number) => {
-    const words = content.split(' ');
-    if (words.length > wordLimit) {
-      return words.slice(0, wordLimit).join(' ') + '...';
-    }
-    return content;
-  };
 
   if (loading) {
     return (
@@ -103,14 +97,14 @@ const LatestAnnouncement: FC = () => {
     return (
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-red-50 border border-red-200 p-6 text-red-800">
-          <p className="font-semibold mb-1">Gagal memuat pengumuman.</p>
+          <p className="font-semibold mb-1">Gagal memuat prestasi.</p>
           <p className="text-sm text-red-600">{error}</p>
         </div>
       </section>
     );
   }
 
-  if (!announcement) {
+  if (!achievement) {
     return (
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <motion.div
@@ -120,7 +114,7 @@ const LatestAnnouncement: FC = () => {
           variants={containerVariants}
           className="bg-gray-50 border border-gray-200 p-6 text-center"
         >
-          <p className="text-gray-600 font-medium">Belum ada pengumuman terbaru saat ini.</p>
+          <p className="text-gray-600 font-medium">Belum ada prestasi terbaru saat ini.</p>
         </motion.div>
       </section>
     );
@@ -136,18 +130,15 @@ const LatestAnnouncement: FC = () => {
         className="bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
       >
         {/* Header */}
-        <div className="bg-orange-50 border-b border-orange-200 px-6 py-4">
+        <div className="border-b border-gray-100 px-6 py-4">
           <motion.h3
             initial="hidden"
             whileInView="visible"
             variants={textVariants}
             className="text-lg font-semibold text-gray-900 flex items-center gap-2"
           >
-            <div className="w-1 h-6 bg-orange-500"></div>
-            Pengumuman Terbaru
-            <span className="ml-auto bg-orange-500 text-white text-xs font-medium px-2 py-1">
-              PENTING
-            </span>
+            <div className="w-1 h-6 bg-blue-600"></div>
+            Prestasi Terbaru
           </motion.h3>
         </div>
 
@@ -159,37 +150,51 @@ const LatestAnnouncement: FC = () => {
           transition={{ delay: 0.2 }}
           className="p-6"
         >
-          {/* Announcement Title & Date */}
-          <div className="bg-gray-50 border border-gray-200 p-4 mb-4">
-            <h4 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-              {announcement.title}
-            </h4>
-            <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {formatDate(announcement.publishDate)}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Image */}
+            {achievement.image && (
+              <div className="lg:w-1/3">
+                <div className="relative w-full h-48 lg:h-32 bg-gray-100 overflow-hidden">
+                  <Image
+                    src={achievement.image}
+                    alt={achievement.title}
+                    layout="fill"
+                    objectFit="cover"
+                    unoptimized
+                    className="transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Text Content */}
+            <div className="lg:w-2/3">
+              <div className="mb-3">
+                <h4 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+                  {achievement.title}
+                </h4>
+                <div className="flex items-center text-sm text-gray-500">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {formatDate(achievement.publishDate)}
+                </div>
+              </div>
+              
+              <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
+                {achievement.description}
+              </p>
+              
+              <Link 
+                href={`/prestasi/${achievement.id}`} 
+                className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
+              >
+                <span>Baca Selengkapnya</span>
+                <svg className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
-          </div>
-          
-          {/* Content Preview */}
-          <div className="mb-6">
-            <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-              {truncateContent(announcement.content, 25)}
-            </p>
-          </div>
-          
-          {/* Action Button */}
-          <div className="flex justify-end">
-            <Link 
-              href={`/pengumuman/${announcement.id}`} 
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm border border-blue-200 hover:border-blue-300 px-4 py-2 transition-colors duration-200"
-            >
-              <span>Baca Selengkapnya</span>
-              <svg className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
           </div>
         </motion.div>
       </motion.div>
@@ -197,4 +202,4 @@ const LatestAnnouncement: FC = () => {
   );
 };
 
-export default LatestAnnouncement;
+export default LatestAchievement;

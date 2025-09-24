@@ -1,52 +1,43 @@
 import Image from 'next/image';
-import React, { useState, useEffect, FC, useCallback } from 'react'; // Import FC, useCallback
-import { motion, AnimatePresence, type Variants } from 'framer-motion'; // Import Framer Motion and type Variants
+import React, { useState, useEffect, FC, useCallback } from 'react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { useRouter } from 'next/router';
 import type { ModalMessage } from '@/types/Teacher';
 import type { Teacher } from '@/types/Teacher';
 
-const DaftarGuruPage: FC = () => {
+const DaftarGuruPreview: FC = () => {
+  const router = useRouter();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalTeachersCount, setTotalTeachersCount] = useState<number>(0); // Total count from API
+  const [totalTeachersCount, setTotalTeachersCount] = useState<number>(0);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<ModalMessage | null>(null);
 
-  const itemsPerPage: number = 8;
+  const maxPreviewItems: number = 4; // Maksimal 4 guru untuk preview
+  
   const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 50, scale: 0.95 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      scale: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.4,
         ease: "easeOut",
-        type: "spring",
-        stiffness: 100,
-        damping: 15,
       }
     },
   };
 
   const headerVariants: Variants = {
-    hidden: { opacity: 0, y: -50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+    hidden: { opacity: 0, y: -20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const textVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
-  };
-
-  // Fungsi untuk mengambil data guru dari backend/API
   const fetchTeachersFromBackend = useCallback(async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
       const apiUrl: string = `/api/teachers`;
-
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -55,9 +46,7 @@ const DaftarGuruPage: FC = () => {
       const data: Teacher[] = await response.json();
 
       setTeachers(data);
-      setTotalTeachersCount(data.length); // Total count diambil dari panjang data yang diterima
-
-      setCurrentPage(1);
+      setTotalTeachersCount(data.length);
     } catch (e: unknown) {
       console.error("Gagal mengambil daftar guru dari database:", e);
       if (e instanceof Error) {
@@ -71,213 +60,220 @@ const DaftarGuruPage: FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependensi kosong karena fungsi ini hanya bergantung pada API endpoint
+  }, []);
 
   useEffect(() => {
-    // Fetch teachers when component mounts
     fetchTeachersFromBackend();
-  }, [fetchTeachersFromBackend]); // Re-fetch when fetchTeachersFromBackend changes (only once due to useCallback)
+  }, [fetchTeachersFromBackend]);
 
-  // Calculate total pages based on totalTeachersCount
-  const totalPages: number = Math.ceil(totalTeachersCount / itemsPerPage);
-
-  // Get teachers for the current page
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentTeachers = teachers.slice(startIndex, startIndex + itemsPerPage);
-
-
-  const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+  // Ambil hanya 4 guru pertama untuk preview
+  const previewTeachers = teachers.slice(0, maxPreviewItems);
 
   const handleCloseModal = () => {
     setShowErrorModal(false);
     setModalMessage(null);
   };
 
+  const handleViewMore = () => {
+    router.push('/daftar-guru'); // Navigasi ke halaman daftar guru lengkap
+  };
+
   return (
-    <section className="relative w-full overflow-hidden font-sans">
-      {/* Hero Section */}
-      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
-        <div className="absolute inset-0 opacity-30 animate-blob-pulse">
-          <div className="absolute -top-8 -left-8 w-40 h-40 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-8 -right-8 w-56 h-56 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-        </div>
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h1
-            initial="hidden"
-            animate="visible"
-            variants={headerVariants}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-800 leading-tight mb-3 drop-shadow-xl"
-          >
-            Daftar <span className="text-blue-600">Guru</span>
-          </motion.h1>
-          <motion.p
-            initial="hidden"
-            animate="visible"
-            variants={textVariants}
-            transition={{ delay: 0.2 }}
-            className="text-sm sm:text-base text-gray-800 max-w-xl mx-auto mb-8 leading-relaxed"
-          >
-            Kenali para pendidik hebat yang berdedikasi membimbing dan menginspirasi setiap siswa di SMKN 4 Mataram.
-          </motion.p>
-        </div>
-      </section>
-
-      {/* Main Content Section */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans">
-        {/* Loading State */}
-        {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
-            {[...Array(itemsPerPage)].map((_, i) => (
-              <div key={i} className="bg-gray-100 rounded-xl shadow-md p-5 text-center animate-pulse">
-                <div className="w-20 h-20 rounded-full bg-gray-300 mx-auto mb-3"></div>
-                <div className="h-5 bg-gray-300 rounded w-3/4 mx-auto mb-2"></div>
-                <div className="h-3 bg-gray-300 rounded w-1/2 mx-auto"></div>
-              </div>
-            ))}
+    <section className="bg-white py-16">
+      {/* Header Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={headerVariants}
+          className="text-center mb-12"
+        >
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-1 h-12 bg-blue-600 mr-4"></div>
+            <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">
+              Tenaga Pengajar
+            </h2>
           </div>
-        )}
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Staff pengajar profesional yang berpengalaman dan berkualifikasi
+          </p>
+          <div className="mt-4 bg-blue-600 text-white px-4 py-2 inline-block text-sm font-medium">
+            Total: {totalTeachersCount} Pengajar
+          </div>
+        </motion.div>
 
-        {/* Error State (using custom modal) */}
-        {showErrorModal && modalMessage && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center font-sans">
-            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center">
-              <p className={`text-base font-semibold mb-4 ${modalMessage.type === 'error' ? 'text-red-600' : 'text-blue-600'}`}>
-                {modalMessage.message}
-              </p>
-              <button
-                onClick={handleCloseModal}
-                className={`px-5 py-2 rounded-lg text-white text-sm transition ${modalMessage.type === 'error' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-              >
-                Tutup
-              </button>
+        {/* Main Content */}
+        <div className="max-w-6xl mx-auto">
+          {/* Loading State */}
+          {loading && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+              {[...Array(maxPreviewItems)].map((_, i) => (
+                <div key={i} className="bg-white border border-gray-200 shadow-sm animate-pulse w-full max-w-sm">
+                  <div className="w-full h-48 bg-gray-300"></div>
+                  <div className="p-4">
+                    <div className="h-4 bg-gray-300 w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-300 w-1/2 mb-2"></div>
+                    <div className="h-3 bg-gray-300 w-1/3"></div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Empty State */}
-        {!loading && !error && teachers.length === 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={textVariants}
-            className="text-center py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200"
-          >
-            <p className="text-xl text-blue-700 font-semibold mb-3">Belum ada data guru yang tersedia saat ini.</p>
-            <p className="text-base text-gray-600">Mohon maaf, kami sedang memperbarui daftar ini.</p>
-          </motion.div>
-        )}
+          {/* Error Modal */}
+          {showErrorModal && modalMessage && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white border border-gray-300 shadow-lg p-6 max-w-md w-full"
+              >
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
+                  <p className="text-gray-600 mb-6">
+                    {modalMessage.message}
+                  </p>
+                  <button
+                    onClick={handleCloseModal}
+                    className="bg-blue-600 text-white px-6 py-2 font-medium hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
 
-        {/* Grid Guru */}
-        {!loading && !error && teachers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
-            <AnimatePresence>
-              {currentTeachers.map((teacher, index) => (
+          {/* Empty State */}
+          {!loading && !error && teachers.length === 0 && (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={cardVariants}
+              className="text-center py-16 bg-gray-50 border border-gray-200"
+            >
+              <div className="w-16 h-16 bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Tidak Ada Data</h3>
+              <p className="text-gray-500">Belum ada data tenaga pengajar tersedia</p>
+            </motion.div>
+          )}
+
+          {/* Teacher Cards - Maksimal 4 */}
+          {!loading && !error && teachers.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+                <AnimatePresence>
+                  {previewTeachers.map((teacher, index) => (
+                    <motion.div
+                      key={teacher.id}
+                      variants={cardVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 group w-full max-w-sm"
+                    >
+                      {/* Status Bar */}
+                      <div className="h-1 bg-blue-600"></div>
+                      
+                      {/* Image */}
+                      <div className="w-full h-48 relative overflow-hidden bg-gray-100">
+                        <Image
+                          src={teacher.image || 'https://placehold.co/400x300/6B7280/FFFFFF?text=Teacher'}
+                          alt={teacher.name}
+                          layout="fill"
+                          objectFit="cover"
+                          className="group-hover:opacity-90 transition-opacity duration-300"
+                          quality={75}
+                          onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = 'https://placehold.co/400x300/6B7280/FFFFFF?text=Error';
+                          }}
+                        />
+                        
+                        {/* Position Badge */}
+                        {teacher.position && (
+                          <div className="absolute top-3 right-3 bg-white bg-opacity-90 text-gray-800 text-xs font-medium px-2 py-1 border border-gray-200">
+                            {teacher.position}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors duration-200">
+                          {teacher.name}
+                        </h3>
+                        
+                        {teacher.subject && (
+                          <p className="text-sm text-gray-600 mb-2 font-medium">
+                            {teacher.subject}
+                          </p>
+                        )}
+                        
+                        {teacher.nip && (
+                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 inline-block border border-gray-200">
+                            NIP: {teacher.nip}
+                          </div>
+                        )}
+
+                        {/* Contact Info */}
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>Staff Pengajar</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Lihat Lebih Banyak Button */}
+              {totalTeachersCount > maxPreviewItems && (
                 <motion.div
-                  key={teacher.id} // Gunakan 'teacher.id' sebagai key
-                  variants={cardVariants}
                   initial="hidden"
                   whileInView="visible"
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ delay: index * 0.08 }}
-                  className="bg-white rounded-xl shadow-xl overflow-hidden
-                             transform transition-all duration-300 ease-in-out
-                             hover:scale-[1.03] hover:shadow-2xl hover:border-blue-400 border border-transparent
-                             group relative cursor-pointer font-sans"
+                  variants={cardVariants}
+                  className="text-center mt-12"
                 >
-                  {/* Subtle gradient overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl pointer-events-none"></div>
-
-                  <div className="w-full h-44 relative overflow-hidden">
-                    <Image
-                      src={teacher.image || 'https://placehold.co/400x300/cccccc/333333?text=No+Image'} // Gunakan 'teacher.image'
-                      alt={teacher.name}
-                      layout="fill"
-                      objectFit="cover"
-                      className="transition-transform duration-500 group-hover:scale-110"
-                      quality={75}
-                      onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = 'https://placehold.co/400x300/cccccc/333333?text=Image+Error';
-                      }}
-                    />
-                    {/* Dark overlay at the bottom for text contrast */}
-                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                    {/* Role/Jabatan */}
-                    <p className="absolute bottom-2 left-2 text-white text-xs md:text-sm font-medium px-2 py-0.5 bg-blue-600 rounded-md shadow-md z-20">
-                      {teacher.position || 'Tenaga Pengajar'} {/* Gunakan 'teacher.position' */}
-                    </p>
-                  </div>
-                  <div className="p-4 text-center relative z-10">
-                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-1 leading-tight">{teacher.name}</h3>
-                    <p className="text-sm text-blue-700 font-semibold">{teacher.subject || 'Belum Ditentukan'}</p>
-                    {/* Menampilkan NIP jika ada */}
-                    {teacher.nip && <p className="text-xs text-gray-600">NIP: {teacher.nip}</p>}
-                  </div>
+                  <button
+                    onClick={handleViewMore}
+                    className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md group"
+                  >
+                    <span>Lihat Lebih Banyak</span>
+                    <svg 
+                      className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform duration-200" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </button>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Menampilkan {previewTeachers.length} dari {totalTeachersCount} pengajar
+                  </p>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {!loading && !error && teachers.length > 0 && totalPages > 1 && (
-          <div className="flex justify-center mt-10">
-            <motion.nav
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.5 }}
-              variants={textVariants}
-              className="inline-flex space-x-1 text-sm rounded-lg bg-white p-2 shadow-xl border border-gray-100"
-            >
-              <button
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-medium
-                  ${currentPage === 1
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-blue-700 bg-white hover:bg-blue-50 hover:text-blue-800'
-                  }`}
-              >
-                &larr; Sebelumnya
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i + 1)}
-                  className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-semibold
-                    ${currentPage === i + 1
-                      ? 'bg-blue-600 text-white shadow-md transform scale-105'
-                      : 'text-gray-700 bg-white hover:bg-blue-50 hover:text-blue-800'
-                    }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-1.5 rounded-lg transition-all duration-300 ease-in-out font-medium
-                  ${currentPage === totalPages
-                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                    : 'text-blue-700 bg-white hover:bg-blue-50 hover:text-blue-800'
-                  }`}
-              >
-                Berikutnya &rarr;
-              </button>
-            </motion.nav>
-          </div>
-        )}
-      </section>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </section>
   );
 };
 
-export default DaftarGuruPage;
+export default DaftarGuruPreview;

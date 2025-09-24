@@ -4,58 +4,58 @@ import { useState, useEffect, FC } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { Facility } from '@/types/Facility';
 
-const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
-  const [facilities, setFacilities] = useState<Facility[]>([]); // Tipekan state facilities
-  const [activeFacility, setActiveFacility] = useState<string | null>(null); // activeFacility akan menyimpan ID fasilitas
-  const [loading, setLoading] = useState<boolean>(true); // Tipekan state loading
-  const [error, setError] = useState<string | null>(null); // Tipekan state error
+const Fasilitas: FC = () => {
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [activeFacility, setActiveFacility] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Framer Motion Variants for general sections
   const sectionVariants: Variants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
 
-  // Variants for main content (sidebar and detail) for morph-like entry
+  // Variants for main content
   const containerVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.98, y: 30 },
+    hidden: { opacity: 0, scale: 0.98, y: 20 },
     visible: {
       opacity: 1,
       scale: 1,
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 80,
-        damping: 15,
-        delayChildren: 0.2,
-        staggerChildren: 0.1,
+        stiffness: 100,
+        damping: 20,
+        delayChildren: 0.1,
+        staggerChildren: 0.05,
       }
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    hidden: { opacity: 0, y: 15, scale: 0.98 },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 20,
+        stiffness: 120,
+        damping: 25,
       }
     },
   };
 
-  // Variants for facility detail content (when switching between facilities)
+  // Variants for facility detail content
   const detailVariants: Variants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
-    exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeIn" } },
+    initial: { opacity: 0, y: 15 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    exit: { opacity: 0, y: -15, transition: { duration: 0.2, ease: "easeIn" } },
   };
 
   // Function to fetch facility data from backend/API
-  const fetchFacilities = async (): Promise<void> => { // Tipekan fungsi fetchFacilities
+  const fetchFacilities = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
@@ -63,14 +63,13 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: Facility[] = await response.json(); // Tipekan data yang diterima
+      const data: Facility[] = await response.json();
       setFacilities(data);
 
       if (data.length > 0) {
-        // Set the first facility as active by default, pastikan id tidak null
         setActiveFacility(data[0].id ?? null);
       }
-    } catch (e: unknown) { // Gunakan unknown untuk error handling yang lebih aman
+    } catch (e: unknown) {
       console.error("Failed to fetch facilities data:", e);
       if (e instanceof Error) {
         setError(`Gagal memuat fasilitas. Detail: ${e.message}`);
@@ -87,186 +86,233 @@ const Fasilitas: FC = () => { // Gunakan FC untuk menipekan komponen
     fetchFacilities();
   }, []);
 
-  // Temukan fasilitas yang aktif
+  // Find active facility
   const currentFacility = facilities.find((fac: Facility) => fac.id === activeFacility);
 
   return (
     <MainLayout>
-      {/* Hero Section with Title */}
-      <section className="relative w-full py-16 md:py-24 lg:py-32 overflow-hidden bg-gradient-to-br from-blue-100 via-sky-100 to-cyan-100 font-sans"> {/* Padding dan font-sans */}
-        <div className="absolute inset-0 opacity-40 animate-blob-pulse">
-          <div className="absolute -top-10 -left-10 w-48 h-48 bg-sky-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-1/2 left-1/3 w-56 h-56 bg-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-        </div>
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* Professional Hero Section */}
+      <section className="relative w-full py-16 md:py-20 bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 border-b-4 border-blue-700 font-sans">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h1
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-800 leading-tight mb-3 drop-shadow-xl" // Font H1 lebih kecil
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4"
           >
-            Fasilitas <span className="text-cyan-600">Unggulan</span>
+            Fasilitas <span className="text-blue-300">Unggulan</span>
           </motion.h1>
           <motion.p
             initial="hidden"
             animate="visible"
             variants={sectionVariants}
             transition={{ delay: 0.2 }}
-            className="text-sm sm:text-base text-gray-800 max-w-2xl mx-auto mb-8 leading-relaxed" // Font P lebih kecil
+            className="text-base sm:text-lg text-blue-100 max-w-3xl mx-auto leading-relaxed font-medium"
           >
             Jelajahi berbagai fasilitas modern dan lengkap yang mendukung proses belajar mengajar di sekolah kami untuk pengalaman terbaik.
           </motion.p>
+          
+          {/* Professional breadcrumb-style indicator */}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={sectionVariants}
+            transition={{ delay: 0.4 }}
+            className="mt-8 inline-block bg-blue-800/30 px-6 py-2 border border-blue-600/50"
+          >
+            <span className="text-blue-100 font-semibold uppercase tracking-wide text-sm">Fasilitas Sekolah</span>
+          </motion.div>
         </div>
       </section>
 
       {/* Main Content Area */}
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14 bg-white shadow-inner-lg rounded-t-3xl -mt-16 relative z-10 font-sans"> {/* Padding dan font-sans */}
-        {/* Loading State with Skeleton */}
-        {loading && (
-          <div className="flex flex-col md:flex-row gap-6 mt-8"> {/* Gap lebih kecil */}
-            {/* Sidebar Skeleton */}
-            <div className="w-full md:w-1/4 bg-gray-100 p-5 rounded-xl shadow-md animate-pulse"> {/* Padding lebih kecil */}
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-8 bg-gray-300 rounded-md mb-2"></div>
-              ))}
-            </div>
-            {/* Content Skeleton */}
-            <div className="w-full md:w-3/4 bg-gray-100 p-7 rounded-xl shadow-md animate-pulse"> {/* Padding lebih kecil */}
-              <div className="w-full h-[250px] bg-gray-300 rounded-lg mb-5"></div> {/* Tinggi dan margin lebih kecil */}
-              <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Tinggi dan margin lebih kecil */}
-              <div className="h-4 bg-gray-300 rounded w-full mb-2"></div> {/* Tinggi dan margin lebih kecil */}
-              <div className="h-4 bg-gray-300 rounded w-11/12 mb-2"></div> {/* Tinggi dan margin lebih kecil */}
-              <div className="h-4 bg-gray-300 rounded w-5/6"></div>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {!loading && error && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={sectionVariants}
-            className="text-center py-16 bg-red-50 rounded-xl shadow-lg border border-red-200 font-sans" // Padding dan font-sans
-          >
-            <p className="text-lg text-red-700 font-semibold mb-3">{error}</p> {/* Font lebih kecil */}
-            <button
-              onClick={fetchFacilities}
-              className="px-6 py-2 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-md text-base" // Padding & font lebih kecil
-            >
-              Coba Lagi
-            </button>
-          </motion.div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && facilities.length === 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={sectionVariants}
-            className="text-center py-16 bg-blue-50 rounded-xl shadow-lg border border-blue-200 font-sans" // Padding dan font-sans
-          >
-            <p className="text-lg text-blue-700 font-semibold mb-3">Tidak ada fasilitas yang tersedia saat ini.</p> {/* Font lebih kecil */}
-            <p className="text-base text-gray-600">Mohon maaf, kami sedang mempersiapkan informasi lebih lanjut.</p>
-          </motion.div>
-        )}
-
-        {/* Main Content when data is loaded */}
-        {!loading && !error && facilities.length > 0 && (
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={containerVariants}
-            className="flex flex-col md:flex-row gap-6 relative mt-8" // Gap lebih kecil
-          >
-            {/* Background decoration (optional, for aesthetic touch) */}
-            <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl opacity-20 pointer-events-none">
-              <div className="absolute -top-10 -left-10 w-48 h-48 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-              <div className="absolute -top-10 -right-10 w-48 h-48 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-200 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-6000"></div>
-            </div>
-
-            {/* Left Sidebar for Navigation */}
-            <motion.div
-              variants={itemVariants}
-              className="w-full md:w-1/4 bg-white p-5 rounded-xl shadow-xl md:sticky md:top-20 h-fit z-10 border border-gray-100" // Padding lebih kecil, top lebih kecil
-            >
-              <h3 className="text-base font-bold text-gray-800 mb-3 pb-1.5 border-b border-gray-200">Daftar Fasilitas</h3> {/* Font H3 lebih kecil, padding lebih kecil */}
-              <nav>
-                <ul>
-                  {facilities.map((fac: Facility) => (
-                    <li key={fac.id ?? fac.name} className="mb-1.5"> {/* Margin bawah lebih kecil */}
-                      <button
-                        onClick={() => setActiveFacility(fac.id ?? null)}
-                        className={`relative block w-full text-left py-2.5 px-3 rounded-lg transition-all duration-300 ease-in-out group text-sm
-                          ${activeFacility === fac.id
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold shadow-md transform translate-x-0.5' // Transform lebih kecil
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-800'
-                          }`}
-                      >
-                        {fac.name}
-                        {activeFacility === fac.id && (
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2.5 w-2.5 bg-white rounded-full transition-all duration-300 group-hover:scale-125"></span>
-                        )}
-                      </button>
-                    </li>
+      <section className="bg-white font-sans">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Loading State with Professional Skeleton */}
+          {loading && (
+            <div className="flex flex-col lg:flex-row gap-8">
+              {/* Sidebar Skeleton */}
+              <div className="w-full lg:w-1/4 bg-gray-50 border-2 border-gray-200 shadow-lg animate-pulse">
+                <div className="bg-slate-800 p-4">
+                  <div className="h-5 bg-gray-600 w-3/4"></div>
+                </div>
+                <div className="p-4 space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-6 bg-gray-300"></div>
                   ))}
-                </ul>
-              </nav>
-            </motion.div>
+                </div>
+              </div>
+              {/* Content Skeleton */}
+              <div className="w-full lg:w-3/4 bg-gray-50 border-2 border-gray-200 shadow-lg animate-pulse">
+                <div className="p-6">
+                  <div className="w-full h-64 bg-gray-300 mb-6"></div>
+                  <div className="h-8 bg-gray-300 w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-300 w-full mb-2"></div>
+                  <div className="h-4 bg-gray-300 w-11/12 mb-2"></div>
+                  <div className="h-4 bg-gray-300 w-5/6"></div>
+                </div>
+              </div>
+            </div>
+          )}
 
-            {/* Right Content Area */}
+          {/* Error State */}
+          {!loading && error && (
             <motion.div
-              variants={itemVariants}
-              className="w-full md:w-3/4 bg-white p-7 rounded-xl shadow-xl z-10 border border-gray-100" // Padding lebih kecil
+              initial="hidden"
+              animate="visible"
+              variants={sectionVariants}
+              className="bg-white border-l-4 border-red-600 shadow-lg p-8 max-w-2xl mx-auto"
             >
-              <AnimatePresence mode="wait">
-                {currentFacility ? (
-                  <motion.div
-                    key={currentFacility.id ?? currentFacility.name}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={detailVariants}
-                  >
-                    <div className="mb-5 overflow-hidden rounded-lg shadow-md border border-gray-200"> {/* Margin bawah, rounded, shadow lebih kecil */}
-                      <Image
-                        src={currentFacility.image}
-                        alt={currentFacility.name}
-                        width={1600}
-                        height={900}
-                        layout="responsive"
-                        objectFit="cover"
-                        className="rounded-lg transition-transform duration-700 hover:scale-105" // Rounded lebih kecil
-                        priority={activeFacility === facilities[0]?.id}
-                      />
-                    </div>
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-3 leading-tight">{currentFacility.name}</h2> {/* Font H2 lebih kecil */}
-                    {currentFacility.description.split('\n\n').map((paragraph, index) => (
-                      <p key={index} className="text-sm text-gray-700 leading-relaxed mb-3"> {/* Font P lebih kecil */}
-                        {paragraph}
-                      </p>
-                    ))}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="no-facility-selected"
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    variants={detailVariants}
-                    className="text-center py-8 text-gray-600 text-base" // Padding dan font lebih kecil
-                  >
-                    <p>Silakan pilih salah satu fasilitas dari daftar di samping untuk melihat detailnya.</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="flex items-center mb-4">
+                <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">Error</h3>
+              </div>
+              <p className="text-base text-gray-700 mb-6">{error}</p>
+              <button
+                onClick={fetchFacilities}
+                className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold transition-all duration-300 shadow-md hover:shadow-lg uppercase tracking-wide text-sm"
+              >
+                Coba Lagi
+              </button>
             </motion.div>
-          </motion.div>
-        )}
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && facilities.length === 0 && (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={sectionVariants}
+              className="bg-white border-2 border-blue-200 shadow-lg p-12 max-w-2xl mx-auto text-center"
+            >
+              <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase tracking-wide">Tidak Ada Fasilitas</h3>
+              <p className="text-base text-gray-600">Tidak ada fasilitas yang tersedia saat ini. Mohon maaf, kami sedang mempersiapkan informasi lebih lanjut.</p>
+            </motion.div>
+          )}
+
+          {/* Main Content when data is loaded */}
+          {!loading && !error && facilities.length > 0 && (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={containerVariants}
+              className="flex flex-col lg:flex-row gap-8"
+            >
+              {/* Left Sidebar for Navigation */}
+              <motion.div
+                variants={itemVariants}
+                className="w-full lg:w-1/4 bg-gray-50 border-2 border-gray-300 shadow-lg lg:sticky lg:top-6 h-fit"
+              >
+                {/* Sidebar Header */}
+                <div className="bg-slate-800 text-white p-4">
+                  <h3 className="text-base font-bold uppercase tracking-wider">
+                    Daftar Fasilitas
+                  </h3>
+                </div>
+                
+                {/* Sidebar Navigation */}
+                <nav className="p-4">
+                  <ul className="space-y-2">
+                    {facilities.map((fac: Facility) => (
+                      <li key={fac.id ?? fac.name}>
+                        <button
+                          onClick={() => setActiveFacility(fac.id ?? null)}
+                          className={`relative block w-full text-left py-3 px-4 transition-all duration-300 ease-in-out text-sm font-medium border-l-4
+                            ${activeFacility === fac.id
+                              ? 'bg-blue-700 text-white border-blue-500 shadow-md'
+                              : 'text-gray-700 hover:bg-gray-100 hover:text-blue-800 border-transparent hover:border-blue-300'
+                            }`}
+                        >
+                          {fac.name}
+                          {activeFacility === fac.id && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-white"></span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </motion.div>
+
+              {/* Right Content Area */}
+              <motion.div
+                variants={itemVariants}
+                className="w-full lg:w-3/4 bg-white border-2 border-gray-200 shadow-lg"
+              >
+                <AnimatePresence mode="wait">
+                  {currentFacility ? (
+                    <motion.div
+                      key={currentFacility.id ?? currentFacility.name}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={detailVariants}
+                      className="p-8"
+                    >
+                      {/* Facility Image */}
+                      <div className="mb-8 bg-gray-100 border-2 border-gray-300 overflow-hidden shadow-lg">
+                        <Image
+                          src={currentFacility.image}
+                          alt={currentFacility.name}
+                          width={1200}
+                          height={600}
+                          layout="responsive"
+                          objectFit="cover"
+                          className="transition-transform duration-500 hover:scale-105"
+                          priority={activeFacility === facilities[0]?.id}
+                        />
+                      </div>
+                      
+                      {/* Facility Title */}
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-b-4 border-gray-300 pb-3 uppercase tracking-wide">
+                        {currentFacility.name}
+                      </h2>
+                      
+                      {/* Facility Description */}
+                      <div 
+                        className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                        style={{lineHeight: '1.7' }}
+                      >
+                        {currentFacility.description.split('\n\n').map((paragraph, index) => (
+                          <p key={index} className="text-base text-gray-700 leading-relaxed mb-4">
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+                      
+                      {/* Additional Info Section */}
+                      <div className="mt-8 pt-6 border-t-2 border-gray-300">
+                        <div className="bg-gray-50 border border-gray-200 p-4">
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Status Fasilitas</h4>
+                          <span className="inline-block bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold uppercase tracking-wide border border-green-300">
+                            Tersedia
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="no-facility-selected"
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      variants={detailVariants}
+                      className="p-12 text-center text-gray-600"
+                    >
+                      <div className="bg-gray-50 border-2 border-gray-200 p-8">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">Pilih Fasilitas</h3>
+                        <p className="text-base">Silakan pilih salah satu fasilitas dari daftar di samping untuk melihat detailnya.</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
+          )}
+        </div>
       </section>
     </MainLayout>
   );
