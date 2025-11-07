@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
 import type { Article } from '@/types/Article'; // Import tipe Article
+import Image from 'next/image';
 
 type ArticleFormModalProps = {
   article: Article | null; // Artikel yang sedang diedit (bisa null jika menambah baru)
@@ -145,7 +146,7 @@ const ArticleFormModal: FC<ArticleFormModalProps> = ({ article, onSave, onClose 
           {/* Preview Gambar */}
           {formData.image && (
             <div className="mt-1 flex justify-center">
-              <img
+              <Image
                 src={formData.image}
                 alt="Preview Artikel"
                 className="h-24 w-24 object-cover rounded-xl border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"

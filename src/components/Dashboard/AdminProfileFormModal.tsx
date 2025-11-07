@@ -2,7 +2,8 @@
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent, Dispatch, SetStateAction } from 'react';
 import type { AdminProfile } from '@/types/AdminProfile';
 import type { Notification } from '@/types/Notification';
-import { useRouter } from 'next/router'; // Menggunakan useRouter untuk navigasi
+// import { useRouter } from 'next/router'; // Menggunakan useRouter untuk navigasi
+import Image from 'next/image';
 
 // --- Komponen Modal Ubah Kata Sandi (Contoh Dummy) ---
 type ChangePasswordModalProps = {
@@ -50,8 +51,12 @@ const ChangePasswordModal: FC<ChangePasswordModalProps> = ({ onClose, setNotific
             
             setNotification({ message: "Kata sandi berhasil diubah!", type: "success" });
             onClose();
-        } catch (err: any) {
-            setError(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+              console.error(err.message);
+            } else {
+              console.error(String(err));
+            }
         } finally {
             setIsLoading(false);
         }
@@ -276,7 +281,7 @@ const AdminProfileFormModal: FC<AdminProfileFormModalProps> = ({ adminProfile, o
             {/* Preview */}
             {formData.profileImage && (
               <div className="mt-2 flex justify-center">
-                <img
+                <Image
                   src={formData.profileImage}
                   alt="Preview"
                   className="h-20 w-20 object-cover rounded-full border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"

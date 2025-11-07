@@ -11,6 +11,23 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: { project: ['./tsconfig.json'] }, // optional but fine
+    },
+    plugins: {
+      next: nextPlugin, // load Next rules
+    },
+    rules: {
+      // Either form works once the plugin is loaded:
+      '@next/next/no-img-element': 'off',
+      // or:
+      // 'next/no-img-element': 'off',
+    },
+  },
 ];
 
 export default eslintConfig;

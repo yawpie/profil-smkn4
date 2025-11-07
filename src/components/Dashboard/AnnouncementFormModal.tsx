@@ -19,7 +19,7 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
 
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB in bytes
+  // const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB in bytes
 
   useEffect(() => {
     if (announcement) {
@@ -49,25 +49,25 @@ const AnnouncementFormModal: FC<AnnouncementFormModalProps> = ({ announcement, o
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
-        setShowErrorModal(true);
-        e.target.value = '';
-        setFormData(prev => ({ ...prev, image: '' }));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setFormData(prev => ({ ...prev, image: '' }));
-    }
-  };
+  // const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     if (file.size > MAX_IMAGE_SIZE_BYTES) {
+  //       setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
+  //       setShowErrorModal(true);
+  //       e.target.value = '';
+  //       setFormData(prev => ({ ...prev, image: '' }));
+  //       return;
+  //     }
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setFormData(prev => ({ ...prev, image: reader.result as string }));
+  //     };
+  //     reader.readAsDataURL(file);
+  //   } else {
+  //     setFormData(prev => ({ ...prev, image: '' }));
+  //   }
+  // };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

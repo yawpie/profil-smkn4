@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
 import type { Achievement } from '@/types/Achievement';
+import Image from 'next/image';
 
 type AchievementFormModalProps = {
   achievement: Achievement | null; // Prestasi yang sedang diedit (bisa null jika menambah baru)
@@ -138,7 +139,7 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
 
           {imageUrl && (
             <div className="mt-1 flex justify-center">
-              <img
+              <Image
                 src={imageUrl}
                 alt="Preview Prestasi"
                 className="h-24 w-24 object-cover rounded-xl border-4 border-green-200 shadow-lg transition transform hover:scale-105 duration-200"

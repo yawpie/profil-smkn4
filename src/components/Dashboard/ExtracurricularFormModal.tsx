@@ -1,5 +1,6 @@
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
 import type { Extracurricular } from '@/types/Extracurricular';
+import Image from 'next/image';
 
 type ExtracurricularFormModalProps = {
   extracurricular: Extracurricular | null;
@@ -116,7 +117,7 @@ const ExtracurricularFormModal: FC<ExtracurricularFormModalProps> = ({ extracurr
           {/* Preview Gambar */}
           {formData.image && (
             <div className="mt-2 flex justify-center">
-              <img
+              <Image
                 src={formData.image}
                 alt="Preview Ekstrakurikuler"
                 className="h-24 w-24 object-cover rounded-full border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
