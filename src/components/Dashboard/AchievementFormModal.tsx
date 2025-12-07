@@ -141,6 +141,8 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
             <div className="mt-1 flex justify-center">
               <Image
                 src={imageUrl}
+                width={96}
+                height={96}
                 alt="Preview Prestasi"
                 className="h-24 w-24 object-cover rounded-xl border-4 border-green-200 shadow-lg transition transform hover:scale-105 duration-200"
                 onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {

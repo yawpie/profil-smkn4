@@ -156,7 +156,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({ teacher, onSave, onClose 
               NIP:
             </label>
             <input
-              type="text"
+              type="number"
               id="nip"
               name="nip"
               value={formData.nip ?? ''}

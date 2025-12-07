@@ -1,34 +1,71 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Layout from '../../components/Dashboard/Layout';
-import { PlusIcon, PencilIcon, TrashIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
-import ExtracurricularFormModal from '../../components/Dashboard/ExtracurricularFormModal';
-import type { Extracurricular } from '@/types/Extracurricular';
-import type { Notification } from '@/types/Notification';
+import React, { useState, useEffect, useCallback } from "react";
+import Layout from "../../components/Dashboard/Layout";
+import {
+  PlusIcon,
+  PencilIcon,
+  TrashIcon,
+  AcademicCapIcon,
+} from "@heroicons/react/24/outline";
+import ExtracurricularFormModal from "../../components/Dashboard/ExtracurricularFormModal";
+import type {
+  Extracurricular,
+  ExtracurricularApi,
+  ExtracurricularsApiEnvelope,
+} from "@/types/Extracurricular";
+import type { Notification } from "@/types/Notification";
+import {
+  apiDelete,
+  apiGet,
+  apiPost,
+  apiPut,
+  type ApiError,
+} from "@/utils/apiClient";
 
 const ExtracurricularsPage: React.FC = () => {
-  const [extracurriculars, setExtracurriculars] = useState<Extracurricular[]>([]);
+  const [extracurriculars, setExtracurriculars] = useState<Extracurricular[]>(
+    []
+  );
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [currentExtracurricular, setCurrentExtracurricular] = useState<Extracurricular | null>(null);
+  const [currentExtracurricular, setCurrentExtracurricular] =
+    useState<Extracurricular | null>(null);
   const [notification, setNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const itemsPerPage = 10;
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
   // Function to fetch extracurricular data from API
-  const fetchExtracurriculars = async () => {
+  const fetchExtracurriculars = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/extracurriculars');
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui dari server.' }));
-        throw new Error(`HTTP error! status: ${response.status}: ${errorData.message || response.statusText}`);
+      const res = await apiGet<ExtracurricularsApiEnvelope>(
+        `/extracurriculars/?page=${currentPage}&limit=${itemsPerPage}`
+      );
+      const rawItems: ExtracurricularApi[] = res.data;
+
+      const mapped: Extracurricular[] = rawItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description ?? "",
+        image: item.image_url ?? undefined,
+        coach: undefined,
+        schedule: undefined,
+      }));
+
+      setExtracurriculars(mapped);
+
+      // Set pagination info from response
+      if (res.page) {
+        setTotalPages(Math.ceil(res.total / itemsPerPage));
+        setTotalItems(res.total || 0);
       }
-      const data: Extracurricular[] = await response.json();
-      setExtracurriculars(data);
     } catch (e: unknown) {
       console.error("Failed to fetch extracurriculars:", e);
       if (e instanceof Error) {
@@ -39,11 +76,11 @@ const ExtracurricularsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
     fetchExtracurriculars();
-  }, []);
+  }, [fetchExtracurriculars]);
 
   const handleAddEdit = (extracurricular: Extracurricular | null = null) => {
     setCurrentExtracurricular(extracurricular);
@@ -59,26 +96,27 @@ const ExtracurricularsPage: React.FC = () => {
     if (!deleteItemId) return;
 
     try {
-      const response = await fetch(`/api/extracurriculars?id=${deleteItemId}`, {
-        method: 'DELETE',
+      await apiDelete<{ message: string }>(
+        `/extracurriculars?id=${deleteItemId}`
+      );
+      setNotification({
+        message: "Ekstrakurikuler berhasil dihapus!",
+        type: "success",
       });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
-        const errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
-        setNotification({ message: errorMessage, type: 'error' });
-        console.error('Backend Error Response for DELETE:', errorData);
-        return;
-      }
-      await response.json();
-      setNotification({ message: 'Ekstrakurikuler berhasil dihapus!', type: 'success' });
+      setCurrentPage(1); // Reset to first page
       fetchExtracurriculars();
     } catch (e: unknown) {
       console.error("Gagal menghapus ekstrakurikuler:", e);
-      if (e instanceof Error) {
-        setNotification({ message: `Gagal menghapus ekstrakurikuler: ${e.message}`, type: 'error' });
-      } else {
-        setNotification({ message: 'Gagal menghapus ekstrakurikuler. Silakan coba lagi.', type: 'error' });
-      }
+      const apiError = e as ApiError;
+      const message =
+        apiError?.message ||
+        (e instanceof Error
+          ? e.message
+          : "Gagal menghapus ekstrakurikuler. Silakan coba lagi.");
+      setNotification({
+        message: `Gagal menghapus ekstrakurikuler: ${message}`,
+        type: "error",
+      });
     } finally {
       setShowConfirmModal(false);
       setDeleteItemId(null);
@@ -90,42 +128,56 @@ const ExtracurricularsPage: React.FC = () => {
     setDeleteItemId(null);
   };
 
-  const handleSaveExtracurricular = async (newExtracurricular: Extracurricular) => {
+  const handleSaveExtracurricular = async (
+    newExtracurricular: Extracurricular
+  ) => {
     try {
-      const method = newExtracurricular.id ? 'PUT' : 'POST';
-      const response = await fetch('/api/extracurriculars', {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newExtracurricular),
-      });
+      const isEdit = Boolean(newExtracurricular.id);
+      const formData = new FormData();
+      formData.append("name", newExtracurricular.name);
+      if (newExtracurricular.description) {
+        formData.append("description", newExtracurricular.description);
+      }
+      // guru_id is optional and currently not managed in UI
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Kesalahan tidak diketahui.' }));
-        let errorMessage = `HTTP error! Status: ${response.status}: ${errorData.message || response.statusText}`;
-
-        if (response.status === 413) {
-          errorMessage = "Gagal menyimpan ekstrakurikuler. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
-        }
-        
-        setNotification({ message: errorMessage, type: 'error' });
-        console.error('Backend Error Response for SAVE:', errorData);
-        return;
+      if (isEdit && newExtracurricular.id) {
+        await apiPut<ExtracurricularsApiEnvelope, FormData>(
+          `/extracurriculars?id=${newExtracurricular.id}`,
+          formData
+        );
+      } else {
+        await apiPost<ExtracurricularsApiEnvelope, FormData>(
+          "/extracurriculars",
+          formData
+        );
       }
 
-      await response.json();
-      setNotification({ message: `Ekstrakurikuler berhasil ${newExtracurricular.id ? 'diperbarui' : 'ditambahkan'}!`, type: 'success' });
+      setNotification({
+        message: `Ekstrakurikuler berhasil ${
+          isEdit ? "diperbarui" : "ditambahkan"
+        }!`,
+        type: "success",
+      });
       setIsModalOpen(false);
       setCurrentExtracurricular(null);
+      setCurrentPage(1); // Reset to first page
       fetchExtracurriculars();
     } catch (e: unknown) {
       console.error("Gagal menyimpan ekstrakurikuler:", e);
-      if (e instanceof Error) {
-        setNotification({ message: `Gagal menyimpan ekstrakurikuler: ${e.message}`, type: 'error' });
-      } else {
-        setNotification({ message: 'Gagal menyimpan ekstrakurikuler. Silakan coba lagi.', type: 'error' });
+      const apiError = e as ApiError;
+      let errorMessage =
+        apiError?.message ||
+        (e instanceof Error
+          ? e.message
+          : "Gagal menyimpan ekstrakurikuler. Silakan coba lagi.");
+      if (apiError?.status === 413) {
+        errorMessage =
+          "Gagal menyimpan ekstrakurikuler. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.";
       }
+      setNotification({
+        message: `Gagal menyimpan ekstrakurikuler: ${errorMessage}`,
+        type: "error",
+      });
     }
   };
 
@@ -141,8 +193,12 @@ const ExtracurricularsPage: React.FC = () => {
                   <AcademicCapIcon className="h-8 w-8 text-purple-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Manajemen Ekstrakurikuler</h1>
-                  <p className="text-gray-600 mt-1">Kelola dan pantau semua kegiatan ekstrakurikuler</p>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Manajemen Ekstrakurikuler
+                  </h1>
+                  <p className="text-gray-600 mt-1">
+                    Kelola dan pantau semua kegiatan ekstrakurikuler
+                  </p>
                 </div>
               </div>
               <button
@@ -161,18 +217,32 @@ const ExtracurricularsPage: React.FC = () => {
               <div className="flex items-center justify-center py-16">
                 <div className="flex flex-col items-center gap-4">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                  <p className="text-gray-600 font-medium">Memuat data ekstrakurikuler...</p>
+                  <p className="text-gray-600 font-medium">
+                    Memuat data ekstrakurikuler...
+                  </p>
                 </div>
               </div>
             ) : error ? (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center">
                   <div className="p-4 bg-red-100 rounded-full inline-block mb-4">
-                    <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="h-8 w-8 text-red-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                   </div>
-                  <p className="text-red-600 font-semibold text-lg mb-2">Terjadi Kesalahan</p>
+                  <p className="text-red-600 font-semibold text-lg mb-2">
+                    Terjadi Kesalahan
+                  </p>
                   <p className="text-gray-600">{error}</p>
                 </div>
               </div>
@@ -210,8 +280,13 @@ const ExtracurricularsPage: React.FC = () => {
                               <AcademicCapIcon className="h-12 w-12 text-gray-400" />
                             </div>
                             <div>
-                              <p className="text-gray-900 font-semibold text-lg">Belum ada ekstrakurikuler</p>
-                              <p className="text-gray-500 mt-1">Mulai dengan menambahkan ekstrakurikuler pertama Anda</p>
+                              <p className="text-gray-900 font-semibold text-lg">
+                                Belum ada ekstrakurikuler
+                              </p>
+                              <p className="text-gray-500 mt-1">
+                                Mulai dengan menambahkan ekstrakurikuler pertama
+                                Anda
+                              </p>
                             </div>
                             <button
                               onClick={() => handleAddEdit()}
@@ -225,23 +300,38 @@ const ExtracurricularsPage: React.FC = () => {
                       </tr>
                     ) : (
                       extracurriculars.map((item, index) => (
-                        <tr key={item.id} className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
+                        <tr
+                          key={item.id}
+                          className={`hover:bg-gray-50 transition-colors duration-150 ${
+                            index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                          }`}
+                        >
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
-                              <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                              <p className="text-xs text-gray-500 mt-1">ID: {item.id}</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {item.name}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                ID: {item.id}
+                              </p>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             {item.image ? (
                               <div className="relative">
-                                <img 
-                                  src={item.image} 
-                                  alt={item.name} 
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
                                   className="h-16 w-16 rounded-lg object-cover border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200"
-                                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                                  onError={(
+                                    e: React.SyntheticEvent<
+                                      HTMLImageElement,
+                                      Event
+                                    >
+                                  ) => {
                                     e.currentTarget.onerror = null;
-                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=64&h=64&q=70';
+                                    e.currentTarget.src =
+                                      "https://images.unsplash.com/photo-1586348902889-437aa5a670fd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTZ8fG5vJTIwaW1hZ2V8ZW58MHx8MHx8&auto=format&fit=crop&w=64&h=64&q=70";
                                   }}
                                 />
                               </div>
@@ -252,7 +342,10 @@ const ExtracurricularsPage: React.FC = () => {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-sm text-gray-700 max-w-xs truncate" title={item.description}>
+                            <p
+                              className="text-sm text-gray-700 max-w-xs truncate"
+                              title={item.description}
+                            >
                               {item.description}
                             </p>
                           </td>
@@ -263,7 +356,9 @@ const ExtracurricularsPage: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-sm text-gray-700 font-medium">{item.schedule}</p>
+                            <p className="text-sm text-gray-700 font-medium">
+                              {item.schedule}
+                            </p>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
@@ -288,6 +383,153 @@ const ExtracurricularsPage: React.FC = () => {
                     )}
                   </tbody>
                 </table>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      {/* Pagination Info */}
+                      <div className="text-sm text-gray-700">
+                        Menampilkan{" "}
+                        <span className="font-medium">
+                          {(currentPage - 1) * itemsPerPage + 1}
+                        </span>{" "}
+                        hingga{" "}
+                        <span className="font-medium">
+                          {Math.min(currentPage * itemsPerPage, totalItems)}
+                        </span>{" "}
+                        dari <span className="font-medium">{totalItems}</span>{" "}
+                        hasil
+                      </div>
+
+                      {/* Pagination Controls */}
+                      <div className="flex items-center space-x-2">
+                        {/* Previous Button */}
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(1, prev - 1))
+                          }
+                          disabled={currentPage === 1}
+                          className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                            currentPage === 1
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                          }`}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Sebelumnya
+                        </button>
+
+                        {/* Page Numbers */}
+                        <div className="hidden sm:flex items-center space-x-1">
+                          {(() => {
+                            const pages = [];
+                            const maxVisible = 7;
+
+                            if (totalPages <= maxVisible) {
+                              for (let i = 1; i <= totalPages; i++) {
+                                pages.push(i);
+                              }
+                            } else {
+                              pages.push(1);
+                              let start = Math.max(2, currentPage - 1);
+                              let end = Math.min(
+                                totalPages - 1,
+                                currentPage + 1
+                              );
+
+                              if (currentPage <= 3) {
+                                end = 5;
+                              }
+                              if (currentPage >= totalPages - 2) {
+                                start = totalPages - 4;
+                              }
+
+                              if (start > 2) {
+                                pages.push(-1);
+                              }
+                              for (let i = start; i <= end; i++) {
+                                pages.push(i);
+                              }
+                              if (end < totalPages - 1) {
+                                pages.push(-2);
+                              }
+                              pages.push(totalPages);
+                            }
+
+                            return pages.map((page, index) => {
+                              if (page < 0) {
+                                return (
+                                  <span
+                                    key={`ellipsis-${index}`}
+                                    className="px-3 py-2 text-gray-500"
+                                  >
+                                    ...
+                                  </span>
+                                );
+                              }
+                              return (
+                                <button
+                                  key={page}
+                                  onClick={() => setCurrentPage(page)}
+                                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                                    currentPage === page
+                                      ? "bg-blue-600 text-white shadow-sm"
+                                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              );
+                            });
+                          })()}
+                        </div>
+
+                        {/* Mobile Page Indicator */}
+                        <div className="sm:hidden px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg">
+                          {currentPage} / {totalPages}
+                        </div>
+
+                        {/* Next Button */}
+                        <button
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(totalPages, prev + 1)
+                            )
+                          }
+                          disabled={currentPage === totalPages}
+                          className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                            currentPage === totalPages
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                          }`}
+                        >
+                          Selanjutnya
+                          <svg
+                            className="w-4 h-4 ml-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -310,12 +552,17 @@ const ExtracurricularsPage: React.FC = () => {
                 <TrashIcon className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Konfirmasi Penghapusan</h3>
-                <p className="text-gray-600 text-sm">Tindakan ini tidak dapat dibatalkan</p>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Konfirmasi Penghapusan
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Tindakan ini tidak dapat dibatalkan
+                </p>
               </div>
             </div>
             <p className="text-gray-700 mb-6">
-              Apakah Anda yakin ingin menghapus ekstrakurikuler ini? Semua data terkait akan dihapus secara permanen.
+              Apakah Anda yakin ingin menghapus ekstrakurikuler ini? Semua data
+              terkait akan dihapus secara permanen.
             </p>
             <div className="flex justify-end gap-3">
               <button

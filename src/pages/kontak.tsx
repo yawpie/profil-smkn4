@@ -232,13 +232,13 @@ const HubungiKami: React.FC = () => {
                   Tim SMKN 4 Mataram siap membantu Anda dengan informasi terkini tentang pendaftaran, program studi, dan kegiatan sekolah.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <a 
+                  {/* <a 
                     href="tel:+6281805422671"
                     className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors duration-200 border border-blue-600"
                   >
                     <FontAwesomeIcon icon={faPhone} className="w-4 h-4" />
                     Telepon Sekarang
-                  </a>
+                  </a> */}
                   <a 
                     href="mailto:smkn4mtrm@gmail.com"
                     className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-colors duration-200 border border-slate-600"

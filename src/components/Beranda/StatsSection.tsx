@@ -90,7 +90,7 @@ const StatsSection = ({
   stats = {
     totalSiswa: "800",
     totalGuru: 0,
-    totalStaff: 0,
+    // totalStaff: 0,
     totalEkstrakurikuler: 0,
     totalJurusan: 0,
     totalFasilitas: 0,
@@ -99,7 +99,7 @@ const StatsSection = ({
   stats: {
     totalSiswa: string | number;
     totalGuru: number;
-    totalStaff: number;
+    // totalStaff: number;
     totalEkstrakurikuler: number;
     totalJurusan: number;
     totalFasilitas: number;
@@ -163,7 +163,7 @@ const StatsSection = ({
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4 sm:gap-5 lg:gap-6">
           <StatItem label="Siswa Aktif" value={stats.totalSiswa} index={0} />
           <StatItem label="Guru" value={stats.totalGuru} index={1} />
-          <StatItem label="Staf" value={stats.totalStaff} index={2} />
+          {/* <StatItem label="Staf" value={stats.totalStaff} index={2} /> */}
           <StatItem
             label="Ekstrakurikuler"
             value={stats.totalEkstrakurikuler}

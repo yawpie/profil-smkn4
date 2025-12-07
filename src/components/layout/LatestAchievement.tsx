@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, FC } from 'react';
-import { motion, type Variants } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
-import type { Achievement } from '@/types/Achievement';
+import React, { useState, useEffect, FC } from "react";
+import { motion, type Variants } from "framer-motion";
+import Link from "next/link";
+import Image from "next/image";
+import type { Achievement, AchievementsApiEnvelope } from "@/types/Achievement";
+import { apiGet, type ApiError } from "@/utils/apiClient";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -37,15 +38,19 @@ const LatestAchievement: FC = () => {
 
   const formatDate = (dateString: string): string => {
     if (!dateString) {
-      return '';
+      return "";
     }
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        throw new Error('Invalid date string');
+        throw new Error("Invalid date string");
       }
-      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-      return date.toLocaleDateString('id-ID', options);
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      return date.toLocaleDateString("id-ID", options);
     } catch (e) {
       console.error("Gagal memformat tanggal:", dateString, e);
       return dateString;
@@ -55,21 +60,35 @@ const LatestAchievement: FC = () => {
   useEffect(() => {
     async function fetchLatestAchievement(): Promise<void> {
       try {
-        const response = await fetch('/api/achievements');
-        if (!response.ok) {
-          throw new Error(`Kesalahan HTTP! status: ${response.status}`);
-        }
-        const data: Achievement[] = await response.json();
-        
+        const response = await apiGet<AchievementsApiEnvelope>("/achievements");
+
+        const data: Achievement[] = response.data.map((item) => ({
+          id: item.id,
+          title: item.title,
+          image: item.image_url || "/images/placeholder-achievement.png",
+          description: item.description,
+          content: item.content,
+          publishDate: item.publishDate,
+        }));
         if (data && data.length > 0) {
-          const latest = data.sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime())[0];
-          setAchievement(latest); 
+          const latest = data
+            .slice()
+            .sort(
+              (a, b) =>
+                new Date(b.publishDate).getTime() -
+                new Date(a.publishDate).getTime()
+            )[0];
+          setAchievement(latest);
         } else {
           setAchievement(null);
         }
       } catch (e: unknown) {
         console.error("Gagal mengambil prestasi terbaru:", e);
-        if (e instanceof Error) {
+        if ((e as ApiError)?.message) {
+          setError(
+            `Gagal memuat prestasi terbaru. Detail: ${(e as ApiError).message}`
+          );
+        } else if (e instanceof Error) {
           setError(`Gagal memuat prestasi terbaru. Detail: ${e.message}`);
         } else {
           setError("Gagal memuat prestasi terbaru. Silakan coba lagi nanti.");
@@ -114,7 +133,9 @@ const LatestAchievement: FC = () => {
           variants={containerVariants}
           className="bg-gray-50 border border-gray-200 p-6 text-center"
         >
-          <p className="text-gray-600 font-medium">Belum ada prestasi terbaru saat ini.</p>
+          <p className="text-gray-600 font-medium">
+            Belum ada prestasi terbaru saat ini.
+          </p>
         </motion.div>
       </section>
     );
@@ -174,24 +195,44 @@ const LatestAchievement: FC = () => {
                   {achievement.title}
                 </h4>
                 <div className="flex items-center text-sm text-gray-500">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   {formatDate(achievement.publishDate)}
                 </div>
               </div>
-              
+
               <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-2">
                 {achievement.description}
               </p>
-              
-              <Link 
-                href={`/prestasi/${achievement.id}`} 
+
+              <Link
+                href={`/prestasi/${achievement.id}`}
                 className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
               >
                 <span>Baca Selengkapnya</span>
-                <svg className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg
+                  className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </Link>
             </div>

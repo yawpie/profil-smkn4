@@ -4,8 +4,9 @@ import MainLayout from '../../components/layout/MainLayout';
 import Image from 'next/image';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
-import type { Achievement } from '@/types/Achievement';
+import type { Achievement, AchievementApi } from '@/types/Achievement';
 import Head from 'next/head';
+import { apiGet } from '@/utils/apiClient';
 
 // Helper function to format dates
 const formatDate = (dateString: string): string => {
@@ -47,16 +48,16 @@ const AchievementDetailPage: FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/achievements?id=${id}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('Achievement not found.');
-          } else {
-            throw new Error(`Failed to load data: ${response.statusText}`);
-          }
-        }
-        const data: Achievement = await response.json();
-        if (data) {
+        const response = await apiGet<AchievementApi>(`/achievements?id=${id}`);
+        if (response) {
+          const data: Achievement = {
+            id: response.id,
+            title: response.title,
+            content: response.content,
+            description: response.description || '',
+            publishDate: response.publishDate || '',
+            image: response.image_url || "/images/placeholder-achievement.png",
+          };
           setAchievement(data);
         } else {
           setError('Achievement data not available.');

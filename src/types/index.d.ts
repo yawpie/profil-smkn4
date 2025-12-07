@@ -10,8 +10,8 @@ export type TotalsData = {
   
   export type MonthlyDataItem = {
     name: string;
-    students: number;
-    teachers: number;
+    // students: number;
+    // teachers: number;
     articles: number;
   };
   

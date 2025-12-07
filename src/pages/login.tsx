@@ -3,6 +3,7 @@
 import React, { useState, FC, ChangeEvent, FormEvent } from 'react';
 import { FaUserAlt, FaLock } from 'react-icons/fa';
 import { useRouter } from 'next/router';
+import { apiPost } from '@/utils/apiClient';
 
 const LoginPage: FC = () => {
   const [username, setUsername] = useState<string>('');
@@ -27,13 +28,9 @@ const LoginPage: FC = () => {
 
     try {
       // Kirim request login
-      const loginResponse: Response = await fetch('http://192.168.236.15:3000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
+      const loginResponse: LoginResponseData = await apiPost('/login', {
+        username,
+        password,
       });
 
       type LoginResponseData = {
@@ -41,13 +38,12 @@ const LoginPage: FC = () => {
         token?: string;
       };
 
-      const loginData: LoginResponseData = await loginResponse.json();
-
-      if (!loginResponse.ok) {
-        // Jika respons dari server tidak OK (misalnya, 401 Unauthorized),
-        // gunakan pesan error dari server.
-        throw new Error(loginData.message || 'Silahkan periksa kembali username dan password Anda.');
-      }
+      
+      // if (!loginResponse.ok) {
+      //   // Jika respons dari server tidak OK (misalnya, 401 Unauthorized),
+      //   // gunakan pesan error dari server.
+      //   throw new Error(loginData.message || 'Silahkan periksa kembali username dan password Anda.');
+      // }
 
       // ✅ Login sukses
       setSuccess(`Login Berhasil! Selamat datang.`);
@@ -55,7 +51,7 @@ const LoginPage: FC = () => {
       setPassword('');
       setError('');
 
-      router.push('/dashboard');
+      router.push('/predashboard');
 
     } catch (err: any) {
       // Menangani error dari `fetch` (seperti "Failed to fetch") atau error yang di-throw

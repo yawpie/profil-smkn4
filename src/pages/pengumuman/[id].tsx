@@ -1,21 +1,26 @@
 // pages/pengumuman/[id].tsx
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
-import Link from 'next/link';
-import type { Announcement } from '@/types/Announcement';
-import MainLayout from '../../components/layout/MainLayout';
-import Head from 'next/head';
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { motion, type Variants } from "framer-motion";
+import Link from "next/link";
+import type {
+  Announcement,
+  AnnouncementApi,
+  AnnouncementsApiEnvelope,
+} from "@/types/Announcement";
+import MainLayout from "../../components/layout/MainLayout";
+import Head from "next/head";
+import { apiGet } from "@/utils/apiClient";
 
 // Motion variants
 const fadeInVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 const slideInVariants: Variants = {
   hidden: { opacity: 0, x: -15 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
 const AnnouncementDetailPage: React.FC = () => {
@@ -33,18 +38,24 @@ const AnnouncementDetailPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/announcements?id=${id}`);
-        if (!res.ok) {
-          throw new Error(`Gagal mengambil data: ${res.statusText}`);
-        }
-        const data: Announcement = await res.json();
-        if (data) {
-          setAnnouncement(data);
+        const res = await apiGet<AnnouncementApi>(`/announcement?id=${id}`);
+        console.log(res);
+        
+        if (res) {
+          const mapped: Announcement = {
+            id: res.id,
+            title: res.title,
+            content: res.content,
+            publishDate: res.date,
+            status: res.status === "PUBLISHED" ? "Published" : "Draft",
+            image: res.image_url,
+          };
+          setAnnouncement(mapped);
         } else {
-          setError('Data pengumuman tidak ditemukan.');
+          setError("Data pengumuman tidak ditemukan.");
         }
       } catch (err: any) {
-        console.error('Error fetching announcement details:', err);
+        console.error("Error fetching announcement details:", err);
         setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
       } finally {
         setLoading(false);
@@ -56,17 +67,17 @@ const AnnouncementDetailPage: React.FC = () => {
 
   // Helper function to format date
   const formatDate = (dateString: string): string => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        throw new Error('Invalid date string');
+        throw new Error("Invalid date string");
       }
-      return date.toLocaleDateString('id-ID', { 
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString("id-ID", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     } catch (e) {
       console.error("Error formatting date:", e);
@@ -95,8 +106,8 @@ const AnnouncementDetailPage: React.FC = () => {
         <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-slate-50">
           <div className="max-w-2xl mx-auto bg-red-50 border-l-4 border-red-500 p-8 text-center">
             <p className="text-lg text-red-800 font-semibold mb-4">{error}</p>
-            <Link 
-              href="/pengumuman" 
+            <Link
+              href="/pengumuman"
               className="inline-block px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-200"
             >
               Kembali ke Daftar Pengumuman
@@ -113,9 +124,11 @@ const AnnouncementDetailPage: React.FC = () => {
       <MainLayout>
         <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-slate-50">
           <div className="max-w-2xl mx-auto bg-slate-100 border-l-4 border-slate-400 p-8 text-center">
-            <p className="text-lg text-slate-800 font-semibold mb-4">Pengumuman tidak tersedia</p>
-            <Link 
-              href="/pengumuman" 
+            <p className="text-lg text-slate-800 font-semibold mb-4">
+              Pengumuman tidak tersedia
+            </p>
+            <Link
+              href="/pengumuman"
               className="inline-block px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-medium transition-colors duration-200"
             >
               Kembali ke Daftar Pengumuman
@@ -130,11 +143,30 @@ const AnnouncementDetailPage: React.FC = () => {
     <MainLayout>
       <Head>
         <title>{announcement.title} - Pengumuman SMKN 4 Mataram</title>
-        <meta name="description" content={announcement.summary || announcement.content?.substring(0, 160) || `Detail pengumuman ${announcement.title} dari SMKN 4 Mataram.`} />
+        <meta
+          name="description"
+          content={
+            announcement.summary ||
+            announcement.content?.substring(0, 160) ||
+            `Detail pengumuman ${announcement.title} dari SMKN 4 Mataram.`
+          }
+        />
         <meta property="og:title" content={announcement.title} />
-        <meta property="og:description" content={announcement.summary || announcement.content?.substring(0, 160) || `Detail pengumuman ${announcement.title} dari SMKN 4 Mataram.`} />
+        <meta
+          property="og:description"
+          content={
+            announcement.summary ||
+            announcement.content?.substring(0, 160) ||
+            `Detail pengumuman ${announcement.title} dari SMKN 4 Mataram.`
+          }
+        />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/pengumuman/${announcement.id}`} />
+        <meta
+          property="og:url"
+          content={`${
+            process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+          }/pengumuman/${announcement.id}`}
+        />
         <meta name="twitter:card" content="summary" />
       </Head>
 
@@ -147,7 +179,7 @@ const AnnouncementDetailPage: React.FC = () => {
           <div className="absolute bottom-10 left-1/4 w-16 h-16 bg-blue-500 transform rotate-45"></div>
           <div className="absolute bottom-20 right-1/3 w-20 h-20 bg-slate-500 transform -rotate-45"></div>
         </div>
-        
+
         <div className="relative container mx-auto px-6 sm:px-8 lg:px-12">
           <motion.div
             initial="hidden"
@@ -160,11 +192,17 @@ const AnnouncementDetailPage: React.FC = () => {
               className="mb-10 text-sm text-slate-300"
               variants={slideInVariants}
             >
-              <Link href="/" className="hover:text-white transition-colors duration-200">
+              <Link
+                href="/"
+                className="hover:text-white transition-colors duration-200"
+              >
                 Beranda
               </Link>
               <span className="mx-2">/</span>
-              <Link href="/pengumuman" className="hover:text-white transition-colors duration-200">
+              <Link
+                href="/pengumuman"
+                className="hover:text-white transition-colors duration-200"
+              >
                 Pengumuman
               </Link>
               <span className="mx-2">/</span>
@@ -182,11 +220,11 @@ const AnnouncementDetailPage: React.FC = () => {
                 </div>
                 <div className="w-1 h-12 bg-blue-500 ml-6"></div>
               </div>
-              
+
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-8 px-4">
                 {announcement.title}
               </h1>
-              
+
               <div className="flex items-center justify-center text-slate-300 text-base">
                 <time className="font-medium">
                   {formatDate(announcement.publishDate)}
@@ -223,21 +261,24 @@ const AnnouncementDetailPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="w-20 h-1 bg-blue-600 mb-6"></div>
-                  
+
                   <div className="flex items-center text-base text-slate-600">
                     <span className="font-medium">Dipublikasikan:</span>
-                    <time className="ml-2">{formatDate(announcement.publishDate)}</time>
+                    <time className="ml-2">
+                      {formatDate(announcement.publishDate)}
+                    </time>
                   </div>
                 </header>
 
                 {/* Article Content */}
-                <div className="prose prose-xl prose-slate max-w-none"
-                >
-                  <div 
+                <div className="prose prose-xl prose-slate max-w-none">
+                  <div
                     className="text-slate-700 leading-relaxed text-lg"
-                    dangerouslySetInnerHTML={{ 
-                      __html: announcement.content || '<p>Konten pengumuman tidak tersedia.</p>' 
-                    }} 
+                    dangerouslySetInnerHTML={{
+                      __html:
+                        announcement.content ||
+                        "<p>Konten pengumuman tidak tersedia.</p>",
+                    }}
                   />
                 </div>
               </div>
@@ -250,17 +291,22 @@ const AnnouncementDetailPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.5 }}
             >
-              <Link 
-                href="/pengumuman" 
+              <Link
+                href="/pengumuman"
                 className="inline-flex items-center px-10 py-5 bg-slate-600 hover:bg-slate-700 text-white font-medium text-lg transition-colors duration-200 group"
               >
-                <svg 
-                  className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform duration-200" 
-                  fill="none" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform duration-200"
+                  fill="none"
+                  stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
                 </svg>
                 Kembali ke Daftar Pengumuman
               </Link>
@@ -281,7 +327,8 @@ const AnnouncementDetailPage: React.FC = () => {
               </div>
               <div className="w-20 h-1 bg-blue-600 mb-6"></div>
               <p className="text-slate-600 mb-8 text-lg leading-relaxed">
-                Untuk informasi lebih lanjut mengenai pengumuman ini, silakan hubungi bagian administrasi sekolah.
+                Untuk informasi lebih lanjut mengenai pengumuman ini, silakan
+                hubungi bagian administrasi sekolah.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
