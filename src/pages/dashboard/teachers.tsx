@@ -120,6 +120,9 @@ const TeachersPage: React.FC = () => {
       if (newTeacher.nip) {
         formData.append("nip", newTeacher.nip);
       }
+      if (newTeacher.imageFile) {
+        formData.append("image", newTeacher.imageFile);
+      }
 
       // If subject is distinct from jabatan and backend supports it, you could
       // append it as an extra field here. For now, subject is mapped from jabatan.

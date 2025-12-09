@@ -16,11 +16,11 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({ teacher, onSave, onClose 
     subject: teacher?.subject || '',
     nip: teacher?.nip || '',
     position: teacher?.position || '',
+    imageFile: null,
   });
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 5 MB in bytes
-
+  const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB in bytes
   useEffect(() => {
     // Memastikan form terisi dengan data terbaru saat modal dibuka atau 'teacher' berubah
     if (teacher) {
@@ -48,7 +48,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({ teacher, onSave, onClose 
         setFormData(prev => ({ ...prev, image: '' })); // Clear preview
         return;
       }
-
+      setFormData(prev => ({ ...prev, imageFile: file }));
       // Read file as Data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -112,7 +112,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({ teacher, onSave, onClose 
               type="file" // Changed to file input
               id="image"
               name="image"
-              accept="image/*" // Restrict to image files
+              accept="image/jpeg,image/png,image/webp,image/pjpeg" // Restrict to image files
               onChange={handleFileChange} // Use the new file handler
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />

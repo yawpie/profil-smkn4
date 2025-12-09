@@ -18,7 +18,8 @@ export type Teacher = {
   image: string; // normalized URL (from image_url or fallback)
   subject: string; // kept for UI compatibility; can be derived from jabatan if needed
   nip: string | null;
-  position: string; // maps from jabatan
+  position: string; // maps from jabatan,
+  imageFile?: File | null; 
 };
 
 // Outer envelope from backend for list endpoint
