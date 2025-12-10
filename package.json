@@ -1,6 +1,6 @@
 {
-  "name": "smkn4-profile",
-  "version": "0.1.0",
+  "name": "frontend-smkn4",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
