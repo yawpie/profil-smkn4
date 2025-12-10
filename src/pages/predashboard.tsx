@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 export default function PreDashboardPage() {
     const router = useRouter();
+    const returnUrl = router.query.returnUrl as string | undefined;
     useEffect(() => {
     let cancelled = false;
 
@@ -19,7 +20,13 @@ export default function PreDashboardPage() {
 
       // 3. Redirect after done
       if (!cancelled) {
-        router.replace("/dashboard"); // go to real page
+        if (returnUrl){
+          router.replace(returnUrl); // go to real page
+  
+        }else {
+
+          router.replace("/dashboard"); // go to real page
+        }
       }
     };
 

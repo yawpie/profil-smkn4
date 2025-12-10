@@ -114,7 +114,13 @@ const SlideFormModal: FC<SlideFormModalProps> = ({
       isActive: formData.isActive ?? true,
     };
 
-    onSave(finalSlideData);
+    // onSave(finalSlideData);
+    setIsSubmitting(true);
+    try {
+      await onSave(finalSlideData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseErrorModal = () => {

@@ -62,7 +62,7 @@ const LoginPage: FC = () => {
       await checkAuth();
 
       // Redirect to return URL or predashboard
-      router.push(returnUrl);
+      router.push(`/predashboard?returnUrl=${encodeURIComponent(returnUrl)}`);
     } catch (err: any) {
       // Menangani error dari `fetch` (seperti "Failed to fetch") atau error yang di-throw
       console.error(err); // Untuk debugging
