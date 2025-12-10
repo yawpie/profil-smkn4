@@ -117,7 +117,7 @@ const AchievementsPage: FC = () => {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this achievement?")) {
       try {
-        await apiDelete<{ message: string }>(`/achievements/${id}`);
+        await apiDelete<{ message: string }>(`/achievements?id=${id}`);
 
         setNotification({
           message: "Achievement successfully deleted!",
@@ -166,7 +166,7 @@ const AchievementsPage: FC = () => {
 
       if (newAchievement.id) {
         await apiPut<{ message: string; data: AchievementApi }>(
-          `/achievements/${newAchievement.id}`,
+          `/achievements?id=${newAchievement.id}`,
           form
         );
       } else {

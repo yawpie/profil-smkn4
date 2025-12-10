@@ -38,7 +38,7 @@ const TeachersPage: React.FC = () => {
     setError(null);
     try {
       const res = await apiGet<TeachersApiEnvelope>(
-        `/teachers/?page=${currentPage}&limit=${itemsPerPage}`
+        `/teachers?page=${currentPage}&limit=${itemsPerPage}`
       );
       const apiItems: TeacherApi[] = res.data ?? [];
       const normalized: Teacher[] = apiItems.map((t) => ({

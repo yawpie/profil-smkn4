@@ -39,7 +39,7 @@ const FacilitiesPage = () => {
     setError(null);
     try {
       const res = await apiGet<FacilitiesApiEnvelope>(
-        `/facilities/?page=${currentPage}&limit=${itemsPerPage}`
+        `/facilities?page=${currentPage}&limit=${itemsPerPage}`
       );
       const apiItems: FacilityApi[] = res.data ?? [];
       const normalized: Facility[] = apiItems.map((f) => ({

@@ -37,7 +37,7 @@ const ArticlesPage: FC = () => {
     setError(null);
     try {
       const res = await apiGet<ArticlesApiEnvelope>(
-        `/articles/?page=${currentPage}&limit=${itemsPerPage}`
+        `/articles?page=${currentPage}&limit=${itemsPerPage}`
       );
       const rawItems: ArticleApi[] = res.data;
 

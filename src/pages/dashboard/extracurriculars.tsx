@@ -46,7 +46,7 @@ const ExtracurricularsPage: React.FC = () => {
     setError(null);
     try {
       const res = await apiGet<ExtracurricularsApiEnvelope>(
-        `/extracurriculars/?page=${currentPage}&limit=${itemsPerPage}`
+        `/extracurriculars?page=${currentPage}&limit=${itemsPerPage}`
       );
       const rawItems: ExtracurricularApi[] = res.data;
 

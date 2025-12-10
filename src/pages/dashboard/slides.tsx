@@ -36,7 +36,7 @@ const SlidesPage: React.FC = () => {
     setError(null);
     try {
       const res = await apiGet<{ message: string; data: Slide[] }>(
-        `/slides/?page=${currentPage}&limit=${itemsPerPage}`
+        `/slides?page=${currentPage}&limit=${itemsPerPage}`
       );
       const data = res.data;
       setSlides(data.sort((a, b) => a.order - b.order));
@@ -83,7 +83,7 @@ const SlidesPage: React.FC = () => {
       )
     ) {
       try {
-        await apiDelete<{ message: string }>(`/slides/${id}`);
+        await apiDelete<{ message: string }>(`/slides?id=${id}`);
         setNotification({
           message: "Slide successfully deleted!",
           type: "success",

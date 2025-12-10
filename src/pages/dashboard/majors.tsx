@@ -37,7 +37,7 @@ const MajorsPage: React.FC = () => {
     setError(null);
     try {
       const response = await apiGet<MajorsApiEnvelope>(
-        `/majors/?page=${currentPage}&limit=${itemsPerPage}`
+        `/majors?page=${currentPage}&limit=${itemsPerPage}`
       );
       const apiMajors: MajorApi[] = response.data;
       const mapped: Major[] = apiMajors.map((m) => ({

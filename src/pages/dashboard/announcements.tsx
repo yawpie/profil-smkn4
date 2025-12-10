@@ -105,7 +105,7 @@ const AnnouncementsPage: FC = () => {
     setError(null);
     try {
       const res = await apiGet<AnnouncementsApiEnvelope>(
-        `/announcement/?page=${currentPage}&limit=${itemsPerPage}`
+        `/announcement?page=${currentPage}&limit=${itemsPerPage}`
       );
       const rawItems: AnnouncementApi[] = res.data;
 
