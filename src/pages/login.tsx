@@ -1,34 +1,42 @@
 "use client";
 
-import React, { useState, FC, ChangeEvent, FormEvent } from 'react';
-import { FaUserAlt, FaLock } from 'react-icons/fa';
-import { useRouter } from 'next/router';
-import { apiPost } from '@/utils/apiClient';
+import React, { useState, FC, ChangeEvent, FormEvent } from "react";
+import { FaUserAlt, FaLock } from "react-icons/fa";
+import { useRouter } from "next/router";
+import { apiPost } from "@/utils/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginPage: FC = () => {
-  const [username, setUsername] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [success, setSuccess] = useState<string>('');
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+  const { checkAuth } = useAuth();
+
+  // Get return URL from query params
+  const returnUrl =
+    typeof router.query.returnUrl === "string"
+      ? router.query.returnUrl
+      : "/predashboard";
 
   // Handler untuk submit form
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setLoading(true);
 
     if (!username || !password) {
-      setError('Username dan Password harus diisi.');
+      setError("Username dan Password harus diisi.");
       setLoading(false);
       return;
     }
 
     try {
       // Kirim request login
-      const loginResponse: LoginResponseData = await apiPost('/login', {
+      const loginResponse: LoginResponseData = await apiPost("/login", {
         username,
         password,
       });
@@ -38,7 +46,6 @@ const LoginPage: FC = () => {
         token?: string;
       };
 
-      
       // if (!loginResponse.ok) {
       //   // Jika respons dari server tidak OK (misalnya, 401 Unauthorized),
       //   // gunakan pesan error dari server.
@@ -47,23 +54,28 @@ const LoginPage: FC = () => {
 
       // ✅ Login sukses
       setSuccess(`Login Berhasil! Selamat datang.`);
-      setUsername('');
-      setPassword('');
-      setError('');
+      setUsername("");
+      setPassword("");
+      setError("");
 
-      router.push('/predashboard');
+      // Update auth state
+      await checkAuth();
 
+      // Redirect to return URL or predashboard
+      router.push(returnUrl);
     } catch (err: any) {
       // Menangani error dari `fetch` (seperti "Failed to fetch") atau error yang di-throw
       console.error(err); // Untuk debugging
-      if (err.message.includes('Failed to fetch')) {
+      if (err.message.includes("Failed to fetch")) {
         // Pesan khusus untuk error jaringan
-        setError('Koneksi ke server gagal. Pastikan Anda terhubung ke internet dan coba lagi.');
+        setError(
+          "Koneksi ke server gagal. Pastikan Anda terhubung ke internet dan coba lagi."
+        );
       } else {
         // Gunakan pesan error dari server jika ada, atau pesan default
-        setError(err.message || 'Terjadi kesalahan tidak terduga saat login.');
+        setError(err.message || "Terjadi kesalahan tidak terduga saat login.");
       }
-      setSuccess('');
+      setSuccess("");
     } finally {
       setLoading(false);
     }
@@ -71,7 +83,7 @@ const LoginPage: FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-md"> 
+      <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-md">
         <div className="w-full p-6 md:p-10 flex flex-col justify-center">
           <h2 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">
             Sign in
@@ -94,7 +106,10 @@ const LoginPage: FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username Input */}
             <div className="relative">
-              <label htmlFor="username" className="block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="block text-xs font-medium text-gray-700"
+              >
                 Username
               </label>
               <div className="mt-1 flex items-center bg-white border border-gray-300 rounded-md focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
@@ -105,7 +120,9 @@ const LoginPage: FC = () => {
                   type="text"
                   id="username"
                   value={username}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setUsername(e.target.value)
+                  }
                   required
                   className="w-full px-2 py-2 bg-transparent text-black placeholder-gray-500 rounded-r-md focus:outline-none text-xs"
                   placeholder="Masukkan username Anda"
@@ -115,7 +132,10 @@ const LoginPage: FC = () => {
 
             {/* Password Input */}
             <div className="relative">
-              <label htmlFor="password" className="block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-xs font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1 flex items-center bg-white border border-gray-300 rounded-md focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
@@ -126,7 +146,9 @@ const LoginPage: FC = () => {
                   type="password"
                   id="password"
                   value={password}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setPassword(e.target.value)
+                  }
                   required
                   className="w-full px-2 py-2 bg-transparent text-black placeholder-gray-500 rounded-r-md focus:outline-none text-xs"
                   placeholder="Masukkan password Anda"
@@ -137,12 +159,23 @@ const LoginPage: FC = () => {
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center">
-                <input id="remember-me" name="remember-me" type="checkbox" className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                <label htmlFor="remember-me" className="ml-1.5 block text-gray-900">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-3 w-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="ml-1.5 block text-gray-900"
+                >
                   Ingat Saya
                 </label>
               </div>
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
                 Lupa Password?
               </a>
             </div>
@@ -155,14 +188,30 @@ const LoginPage: FC = () => {
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-1.5">
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    />
                   </svg>
                   <span>Memproses...</span>
                 </div>
               ) : (
-                'Login'
+                "Login"
               )}
             </button>
           </form>
