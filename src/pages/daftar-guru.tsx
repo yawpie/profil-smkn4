@@ -1,9 +1,10 @@
-import { useState, useEffect, FC } from 'react';
-import MainLayout from '../components/layout/MainLayout';
-import Image from 'next/image';
-import { motion, type Variants } from 'framer-motion';
+import { useState, useEffect, FC } from "react";
+import MainLayout from "../components/layout/MainLayout";
+import Image from "next/image";
+import { motion, type Variants } from "framer-motion";
 
-import type { Teacher } from '@/types/Teacher';
+import type { Teacher, TeacherApi, TeachersApiEnvelope } from "@/types/Teacher";
+import { apiGet, type ApiError } from "@/utils/apiClient";
 
 const DaftarGuruPage: FC = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -21,34 +22,53 @@ const DaftarGuruPage: FC = () => {
       transition: {
         duration: 0.5,
         ease: "easeOut",
-      }
+      },
     },
   };
 
   const headerVariants: Variants = {
     hidden: { opacity: 0, y: -30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   const textVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const fetchTeachers = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/teachers');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Teacher[] = await response.json();
-      setTeachers(data);
+      const res = await apiGet<TeachersApiEnvelope>("/teachers/");
+      const rawItems: TeacherApi[] = res.data;
+
+      const mapped: Teacher[] = rawItems.map((item) => ({
+        id: item.guru_id,
+        name: item.name,
+        image: item.image_url || "/images/default_avatar.png",
+        subject: item.jabatan,
+        nip: item.nip,
+        position: item.jabatan,
+      }));
+
+      setTeachers(mapped);
       setCurrentPage(1);
     } catch (err: unknown) {
       console.error("Failed to load teacher list:", err);
-      if (err instanceof Error) {
+      if ((err as ApiError)?.message) {
+        setError(
+          `Gagal memuat daftar guru. Detail: ${(err as ApiError).message}`
+        );
+      } else if (err instanceof Error) {
         setError(`Gagal memuat daftar guru. Detail: ${err.message}`);
       } else {
         setError("Gagal memuat daftar guru. Silakan coba lagi nanti.");
@@ -65,12 +85,15 @@ const DaftarGuruPage: FC = () => {
   // Pagination Logic
   const totalPages: number = Math.ceil(teachers.length / itemsPerPage);
   const startIndex: number = (currentPage - 1) * itemsPerPage;
-  const currentTeachers: Teacher[] = teachers.slice(startIndex, startIndex + itemsPerPage);
+  const currentTeachers: Teacher[] = teachers.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -85,7 +108,7 @@ const DaftarGuruPage: FC = () => {
             <div className="absolute bottom-10 right-10 w-24 h-24 bg-slate-600 transform -rotate-12"></div>
             <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-blue-500 transform rotate-45"></div>
           </div>
-          
+
           <motion.h1
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -154,13 +177,13 @@ const DaftarGuruPage: FC = () => {
           <div className="absolute top-32 right-16 w-32 h-32 bg-slate-600 transform -rotate-12"></div>
           <div className="absolute bottom-16 left-1/3 w-24 h-24 bg-blue-500 transform rotate-45"></div>
           <div className="absolute bottom-32 right-1/4 w-28 h-28 bg-slate-500 transform -rotate-45"></div>
-          
+
           {/* Additional geometric elements */}
           <div className="absolute top-1/4 left-1/2 w-2 h-16 bg-white opacity-20 transform rotate-12"></div>
           <div className="absolute top-1/3 right-1/3 w-16 h-2 bg-white opacity-20 transform -rotate-12"></div>
           <div className="absolute bottom-1/3 left-1/4 w-2 h-12 bg-white opacity-20 transform rotate-45"></div>
         </div>
-        
+
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <motion.div
@@ -180,14 +203,16 @@ const DaftarGuruPage: FC = () => {
               </div>
               <div className="w-32 h-1 bg-blue-500 mx-auto mb-6"></div>
             </motion.div>
-            
+
             <motion.p
               initial="hidden"
               animate="visible"
               variants={textVariants}
               transition={{ delay: 0.2 }}
-              className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-              Para pendidik profesional yang berdedikasi membentuk generasi unggul
+              className="text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed"
+            >
+              Para pendidik profesional yang berdedikasi membentuk generasi
+              unggul
             </motion.p>
           </div>
         </div>
@@ -221,7 +246,7 @@ const DaftarGuruPage: FC = () => {
           </motion.div>
         </div>
       </section>
-      
+
       {/* Main Content Section */}
       <section className="bg-white py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,7 +273,8 @@ const DaftarGuruPage: FC = () => {
                 </h2>
                 <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
                 <p className="text-slate-600 max-w-2xl mx-auto">
-                  Menampilkan {teachers.length} pendidik berkualitas yang berkomitmen pada keunggulan pendidikan
+                  Menampilkan {teachers.length} pendidik berkualitas yang
+                  berkomitmen pada keunggulan pendidikan
                 </p>
               </div>
 
@@ -268,7 +294,7 @@ const DaftarGuruPage: FC = () => {
                     {/* Image Container */}
                     <div className="w-full h-48 relative overflow-hidden bg-slate-100">
                       <Image
-                        src={teacher.image || '/images/default_avatar.png'}
+                        src={teacher.image || "/images/default_avatar.png"}
                         alt={teacher.name}
                         layout="fill"
                         objectFit="cover"
@@ -277,26 +303,26 @@ const DaftarGuruPage: FC = () => {
                       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
                       <div className="absolute bottom-3 left-3">
                         <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
-                          {teacher.position || 'Guru'}
+                          {teacher.position || "Guru"}
                         </span>
                       </div>
                     </div>
 
                     {/* Content */}
                     <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
-                      {teacher.name}
-                    </h3>
-                    <p className="text-blue-700 font-semibold text-sm mb-2">
-                      {teacher.subject}
-                    </p>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">
-                      NIP: {teacher.nip || 'Tidak Tersedia'}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
+                        {teacher.name}
+                      </h3>
+                      <p className="text-blue-700 font-semibold text-sm mb-2">
+                        {teacher.subject}
+                      </p>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide">
+                        NIP: {teacher.nip || "Tidak Tersedia"}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -312,9 +338,10 @@ const DaftarGuruPage: FC = () => {
                       onClick={() => goToPage(currentPage - 1)}
                       disabled={currentPage === 1}
                       className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
-                        ${currentPage === 1
-                          ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
-                          : 'text-slate-700 bg-white hover:bg-slate-50'
+                        ${
+                          currentPage === 1
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
                         }`}
                     >
                       &larr; Sebelumnya
@@ -325,9 +352,10 @@ const DaftarGuruPage: FC = () => {
                         key={i}
                         onClick={() => goToPage(i + 1)}
                         className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
-                          ${currentPage === i + 1
-                            ? 'bg-blue-600 text-white'
-                            : 'text-slate-700 bg-white hover:bg-slate-50'
+                          ${
+                            currentPage === i + 1
+                              ? "bg-blue-600 text-white"
+                              : "text-slate-700 bg-white hover:bg-slate-50"
                           }`}
                       >
                         {i + 1}
@@ -338,9 +366,10 @@ const DaftarGuruPage: FC = () => {
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className={`px-4 py-2 font-medium transition-colors duration-200
-                        ${currentPage === totalPages
-                          ? 'text-slate-400 bg-slate-50 cursor-not-allowed'
-                          : 'text-slate-700 bg-white hover:bg-slate-50'
+                        ${
+                          currentPage === totalPages
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
                         }`}
                     >
                       Berikutnya &rarr;

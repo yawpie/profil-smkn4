@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, FC } from 'react';
-import { motion, type Variants } from 'framer-motion';
-import Link from 'next/link';
-import type { Announcement } from '@/types/Announcement';
+import React, { useState, useEffect, FC } from "react";
+import { motion, type Variants } from "framer-motion";
+import Link from "next/link";
+import type {
+  Announcement,
+  AnnouncementApi,
+  AnnouncementsApiEnvelope,
+} from "@/types/Announcement";
+import { apiGet, type ApiError } from "@/utils/apiClient";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -36,15 +41,19 @@ const LatestAnnouncement: FC = () => {
 
   const formatDate = (dateString: string): string => {
     if (!dateString) {
-      return '';
+      return "";
     }
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        throw new Error('Invalid date string');
+        throw new Error("Invalid date string");
       }
-      const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-      return date.toLocaleDateString('id-ID', options);
+      const options: Intl.DateTimeFormatOptions = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      };
+      return date.toLocaleDateString("id-ID", options);
     } catch (e) {
       console.error("Gagal memformat tanggal:", dateString, e);
       return dateString;
@@ -54,20 +63,44 @@ const LatestAnnouncement: FC = () => {
   useEffect(() => {
     async function fetchLatestAnnouncement(): Promise<void> {
       try {
-        const response = await fetch('/api/announcements'); 
-        if (!response.ok) {
-          throw new Error(`Kesalahan HTTP! status: ${response.status}`);
-        }
-        const data: Announcement[] = await response.json();
-        
-        if (data && data.length > 0) {
-          setAnnouncement(data[0]); 
+        const response = await apiGet<AnnouncementsApiEnvelope>(
+          "/announcement"
+        );
+
+        const apiAnnouncements: AnnouncementApi[] = response.data;
+
+        const mapped: Announcement[] = apiAnnouncements
+          .filter((item) => item.status === "PUBLISHED")
+          .map(
+            (item): Announcement => ({
+              id: item.id,
+              title: item.title,
+              content: item.content,
+              publishDate: new Date(item.date).toISOString(),
+              status: item.status === "PUBLISHED" ? "Published" : "Draft",
+              image: item.image_url,
+            })
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.publishDate).getTime() -
+              new Date(a.publishDate).getTime()
+          );
+
+        if (mapped.length > 0) {
+          setAnnouncement(mapped[0]);
         } else {
           setAnnouncement(null);
         }
       } catch (e: unknown) {
         console.error("Gagal mengambil pengumuman terbaru:", e);
-        if (e instanceof Error) {
+        if ((e as ApiError)?.message) {
+          setError(
+            `Gagal memuat pengumuman terbaru. Detail: ${
+              (e as ApiError).message
+            }`
+          );
+        } else if (e instanceof Error) {
           setError(`Gagal memuat pengumuman terbaru. Detail: ${e.message}`);
         } else {
           setError("Gagal memuat pengumuman terbaru. Silakan coba lagi nanti.");
@@ -81,9 +114,9 @@ const LatestAnnouncement: FC = () => {
   }, []);
 
   const truncateContent = (content: string, wordLimit: number) => {
-    const words = content.split(' ');
+    const words = content.split(" ");
     if (words.length > wordLimit) {
-      return words.slice(0, wordLimit).join(' ') + '...';
+      return words.slice(0, wordLimit).join(" ") + "...";
     }
     return content;
   };
@@ -120,7 +153,9 @@ const LatestAnnouncement: FC = () => {
           variants={containerVariants}
           className="bg-gray-50 border border-gray-200 p-6 text-center"
         >
-          <p className="text-gray-600 font-medium">Belum ada pengumuman terbaru saat ini.</p>
+          <p className="text-gray-600 font-medium">
+            Belum ada pengumuman terbaru saat ini.
+          </p>
         </motion.div>
       </section>
     );
@@ -165,29 +200,49 @@ const LatestAnnouncement: FC = () => {
               {announcement.title}
             </h4>
             <div className="flex items-center text-sm text-gray-500">
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               {formatDate(announcement.publishDate)}
             </div>
           </div>
-          
+
           {/* Content Preview */}
           <div className="mb-6">
             <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
               {truncateContent(announcement.content, 25)}
             </p>
           </div>
-          
+
           {/* Action Button */}
           <div className="flex justify-end">
-            <Link 
-              href={`/pengumuman/${announcement.id}`} 
+            <Link
+              href={`/pengumuman/${announcement.id}`}
               className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm border border-blue-200 hover:border-blue-300 px-4 py-2 transition-colors duration-200"
             >
               <span>Baca Selengkapnya</span>
-              <svg className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-4 h-4 ml-1 transition-transform duration-200 hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </Link>
           </div>

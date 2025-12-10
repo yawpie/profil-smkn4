@@ -1,29 +1,41 @@
-import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
-import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
-import type { Slide } from '@/types/Slide';
+import React, {
+  useState,
+  useEffect,
+  FC,
+  ChangeEvent,
+  FormEvent,
+  SyntheticEvent,
+} from "react";
+import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import type { Slide } from "@/types/Slide";
 
 type SlideFormModalProps = {
   slide: Slide | null;
-  onSave: (slide: Slide, imageFile: File | null) => void;
+  onSave: (slide: Slide) => void;
   onClose: () => void;
 };
 
-const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => {
+const SlideFormModal: FC<SlideFormModalProps> = ({
+  slide,
+  onSave,
+  onClose,
+}) => {
   const [formData, setFormData] = useState<Slide>({
-    id: slide?.id || '',
-    image: slide?.image || '',
-    alt: slide?.alt || '',
-    title: slide?.title || '',
-    subtitle: slide?.subtitle || '',
-    description: slide?.description || '',
-    gradientFrom: slide?.gradientFrom || '',
-    gradientTo: slide?.gradientTo || '',
+    id: slide?.id || "",
+    image: slide?.image || "",
+    alt: slide?.alt || "",
+    title: slide?.title || "",
+    subtitle: slide?.subtitle || "",
+    description: slide?.description || "",
+    gradientFrom: slide?.gradientFrom || "",
+    gradientTo: slide?.gradientTo || "",
     order: slide?.order || 1,
     isActive: slide?.isActive ?? true,
+    imageFile: null,
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const MAX_FILE_SIZE_MB = 10;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -31,23 +43,35 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
 
   useEffect(() => {
     if (slide) {
-      setFormData(slide);
-      setImageFile(null); // Reset file saat beralih ke mode edit
+      setFormData({ ...slide, imageFile: null });
     } else {
       setFormData({
-        id: '', image: '', alt: '', title: '', subtitle: '', description: '',
-        gradientFrom: '', gradientTo: '', order: 1, isActive: true
+        id: "",
+        image: "",
+        alt: "",
+        title: "",
+        subtitle: "",
+        description: "",
+        gradientFrom: "",
+        gradientTo: "",
+        order: 1,
+        isActive: true,
+        imageFile: null,
       });
-      setImageFile(null);
     }
   }, [slide]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
     if (type === "checkbox") {
-      setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: (e.target as HTMLInputElement).checked,
+      }));
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -57,50 +81,50 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
       if (file.size > MAX_FILE_SIZE_BYTES) {
         setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_FILE_SIZE_MB}MB.`);
         setShowErrorModal(true);
-        e.target.value = '';
-        setImageFile(null);
+        e.target.value = "";
+        setFormData((prev) => ({ ...prev, imageFile: null }));
         return;
       }
-      setImageFile(file);
-      // Buat URL sementara untuk preview
-      const previewURL = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, image: previewURL }));
+      setFormData((prev) => ({ ...prev, imageFile: file }));
     } else {
-      setImageFile(null);
-      setFormData(prev => ({ ...prev, image: slide?.image || '' }));
+      setFormData((prev) => ({ ...prev, imageFile: null }));
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (formData.order > MAX_SLIDE_ORDER) {
-      setErrorMessage(`Urutan tampil tidak boleh lebih dari ${MAX_SLIDE_ORDER}.`);
+    // if (formData.order > MAX_SLIDE_ORDER) {
+    //   setErrorMessage(
+    //     `Urutan tampil tidak boleh lebih dari ${MAX_SLIDE_ORDER}.`
+    //   );
+    //   setShowErrorModal(true);
+    //   return;
+    // }
+
+    if (!formData.imageFile && (!slide || !slide.imageFile)) {
+      setErrorMessage("Gambar slide wajib diunggah atau dipilih.");
       setShowErrorModal(true);
       return;
     }
 
-    if (!formData.image && (!slide || !slide.image)) {
-        setErrorMessage('Gambar slide wajib diunggah atau dipilih.');
-        setShowErrorModal(true);
-        return;
-    }
-
     const finalSlideData: Slide = {
       ...formData,
-      alt: formData.alt || formData.title || 'Gambar Slide',
+      alt: formData.alt || formData.title || "Gambar Slide",
       isActive: formData.isActive ?? true,
     };
 
-    onSave(finalSlideData, imageFile);
+    onSave(finalSlideData);
   };
 
   const handleCloseErrorModal = () => {
     setShowErrorModal(false);
-    setErrorMessage('');
+    setErrorMessage("");
   };
 
-  const imageUrl = imageFile ? URL.createObjectURL(imageFile) : formData.image;
+  const imageUrl = formData.imageFile
+    ? URL.createObjectURL(formData.imageFile)
+    : null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
@@ -113,12 +137,15 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
           <XMarkIcon className="h-6 w-6" />
         </button>
         <h2 className="text-xl sm:text-2xl font-extrabold text-blue-800 mb-6 text-center">
-          {slide ? 'Edit Slide' : 'Tambah Slide Baru'}
+          {slide ? "Edit Slide" : "Tambah Slide Baru"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">
+              <label
+                htmlFor="title"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+              >
                 Judul Utama: <span className="text-red-500">*</span>
               </label>
               <input
@@ -132,7 +159,10 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
               />
             </div>
             <div>
-              <label htmlFor="subtitle" className="block text-sm font-semibold text-gray-700 mb-1">
+              <label
+                htmlFor="subtitle"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+              >
                 Sub Judul:
               </label>
               <input
@@ -145,9 +175,12 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
               />
             </div>
           </div>
-          
+
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Deskripsi: <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -163,7 +196,10 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="imageUpload" className="block text-sm font-semibold text-gray-700 mb-1">
+              <label
+                htmlFor="imageUpload"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+              >
                 Gambar Slide:
               </label>
               <input
@@ -174,9 +210,11 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
                 onChange={handleFileChange}
                 className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
-              <p className="text-xs text-gray-500 mt-1">Maksimal {MAX_FILE_SIZE_MB}MB</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Maksimal {MAX_FILE_SIZE_MB}MB
+              </p>
             </div>
-            
+
             {imageUrl ? (
               <div className="mt-1 flex flex-col justify-center items-center">
                 <p className="text-xs text-gray-600 mb-2">Pratinjau Gambar:</p>
@@ -184,9 +222,12 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
                   src={imageUrl}
                   alt="Pratinjau Slide"
                   className="h-24 w-auto max-w-full object-cover rounded-xl border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
-                  onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+                  onError={(
+                    e: React.SyntheticEvent<HTMLImageElement, Event>
+                  ) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.src = 'https://placehold.co/200x100/e0e0e0/555555?text=File+Invalid';
+                    e.currentTarget.src =
+                      "https://placehold.co/200x100/e0e0e0/555555?text=File+Invalid";
                   }}
                 />
               </div>
@@ -197,10 +238,13 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
               </div>
             )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="order" className="block text-sm font-semibold text-gray-700 mb-1">
+              <label
+                htmlFor="order"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+              >
                 Urutan Tampil: <span className="text-red-500">*</span>
               </label>
               <input
@@ -224,27 +268,56 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
                 onChange={handleChange}
                 className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
               />
-              <label htmlFor="isActive" className="ml-2 block text-sm font-semibold text-gray-700">
+              <label
+                htmlFor="isActive"
+                className="ml-2 block text-sm font-semibold text-gray-700"
+              >
                 Aktifkan Slide
               </label>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
           <div className="flex items-center justify-end gap-5 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
-              disabled={!!errorMessage || formData.order > MAX_SLIDE_ORDER}
+              disabled={isSubmitting || !!errorMessage}
+              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
             >
-              {slide ? 'Simpan Perubahan' : 'Tambah Slide'}
+              {isSubmitting && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              )}
+              {isSubmitting
+                ? "Menyimpan..."
+                : slide
+                ? "Simpan Perubahan"
+                : "Tambah Slide"}
             </button>
           </div>
         </form>
@@ -253,7 +326,9 @@ const SlideFormModal: FC<SlideFormModalProps> = ({ slide, onSave, onClose }) => 
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
-            <p className="text-lg font-bold text-red-700 mb-4">{errorMessage}</p>
+            <p className="text-lg font-bold text-red-700 mb-4">
+              {errorMessage}
+            </p>
             <button
               onClick={handleCloseErrorModal}
               className="px-6 py-2.5 bg-red-700 text-white rounded-lg hover:bg-red-800 transition duration-200 ease-in-out shadow-md text-base"

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, FC } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { sourceSerif } from "../../fonts";
 
 const Header: FC = () => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState<boolean>(false);
@@ -51,18 +52,18 @@ const Header: FC = () => {
 
   return (
     <header className="fixed w-full top-0 left-0 z-50 bg-gradient-to-r from-blue-700 to-indigo-900 shadow-2xl py-2 font-sans transition-all duration-300 ease-in-out">
-      <div className="container mx-auto px-4 md:px-8 flex items-center justify-between">
+      <div className="container mx-auto px-4 md:px-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/images/logo_sekolah.png"
             alt="SMKN 4 Mataram Logo"
-            width={40}
-            height={40}
-            className="rounded-full bg-white p-0.5 shadow-md"
+            width={60}
+            height={60}
+            className="rounded-full p-0.5 shadow-md"
             unoptimized
           />
-          <span className="text-lg md:text-xl font-extrabold text-white">
-            SMKN 4 Mataram
+          <span className={`serif text-lg md:text-3xl  text-white `}>
+            SMKN 4 MATARAM
           </span>
         </Link>
 
@@ -83,7 +84,7 @@ const Header: FC = () => {
 
         {/* Navigasi Utama (Desktop) */}
         <nav className="hidden md:block">
-          <ul className="flex items-center gap-6 text-sm font-medium">
+          <ul className="flex items-center gap-6 text-md font-medium">
             <li><Link href="/" className="nav-link text-white">Beranda</Link></li>
 
             {/* Profile dengan Dropdown (Visi Misi & Daftar Guru) */}

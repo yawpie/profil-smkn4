@@ -1,6 +1,13 @@
-import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
-import type { Achievement } from '@/types/Achievement';
-import Image from 'next/image';
+import React, {
+  useState,
+  useEffect,
+  FC,
+  ChangeEvent,
+  FormEvent,
+  SyntheticEvent,
+} from "react";
+import type { Achievement } from "@/types/Achievement";
+import Image from "next/image";
 
 type AchievementFormModalProps = {
   achievement: Achievement | null; // Prestasi yang sedang diedit (bisa null jika menambah baru)
@@ -8,18 +15,25 @@ type AchievementFormModalProps = {
   onClose: () => void;
 };
 
-const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSave, onClose }) => {
+const AchievementFormModal: FC<AchievementFormModalProps> = ({
+  achievement,
+  onSave,
+  onClose,
+}) => {
   const [formData, setFormData] = useState<Achievement>({
-    id: achievement?.id || '',
-    title: achievement?.title || '',
-    image: achievement?.image || '',
-    description: achievement?.description || '',
-    content: achievement?.content || '',
-    publishDate: achievement?.publishDate?.split('T')[0] || new Date().toISOString().slice(0, 10),
+    id: achievement?.id || "",
+    title: achievement?.title || "",
+    image: achievement?.image || "",
+    description: achievement?.description || "",
+    content: achievement?.content || "",
+    publishDate:
+      achievement?.publishDate?.split("T")[0] ||
+      new Date().toISOString().slice(0, 10),
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB in bytes
 
   useEffect(() => {
@@ -27,62 +41,75 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
       setFormData({
         id: achievement.id,
         title: achievement.title,
-        image: achievement.image || '',
+        image: achievement.image || "",
         description: achievement.description,
         content: achievement.content,
-        publishDate: achievement.publishDate?.split('T')[0] || '',
+        publishDate: achievement.publishDate?.split("T")[0] || "",
       });
       setImageFile(null); // Reset file saat beralih ke mode edit
     } else {
       setFormData({
-        id: '',
-        title: '',
-        image: '',
-        description: '',
-        content: '',
+        id: "",
+        title: "",
+        image: "",
+        description: "",
+        content: "",
         publishDate: new Date().toISOString().slice(0, 10),
       });
       setImageFile(null);
     }
-    setErrorMessage('');
+    setErrorMessage("");
   }, [achievement]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
+        setErrorMessage(
+          `Ukuran gambar maksimal adalah ${
+            MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+          }MB.`
+        );
         setShowErrorModal(true);
-        e.target.value = '';
+        e.target.value = "";
         setImageFile(null);
         return;
       }
       setImageFile(file);
       // Buat URL sementara untuk preview
       const previewURL = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, image: previewURL }));
+      setFormData((prev) => ({ ...prev, image: previewURL }));
     } else {
       setImageFile(null);
-      setFormData(prev => ({ ...prev, image: achievement?.image || '' }));
+      setFormData((prev) => ({ ...prev, image: achievement?.image || "" }));
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description || !formData.content || !formData.publishDate) {
-      setErrorMessage('Judul, Ringkasan, Konten, dan Tanggal Publikasi wajib diisi!');
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.content ||
+      !formData.publishDate
+    ) {
+      setErrorMessage(
+        "Judul, Ringkasan, Konten, dan Tanggal Publikasi wajib diisi!"
+      );
       setShowErrorModal(true);
       return;
     }
 
     const achievementToSave: Achievement = {
-      id: formData.id ?? '',
+      id: formData.id ?? "",
       title: formData.title,
       image: formData.image, // URL sementara
       description: formData.description,
@@ -90,12 +117,17 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
       publishDate: formData.publishDate,
     };
 
-    onSave(achievementToSave, imageFile);
+    setIsSubmitting(true);
+    try {
+      await onSave(achievementToSave, imageFile);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseErrorModal = () => {
     setShowErrorModal(false);
-    setErrorMessage('');
+    setErrorMessage("");
   };
 
   const imageUrl = imageFile ? URL.createObjectURL(imageFile) : formData.image;
@@ -104,11 +136,14 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-7xl p-4 md:p-8 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative max-h-[90vh] overflow-y-auto">
         <h2 className="text-lg sm:text-xl font-extrabold text-green-800 mb-6 text-center">
-          {achievement ? 'Edit Data Prestasi' : 'Tambah Prestasi Baru'}
+          {achievement ? "Edit Data Prestasi" : "Tambah Prestasi Baru"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Judul Prestasi:
             </label>
             <input
@@ -123,7 +158,10 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
           </div>
 
           <div>
-            <label htmlFor="image" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="image"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Unggah Gambar Prestasi:
             </label>
             <input
@@ -134,25 +172,33 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
               onChange={handleFileChange}
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-green-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
             />
-            <p className="text-sm text-gray-500 mt-1">Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB
+            </p>
           </div>
 
           {imageUrl && (
             <div className="mt-1 flex justify-center">
               <Image
                 src={imageUrl}
+                width={96}
+                height={96}
                 alt="Preview Prestasi"
                 className="h-24 w-24 object-cover rounded-xl border-4 border-green-200 shadow-lg transition transform hover:scale-105 duration-200"
                 onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid';
+                  e.currentTarget.src =
+                    "https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid";
                 }}
               />
             </div>
           )}
 
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="description"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Ringkasan Prestasi:
             </label>
             <textarea
@@ -167,7 +213,10 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
           </div>
 
           <div>
-            <label htmlFor="content" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="content"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Isi Prestasi:
             </label>
             <textarea
@@ -180,10 +229,13 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
               required
             ></textarea>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="publishDate" className="block text-sm font-semibold text-gray-700 mb-1">
+              <label
+                htmlFor="publishDate"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+              >
                 Tanggal Publikasi:
               </label>
               <input
@@ -202,15 +254,39 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-xl bg-green-700 text-white hover:bg-green-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
+              disabled={isSubmitting}
+              className="px-6 py-2 rounded-xl bg-green-700 text-white hover:bg-green-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
             >
-              Simpan
+              {isSubmitting && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              )}
+              {isSubmitting ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>
@@ -219,7 +295,9 @@ const AchievementFormModal: FC<AchievementFormModalProps> = ({ achievement, onSa
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
-            <p className="text-lg font-bold text-red-700 mb-4">{errorMessage}</p>
+            <p className="text-lg font-bold text-red-700 mb-4">
+              {errorMessage}
+            </p>
             <button
               onClick={handleCloseErrorModal}
               className="px-6 py-2.5 bg-red-700 text-white rounded-lg hover:bg-red-800 transition duration-200 ease-in-out shadow-md text-base"

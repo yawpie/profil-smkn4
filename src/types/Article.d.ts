@@ -1,12 +1,42 @@
 // src/types/Article.d.ts
 
-export type Article = {
-  id: string; // Mengubah ke string untuk konsistensi di seluruh proyek
+// Raw backend shape from OpenAPI
+export type ArticleApi = {
+  articles_id: string;
   title: string;
-  image: string; // URL gambar artikel
   content: string;
-  author: string;
-  publishDate: string; // Tanggal publikasi dalam format string
-  summary?: string; // Menambahkan ini jika Anda memiliki ringkasan di frontend
-  slug?: string | null; // Menambahkan ini jika Anda menggunakan slug untuk URL
+  image_url: string | null;
+  published_date: string | null;
+  slug: string | null;
+  status?: "DRAFT" | "PUBLISHED";
+  admin?: { username: string } | null;
+  category?: { name: string } | null;
+  admin_id?: string;
+  category_id?: string;
+};
+
+// Normalized shape used by the frontend components
+export type Article = {
+  id: string; // from articles_id
+  title: string;
+  image: string; // from image_url or fallback
+  imageFile?: File | null;
+  content: string;
+  author: string; // from admin?.username or fallback
+  publishDate: string; // from published_date or empty string
+  summary?: string;
+  slug?: string | null;
+  status?: "DRAFT" | "PUBLISHED";
+  categoryName?: string | null; // from category?.name
+};
+
+export type ArticlesApiEnvelope = {
+  message: string;
+  data: ArticleApi[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+  // data: {
+  // };
 };

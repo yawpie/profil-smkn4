@@ -47,7 +47,7 @@ const Footer: FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.325 5.568L18.43 3.673a1.998 1.998 0 00-2.828 0l-.707.707-.707-.707a1.998 1.998 0 00-2.828 0L9.04 5.568m5.656 5.656L12 14.12l-2.828-2.828m5.656 5.656L12 19.776l-2.828-2.828m0 0a4.001 4.001 0 115.656-5.656l.828.829.828-.829a4.001 4.001 0 115.656 5.656z" />
                   </svg>
                 </span>
-                <span>Jl. Nani Wartabone Desa Bubeya Kec. Suwawa Kab. Bone Bolang</span>
+                <span>Jl. Pendidikan No.45, Dasan Agung Baru, Kec. Selaparang, Kota Mataram, Nusa Tenggara Bar. 83114</span>
               </li>
             </ul>
           </div>
@@ -78,9 +78,9 @@ const Footer: FC = () => {
                 <FaYoutube size={24} />
               </a>
             </div>
-            <Link href="/register/login" className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+            {/* <Link href="/register/login" className="inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
               Login
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>

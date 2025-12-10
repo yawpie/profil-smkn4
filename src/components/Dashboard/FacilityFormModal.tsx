@@ -1,5 +1,12 @@
-import React, { useState, useEffect, FC, ChangeEvent, FormEvent, SyntheticEvent } from 'react';
-import type { Facility } from '@/types/Facility';
+import React, {
+  useState,
+  useEffect,
+  FC,
+  ChangeEvent,
+  FormEvent,
+  SyntheticEvent,
+} from "react";
+import type { Facility } from "@/types/Facility";
 
 type FacilityFormModalProps = {
   facility: Facility | null; // Can be null if creating a new facility
@@ -7,17 +14,22 @@ type FacilityFormModalProps = {
   onClose: () => void;
 };
 
-const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClose }) => {
+const FacilityFormModal: FC<FacilityFormModalProps> = ({
+  facility,
+  onSave,
+  onClose,
+}) => {
   const [formData, setFormData] = useState<Facility>({
-    id: facility?.id || '',
-    name: facility?.name || '',
-    image: facility?.image || '', // This will now store a Data URL for preview, or an actual URL after upload
-    description: facility?.description || '',
-    location: facility?.location || '',
-    status: facility?.status || 'Tersedia'
+    id: facility?.id || "",
+    name: facility?.name || "",
+    image: facility?.image || "", // This will now store a Data URL for preview, or an actual URL after upload
+    description: facility?.description || "",
+    location: facility?.location || "",
+    status: facility?.status || "Tersedia",
   });
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 5 MB in bytes
 
   useEffect(() => {
@@ -25,13 +37,22 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
       setFormData(facility);
     } else {
       // Reset form if facility is null (e.g., for creating new)
-      setFormData({ id: "", name: '', image: '', description: '', location: '', status: 'Tersedia' });
+      setFormData({
+        id: "",
+        name: "",
+        image: "",
+        description: "",
+        location: "",
+        status: "Tersedia",
+      });
     }
   }, [facility]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,52 +60,64 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
     if (file) {
       // Check file size
       if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setErrorMessage(`Ukuran gambar maksimal adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB.`);
+        setErrorMessage(
+          `Ukuran gambar maksimal adalah ${
+            MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+          }MB.`
+        );
         setShowErrorModal(true);
         // Clear the file input and preview
-        e.target.value = ''; // Resets the file input
-        setFormData(prev => ({ ...prev, image: '' })); // Clear preview
+        e.target.value = ""; // Resets the file input
+        setFormData((prev) => ({ ...prev, image: "" })); // Clear preview
         return;
       }
 
       // Read file as Data URL for immediate preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
+        setFormData((prev) => ({ ...prev, image: reader.result as string }));
       };
       reader.readAsDataURL(file); // Converts file to base64 string for preview
     } else {
       // If no file is selected (e.g., user cancels file dialog)
-      setFormData(prev => ({ ...prev, image: '' }));
+      setFormData((prev) => ({ ...prev, image: "" }));
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Simple validation
     if (!formData.name || !formData.location || !formData.status) {
-      setErrorMessage('Nama Fasilitas, Lokasi, dan Status wajib diisi!');
+      setErrorMessage("Nama Fasilitas, Lokasi, dan Status wajib diisi!");
       setShowErrorModal(true);
       return;
     }
-    onSave(formData);
+    try {
+      setIsSubmitting(true);
+      onSave(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseErrorModal = () => {
     setShowErrorModal(false);
-    setErrorMessage('');
+    setErrorMessage("");
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl p-6 md:p-12 animate-fade-in-up transform transition-all duration-300 scale-100 opacity-100 relative max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl sm:text-2xl font-extrabold text-blue-800 mb-6 text-center">
-          {facility ? 'Edit Data Fasilitas' : 'Tambah Fasilitas Baru'}
+          {facility ? "Edit Data Fasilitas" : "Tambah Fasilitas Baru"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Nama Fasilitas */}
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="name"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Nama Fasilitas:
             </label>
             <input
@@ -100,7 +133,10 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
 
           {/* Unggah Gambar Fasilitas */}
           <div>
-            <label htmlFor="image" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="image"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Unggah Gambar Fasilitas
             </label>
             <input
@@ -111,7 +147,9 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
               onChange={handleFileChange} // Use the new file handler
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-4 py-2 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400 file:mr-3 file:py-0.5 file:px-2 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
-            <p className="text-sm text-gray-500 mt-1">Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Maksimal {MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB
+            </p>
           </div>
 
           {/* Preview Gambar */}
@@ -123,7 +161,8 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
                 className="h-24 w-24 object-cover rounded-full border-4 border-blue-200 shadow-lg transition transform hover:scale-105 duration-200"
                 onError={(e: SyntheticEvent<HTMLImageElement, Event>) => {
                   e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid'; // Smaller placeholder
+                  e.currentTarget.src =
+                    "https://placehold.co/96x96/e0e0e0/555555?text=File+Invalid"; // Smaller placeholder
                 }}
               />
             </div>
@@ -131,8 +170,12 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
 
           {/* Deskripsi */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-1">
-              Deskripsi: <span className="text-gray-500 font-normal">(Opsional)</span>
+            <label
+              htmlFor="description"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
+              Deskripsi:{" "}
+              <span className="text-gray-500 font-normal">(Opsional)</span>
             </label>
             <textarea
               id="description"
@@ -146,7 +189,10 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
 
           {/* Lokasi */}
           <div>
-            <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="location"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Lokasi:
             </label>
             <input
@@ -162,7 +208,10 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
 
           {/* Status Ketersediaan */}
           <div>
-            <label htmlFor="status" className="block text-sm font-semibold text-gray-700 mb-1">
+            <label
+              htmlFor="status"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
               Status Ketersediaan:
             </label>
             <select
@@ -185,15 +234,39 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-xl border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition duration-200 ease-in-out shadow-sm text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm"
+              disabled={isSubmitting}
+              className="px-6 py-2 rounded-xl bg-blue-700 text-white hover:bg-blue-800 font-semibold transition duration-200 ease-in-out shadow-lg transform hover:scale-105 text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
             >
-              Simpan
+              {isSubmitting && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              )}
+              {isSubmitting ? "Menyimpan..." : "Simpan"}
             </button>
           </div>
         </form>
@@ -203,7 +276,9 @@ const FacilityFormModal: FC<FacilityFormModalProps> = ({ facility, onSave, onClo
       {showErrorModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center animate-fade-in-up">
-            <p className="text-lg font-bold text-red-700 mb-4">{errorMessage}</p>
+            <p className="text-lg font-bold text-red-700 mb-4">
+              {errorMessage}
+            </p>
             <button
               onClick={handleCloseErrorModal}
               className="px-6 py-2.5 bg-red-700 text-white rounded-lg hover:bg-red-800 transition duration-200 ease-in-out shadow-md"
