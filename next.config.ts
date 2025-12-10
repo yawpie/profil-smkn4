@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
       "cdn.pixabay.com",
       "i.pravatar.cc",
       "via.placeholder.com",
+      "smkn4mtr.sch.id",
       "localhost" // <-- Domain baru ditambahkan di sini
     ],
     dangerouslyAllowSVG: true,
