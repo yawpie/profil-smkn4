@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import type { Extracurricular } from '@/types/Extracurricular';
+import type { Extracurricular, ExtracurricularApi } from '@/types/Extracurricular';
 import MainLayout from '../../components/layout/MainLayout';
 import Head from 'next/head';
+import { apiGet } from '@/utils/apiClient';
 
 const DetailEkstrakurikulerPage = () => {
   const router = useRouter();
@@ -21,13 +22,15 @@ const DetailEkstrakurikulerPage = () => {
         setLoading(true);
         setError(null);
         try {
-          const res = await fetch(`/api/extracurriculars?id=${id}`);
-          if (!res.ok) {
-            throw new Error(`Gagal mengambil data: ${res.statusText}`);
-          }
-          const data = await res.json();
-          if (data) {
-            setEkskul(data);
+          const res = await apiGet<ExtracurricularApi>(`/extracurriculars?id=${id}`);
+          if (res) {
+            setEkskul({
+              id: res.id,
+              name: res.name,
+              description: res.description || '',
+              image: res.image_url || undefined,
+              coach: res.guru?.name || undefined,
+            });
           } else {
             setError('Data ekstrakurikuler tidak ditemukan.');
           }

@@ -1,8 +1,13 @@
-import MainLayout from '../components/layout/MainLayout';
-import Image from 'next/image';
-import { useState, useEffect, FC } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import type { Facility } from '@/types/Facility';
+import MainLayout from "../components/layout/MainLayout";
+import Image from "next/image";
+import { useState, useEffect, FC } from "react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import type {
+  FacilitiesApiEnvelope,
+  Facility,
+  FacilityApi,
+} from "@/types/Facility";
+import { apiGet } from "@/utils/apiClient";
 
 const Fasilitas: FC = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -13,7 +18,11 @@ const Fasilitas: FC = () => {
   // Framer Motion Variants for general sections
   const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" },
+    },
   };
 
   // Variants for main content
@@ -29,7 +38,7 @@ const Fasilitas: FC = () => {
         damping: 20,
         delayChildren: 0.1,
         staggerChildren: 0.05,
-      }
+      },
     },
   };
 
@@ -43,14 +52,18 @@ const Fasilitas: FC = () => {
         type: "spring",
         stiffness: 120,
         damping: 25,
-      }
+      },
     },
   };
 
   // Variants for facility detail content
   const detailVariants: Variants = {
     initial: { opacity: 0, y: 15 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut" },
+    },
     exit: { opacity: 0, y: -15, transition: { duration: 0.2, ease: "easeIn" } },
   };
 
@@ -59,15 +72,30 @@ const Fasilitas: FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/facilities');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Facility[] = await response.json();
-      setFacilities(data);
+      const response = await apiGet<FacilitiesApiEnvelope>("/facilities");
+      if (response) {
+        const data: Facility[] = response.data.map((item: FacilityApi) => ({
+          id: item.id || null,
+          name: item.name,
+          image: item.image_url || "/images/placeholder-facility.png",
+          description: item.description || "Deskripsi tidak tersedia.",
+          location: item.location || "Lokasi tidak tersedia.",
+          status:
+            item.status === "TERSEDIA"
+              ? "Tersedia"
+              : item.status === "DIGUNAKAN"
+              ? "Digunakan"
+              : item.status === "PERBAIKAN"
+              ? "Perbaikan"
+              : "Tidak Tersedia",
+        }));
+        setFacilities(data);
 
-      if (data.length > 0) {
-        setActiveFacility(data[0].id ?? null);
+        if (data.length > 0) {
+          setActiveFacility(data[0].id ?? null);
+        }
+      } else {
+        setError("Data fasilitas tidak tersedia.");
       }
     } catch (e: unknown) {
       console.error("Failed to fetch facilities data:", e);
@@ -87,7 +115,9 @@ const Fasilitas: FC = () => {
   }, []);
 
   // Find active facility
-  const currentFacility = facilities.find((fac: Facility) => fac.id === activeFacility);
+  const currentFacility = facilities.find(
+    (fac: Facility) => fac.id === activeFacility
+  );
 
   return (
     <MainLayout>
@@ -109,9 +139,10 @@ const Fasilitas: FC = () => {
             transition={{ delay: 0.2 }}
             className="text-base sm:text-lg text-blue-100 max-w-3xl mx-auto leading-relaxed font-medium"
           >
-            Jelajahi berbagai fasilitas modern dan lengkap yang mendukung proses belajar mengajar di sekolah kami untuk pengalaman terbaik.
+            Jelajahi berbagai fasilitas modern dan lengkap yang mendukung proses
+            belajar mengajar di sekolah kami untuk pengalaman terbaik.
           </motion.p>
-          
+
           {/* Professional breadcrumb-style indicator */}
           <motion.div
             initial="hidden"
@@ -120,7 +151,9 @@ const Fasilitas: FC = () => {
             transition={{ delay: 0.4 }}
             className="mt-8 inline-block bg-blue-800/30 px-6 py-2 border border-blue-600/50"
           >
-            <span className="text-blue-100 font-semibold uppercase tracking-wide text-sm">Fasilitas Sekolah</span>
+            <span className="text-blue-100 font-semibold uppercase tracking-wide text-sm">
+              Fasilitas Sekolah
+            </span>
           </motion.div>
         </div>
       </section>
@@ -164,10 +197,22 @@ const Fasilitas: FC = () => {
               className="bg-white border-l-4 border-red-600 shadow-lg p-8 max-w-2xl mx-auto"
             >
               <div className="flex items-center mb-4">
-                <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-8 h-8 text-red-600 mr-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
-                <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">Error</h3>
+                <h3 className="text-xl font-bold text-gray-900 uppercase tracking-wide">
+                  Error
+                </h3>
               </div>
               <p className="text-base text-gray-700 mb-6">{error}</p>
               <button
@@ -187,8 +232,13 @@ const Fasilitas: FC = () => {
               variants={sectionVariants}
               className="bg-white border-2 border-blue-200 shadow-lg p-12 max-w-2xl mx-auto text-center"
             >
-              <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase tracking-wide">Tidak Ada Fasilitas</h3>
-              <p className="text-base text-gray-600">Tidak ada fasilitas yang tersedia saat ini. Mohon maaf, kami sedang mempersiapkan informasi lebih lanjut.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase tracking-wide">
+                Tidak Ada Fasilitas
+              </h3>
+              <p className="text-base text-gray-600">
+                Tidak ada fasilitas yang tersedia saat ini. Mohon maaf, kami
+                sedang mempersiapkan informasi lebih lanjut.
+              </p>
             </motion.div>
           )}
 
@@ -212,7 +262,7 @@ const Fasilitas: FC = () => {
                     Daftar Fasilitas
                   </h3>
                 </div>
-                
+
                 {/* Sidebar Navigation */}
                 <nav className="p-4">
                   <ul className="space-y-2">
@@ -221,9 +271,10 @@ const Fasilitas: FC = () => {
                         <button
                           onClick={() => setActiveFacility(fac.id ?? null)}
                           className={`relative block w-full text-left py-3 px-4 transition-all duration-300 ease-in-out text-sm font-medium border-l-4
-                            ${activeFacility === fac.id
-                              ? 'bg-blue-700 text-white border-blue-500 shadow-md'
-                              : 'text-gray-700 hover:bg-gray-100 hover:text-blue-800 border-transparent hover:border-blue-300'
+                            ${
+                              activeFacility === fac.id
+                                ? "bg-blue-700 text-white border-blue-500 shadow-md"
+                                : "text-gray-700 hover:bg-gray-100 hover:text-blue-800 border-transparent hover:border-blue-300"
                             }`}
                         >
                           {fac.name}
@@ -265,28 +316,35 @@ const Fasilitas: FC = () => {
                           priority={activeFacility === facilities[0]?.id}
                         />
                       </div>
-                      
+
                       {/* Facility Title */}
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-b-4 border-gray-300 pb-3 uppercase tracking-wide">
                         {currentFacility.name}
                       </h2>
-                      
+
                       {/* Facility Description */}
-                      <div 
+                      <div
                         className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
-                        style={{lineHeight: '1.7' }}
+                        style={{ lineHeight: "1.7" }}
                       >
-                        {currentFacility.description.split('\n\n').map((paragraph, index) => (
-                          <p key={index} className="text-base text-gray-700 leading-relaxed mb-4">
-                            {paragraph}
-                          </p>
-                        ))}
+                        {currentFacility.description
+                          .split("\n\n")
+                          .map((paragraph, index) => (
+                            <p
+                              key={index}
+                              className="text-base text-gray-700 leading-relaxed mb-4"
+                            >
+                              {paragraph}
+                            </p>
+                          ))}
                       </div>
-                      
+
                       {/* Additional Info Section */}
                       <div className="mt-8 pt-6 border-t-2 border-gray-300">
                         <div className="bg-gray-50 border border-gray-200 p-4">
-                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Status Fasilitas</h4>
+                          <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">
+                            Status Fasilitas
+                          </h4>
                           <span className="inline-block bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold uppercase tracking-wide border border-green-300">
                             Tersedia
                           </span>
@@ -303,8 +361,13 @@ const Fasilitas: FC = () => {
                       className="p-12 text-center text-gray-600"
                     >
                       <div className="bg-gray-50 border-2 border-gray-200 p-8">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">Pilih Fasilitas</h3>
-                        <p className="text-base">Silakan pilih salah satu fasilitas dari daftar di samping untuk melihat detailnya.</p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-4 uppercase tracking-wide">
+                          Pilih Fasilitas
+                        </h3>
+                        <p className="text-base">
+                          Silakan pilih salah satu fasilitas dari daftar di
+                          samping untuk melihat detailnya.
+                        </p>
                       </div>
                     </motion.div>
                   )}
@@ -316,6 +379,6 @@ const Fasilitas: FC = () => {
       </section>
     </MainLayout>
   );
-}
+};
 
 export default Fasilitas;

@@ -1,27 +1,40 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useState, useEffect, FC, useCallback } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import type { Article } from '@/types/Article';
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState, useEffect, FC, useCallback } from "react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import type { Article, ArticleApi, ArticlesApiEnvelope } from "@/types/Article";
+import { apiGet, type ApiError } from "@/utils/apiClient";
 
-const getTruncatedText = (content: string, summary?: string, maxLength: number = 120): string => {
+const getTruncatedText = (
+  content: string,
+  summary?: string,
+  maxLength: number = 120
+): string => {
   if (summary) {
-    return summary.length > maxLength ? summary.substring(0, maxLength) + '...' : summary;
+    return summary.length > maxLength
+      ? summary.substring(0, maxLength) + "..."
+      : summary;
   }
   if (content === null || content === undefined) {
-    return '';
+    return "";
   }
-  return String(content).length > maxLength ? String(content).substring(0, maxLength) + '...' : String(content);
+  return String(content).length > maxLength
+    ? String(content).substring(0, maxLength) + "..."
+    : String(content);
 };
 
 const formatDate = (dateString: string): string => {
-  if (!dateString) return '';
+  if (!dateString) return "";
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      throw new Error('Invalid date string');
+      throw new Error("Invalid date string");
     }
-    return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   } catch (e) {
     console.error("Error formatting date:", e);
     return dateString;
@@ -36,7 +49,11 @@ const ArticleSection: FC = () => {
   // Simplified Motion Variants
   const sectionHeaderVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
   };
 
   const cardVariants: Variants = {
@@ -47,7 +64,7 @@ const ArticleSection: FC = () => {
       transition: {
         duration: 0.5,
         ease: "easeOut",
-      }
+      },
     },
   };
 
@@ -55,17 +72,34 @@ const ArticleSection: FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/articles');
+      const res = await apiGet<ArticlesApiEnvelope>("/articles/");
+      const rawItems: ArticleApi[] = res.data;
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Article[] = await response.json();
-      
-      setArticles(data.slice(0, 5));
+      const mapped: Article[] = rawItems.map((item) => ({
+        id: item.articles_id,
+        title: item.title,
+        image: item.image_url ?? "/images/default_article.png",
+        content: item.content,
+        author: item.admin?.username ?? "Admin",
+        publishDate: item.published_date ?? "",
+        summary: undefined,
+        slug: item.slug,
+        status: item.status,
+        categoryName: item.category?.name ?? null,
+      }));
+
+      const sorted = mapped.sort((a, b) => {
+        const dateA = new Date(a.publishDate).getTime();
+        const dateB = new Date(b.publishDate).getTime();
+        return dateB - dateA;
+      });
+
+      setArticles(sorted.slice(0, 5));
     } catch (e: unknown) {
       console.error("Gagal mengambil artikel:", e);
-      if (e instanceof Error) {
+      if ((e as ApiError)?.message) {
+        setError(`Gagal memuat artikel. Detail: ${(e as ApiError).message}`);
+      } else if (e instanceof Error) {
         setError(`Gagal memuat artikel. Detail: ${e.message}`);
       } else {
         setError("Gagal memuat artikel. Silakan coba lagi nanti.");
@@ -79,8 +113,10 @@ const ArticleSection: FC = () => {
     fetchArticlesFromBackend();
   }, [fetchArticlesFromBackend]);
 
-  const featuredArticle: Article | null = articles.length > 0 ? articles[0] : null;
-  const smallArticles: Article[] = articles.length > 1 ? articles.slice(1, 5) : [];
+  const featuredArticle: Article | null =
+    articles.length > 0 ? articles[0] : null;
+  const smallArticles: Article[] =
+    articles.length > 1 ? articles.slice(1, 5) : [];
 
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white border border-gray-200 shadow-lg mb-8">
@@ -115,7 +151,10 @@ const ArticleSection: FC = () => {
           {/* Small Articles Skeleton */}
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-100 border border-gray-200 animate-pulse">
+              <div
+                key={i}
+                className="bg-gray-100 border border-gray-200 animate-pulse"
+              >
                 <div className="w-full h-32 bg-gray-300"></div>
                 <div className="p-3">
                   <div className="h-3 bg-gray-300 w-1/3 mb-1"></div>
@@ -144,14 +183,15 @@ const ArticleSection: FC = () => {
       {/* Empty State */}
       {!loading && !error && articles.length === 0 && (
         <div className="text-center py-8 bg-gray-50 border border-gray-200">
-          <p className="text-gray-600 font-medium">Belum ada artikel yang tersedia saat ini.</p>
+          <p className="text-gray-600 font-medium">
+            Belum ada artikel yang tersedia saat ini.
+          </p>
         </div>
       )}
 
       {/* Main Article Grid */}
       {!loading && !error && articles.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          
           {/* Featured Article */}
           {featuredArticle && (
             <motion.div
@@ -161,13 +201,16 @@ const ArticleSection: FC = () => {
               viewport={{ once: true, amount: 0.2 }}
               className="lg:col-span-2"
             >
-              <Link href={`/artikel/${featuredArticle.id}`} className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <Link
+                href={`/artikel/${featuredArticle.id}`}
+                className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
+              >
                 <div className="relative w-full h-64">
                   <Image
-                    src={featuredArticle.image || '/images/default_article.png'}
+                    src={featuredArticle.image || "/images/default_article.png"}
                     alt={featuredArticle.title}
                     fill
-                    style={{ objectFit: 'cover' }}
+                    style={{ objectFit: "cover" }}
                     className="group-hover:opacity-90 transition-opacity duration-300"
                     quality={80}
                   />
@@ -179,8 +222,18 @@ const ArticleSection: FC = () => {
                 </div>
                 <div className="p-4">
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                     {formatDate(featuredArticle.publishDate)}
                   </div>
@@ -188,7 +241,10 @@ const ArticleSection: FC = () => {
                     {featuredArticle.title}
                   </h3>
                   <p className="text-sm text-gray-600 line-clamp-2">
-                    {getTruncatedText(featuredArticle.content, featuredArticle.summary)}
+                    {getTruncatedText(
+                      featuredArticle.content,
+                      featuredArticle.summary
+                    )}
                   </p>
                 </div>
               </Link>
@@ -207,21 +263,34 @@ const ArticleSection: FC = () => {
                   viewport={{ once: true, amount: 0.1 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link href={`/artikel/${article.slug || article.id}`} className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 h-full">
+                  <Link
+                    href={`/artikel/${article.slug || article.id}`}
+                    className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 h-full"
+                  >
                     <div className="relative w-full h-32">
                       <Image
-                        src={article.image || '/images/default_article.png'}
+                        src={article.image || "/images/default_article.png"}
                         alt={article.title}
                         fill
-                        style={{ objectFit: 'cover' }}
+                        style={{ objectFit: "cover" }}
                         className="group-hover:opacity-90 transition-opacity duration-300"
                         quality={70}
                       />
                     </div>
                     <div className="p-3">
                       <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         {formatDate(article.publishDate)}
                       </div>
@@ -243,10 +312,23 @@ const ArticleSection: FC = () => {
       {/* View All Button */}
       {!loading && !error && articles.length > 0 && (
         <div className="text-center mt-6 pt-6 border-t border-gray-200">
-          <Link href="/artikel" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200">
+          <Link
+            href="/artikel"
+            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors duration-200"
+          >
             <span>Lihat Semua Artikel</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </Link>
         </div>

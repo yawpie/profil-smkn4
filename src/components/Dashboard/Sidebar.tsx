@@ -8,6 +8,8 @@ import { motion } from "framer-motion";
 import type { Notification } from "@/types/Notification";
 import type { NavItem } from "@/types/Sidebar";
 import { iconsSvg } from "@/icons/icons";
+import { apiGet, apiPost } from "@/utils/apiClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -15,11 +17,16 @@ type SidebarProps = {
   setNotification: React.Dispatch<React.SetStateAction<Notification | null>>;
 };
 
-const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification }) => {
+const Sidebar: FC<SidebarProps> = ({
+  isCollapsed,
+  toggleSidebar,
+  setNotification,
+}) => {
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const sidebarRef = useRef<HTMLElement>(null);
+  const { logout } = useAuth();
 
   const collapsedWidthPx = 80;
   const expandedWidthPx = 280;
@@ -38,57 +45,81 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
 
     adjustSidebarScale();
 
-    window.addEventListener('resize', adjustSidebarScale);
+    window.addEventListener("resize", adjustSidebarScale);
 
     return () => {
-      window.removeEventListener('resize', adjustSidebarScale);
+      window.removeEventListener("resize", adjustSidebarScale);
     };
   }, [sidebarWidth]);
 
   const navItems: NavItem[] = [
-    { href: "/dashboard/", label: "Dashboard Overview", icon: iconsSvg.DashboardIcon },
-    { href: "/dashboard/admin-profile", label: "Profil Admin", icon: iconsSvg.UserIcon },
-    { href: "/dashboard/teachers", label: "Daftar Guru", icon: iconsSvg.TeacherIcon },
-    { href: "/dashboard/staff", label: "Daftar Staff", icon: iconsSvg.StaffIcon },
-    { href: "/dashboard/facilities", label: "Fasilitas", icon: iconsSvg.BuildingIcon },
-    { href: "/dashboard/extracurriculars", label: "Ekstrakurikuler", icon: iconsSvg.SportIcon },
-    { href: "/dashboard/majors", label: "Jurusan", icon: iconsSvg.AcademicCapIcon },
-    { href: "/dashboard/announcements", label: "Pengumuman", icon: iconsSvg.MegaphoneIcon },
-    { href: "/dashboard/articles", label: "Artikel Sekolah", icon: iconsSvg.ArticleIcon },
-    { href: "/dashboard/achievements", label: "Manajemen Prestasi", icon: iconsSvg.TrophyIcon },
-    { href: "/dashboard/slides", label: "Manajemen Slides", icon: iconsSvg.ImageIcon },
+    {
+      href: "/dashboard/",
+      label: "Dashboard Overview",
+      icon: iconsSvg.DashboardIcon,
+    },
+    {
+      href: "/dashboard/admin-profile",
+      label: "Profil Admin",
+      icon: iconsSvg.UserIcon,
+    },
+    {
+      href: "/dashboard/teachers",
+      label: "Daftar Guru",
+      icon: iconsSvg.TeacherIcon,
+    },
+    {
+      href: "/dashboard/staff",
+      label: "Daftar Staff",
+      icon: iconsSvg.StaffIcon,
+    },
+    {
+      href: "/dashboard/facilities",
+      label: "Fasilitas",
+      icon: iconsSvg.BuildingIcon,
+    },
+    {
+      href: "/dashboard/extracurriculars",
+      label: "Ekstrakurikuler",
+      icon: iconsSvg.SportIcon,
+    },
+    {
+      href: "/dashboard/majors",
+      label: "Jurusan",
+      icon: iconsSvg.AcademicCapIcon,
+    },
+    {
+      href: "/dashboard/announcements",
+      label: "Pengumuman",
+      icon: iconsSvg.MegaphoneIcon,
+    },
+    {
+      href: "/dashboard/articles",
+      label: "Artikel Sekolah",
+      icon: iconsSvg.ArticleIcon,
+    },
+    {
+      href: "/dashboard/achievements",
+      label: "Manajemen Prestasi",
+      icon: iconsSvg.TrophyIcon,
+    },
+    {
+      href: "/dashboard/slides",
+      label: "Manajemen Slides",
+      icon: iconsSvg.ImageIcon,
+    },
   ];
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://192.168.236.15:3000/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        setNotification({ message: "Anda berhasil logout!", type: "success" });
-        router.push('/');
-      } else {
-        const errorData = await response.json();
-        setNotification({ message: errorData.message || "Gagal logout. Silakan coba lagi.", type: "error" });
-      }
+      // Call backend logout endpoint to clear cookies
+      await apiPost("/logout", {});
     } catch (error: any) {
       console.error("Error during logout:", error);
-      if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        setNotification({
-          message: "Koneksi ke server gagal. Pastikan server berjalan dan Anda terhubung ke jaringan yang benar.",
-          type: "error"
-        });
-      } else {
-        setNotification({
-          message: error.message || "Terjadi kesalahan tidak terduga saat logout. Silakan coba lagi.",
-          type: "error"
-        });
-      }
+      // Even if backend logout fails, we still logout on frontend
+    } finally {
+      // Use auth context logout which clears state and redirects
+      logout();
     }
   };
 
@@ -97,31 +128,34 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
       ref={sidebarRef}
       animate={{ width: sidebarWidth }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className={`h-[calc(100vh-2rem)] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl rounded-r-3xl m-4 overflow-hidden flex flex-col justify-between backdrop-blur-xl border border-white/10`}
+      className={`h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl  overflow-hidden flex flex-col justify-between backdrop-blur-xl border border-white/10`}
       style={{
         minWidth: sidebarWidth,
         maxWidth: sidebarWidth,
         flexShrink: 0,
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #312e81 50%, #1e1b4b 75%, #0f172a 100%)',
+        background:
+          "linear-gradient(135deg, #0f172a 0%, #1e1b4b 25%, #312e81 50%, #1e1b4b 75%, #0f172a 100%)",
       }}
     >
       {/* Glassmorphism overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-      
+
       {/* Header */}
       <div className="relative flex items-center justify-between px-4 py-4 border-b border-white/10">
         {isCollapsed ? (
-          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
-          </div>
+          <></>
         ) : (
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-lg">A</span>
             </div>
             <div>
-              <h1 className="font-bold text-white text-base tracking-tight">Admin Panel</h1>
-              <p className="text-purple-300 text-xs font-medium">Management System</p>
+              <h1 className="font-bold text-white text-base tracking-tight">
+                Admin Panel
+              </h1>
+              <p className="text-purple-300 text-xs font-medium">
+                Management System
+              </p>
             </div>
           </div>
         )}
@@ -151,7 +185,7 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
             const CurrentIcon = item.icon;
 
             return (
-              <motion.li 
+              <motion.li
                 key={item.href}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -162,12 +196,17 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
                   href={item.href}
                   className={`
                     group flex items-center relative
-                    ${isCollapsed ? "justify-center p-2" : "justify-start py-1.5 px-2"}
+                    ${
+                      isCollapsed
+                        ? "justify-center p-2"
+                        : "justify-start py-1.5 px-2"
+                    }
                     rounded-md transition-all duration-300 ease-out
                     text-xs font-medium overflow-hidden
-                    ${isActive 
-                      ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg border border-purple-400/30 backdrop-blur-sm" 
-                      : "text-slate-300 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10 backdrop-blur-sm"
+                    ${
+                      isActive
+                        ? "bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg border border-purple-400/30 backdrop-blur-sm"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white border border-transparent hover:border-white/10 backdrop-blur-sm"
                     }
                   `}
                 >
@@ -176,13 +215,27 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
                     <motion.div
                       layoutId="activeIndicator"
                       className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-400 to-pink-400 rounded-r-full"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      transition={{
+                        type: "spring",
+                        bounce: 0.2,
+                        duration: 0.6,
+                      }}
                     />
                   )}
 
                   {/* Icon with glow effect */}
-                  <div className={`flex-shrink-0 ${isCollapsed ? "" : "mr-2"} relative`}>
-                    <CurrentIcon className={`h-3.5 w-3.5 transition-all duration-300 ${isActive ? 'text-purple-300' : 'text-slate-400 group-hover:text-white'}`} />
+                  <div
+                    className={`flex-shrink-0 ${
+                      isCollapsed ? "" : "mr-2"
+                    } relative`}
+                  >
+                    <CurrentIcon
+                      className={`h-3.5 w-3.5 transition-all duration-300 ${
+                        isActive
+                          ? "text-purple-300"
+                          : "text-slate-400 group-hover:text-white"
+                      }`}
+                    />
                     {isActive && (
                       <div className="absolute inset-0 bg-purple-400/20 rounded-full blur-sm" />
                     )}
@@ -197,14 +250,16 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
 
                   {/* Tooltip for collapsed state */}
                   {isCollapsed && (
-                    <div className="absolute left-full ml-4 py-2 px-4
+                    <div
+                      className="absolute left-full ml-4 py-2 px-4
                                      bg-slate-800/90 backdrop-blur-sm text-white text-sm font-medium rounded-xl
                                      opacity-0 group-hover:opacity-100 pointer-events-none
                                      transition-all duration-200 delay-300
                                      whitespace-nowrap z-50
                                      shadow-xl border border-white/10
                                      before:content-[''] before:absolute before:right-full before:top-1/2 before:-translate-y-1/2
-                                     before:border-4 before:border-transparent before:border-r-slate-800/90">
+                                     before:border-4 before:border-transparent before:border-r-slate-800/90"
+                    >
                       {item.label}
                     </div>
                   )}
@@ -225,7 +280,11 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={`
-            ${isCollapsed ? "w-8 h-8 rounded-xl flex items-center justify-center relative group" : "w-full py-2.5 rounded-xl"}
+            ${
+              isCollapsed
+                ? "w-8 h-8 rounded-xl flex items-center justify-center relative group"
+                : "w-full py-2.5 rounded-xl"
+            }
             bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 
             text-white font-semibold transition-all duration-300
             text-sm shadow-lg hover:shadow-xl
@@ -236,7 +295,7 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
         >
           {/* Button glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-pink-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300" />
-          
+
           <div className="relative z-10 flex items-center justify-center">
             {isCollapsed ? (
               <iconsSvg.LogoutIcon className="h-4 w-4" />
@@ -250,14 +309,16 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
 
           {/* Tooltip for collapsed logout */}
           {isCollapsed && (
-            <div className="absolute left-full ml-4 py-2 px-4
+            <div
+              className="absolute left-full ml-4 py-2 px-4
                                      bg-red-600/90 backdrop-blur-sm text-white text-sm font-medium rounded-xl
                                      opacity-0 group-hover:opacity-100 pointer-events-none
                                      transition-all duration-200 delay-300
                                      whitespace-nowrap z-50
                                      shadow-xl border border-red-400/30
                                      before:content-[''] before:absolute before:right-full before:top-1/2 before:-translate-y-1/2
-                                     before:border-4 before:border-transparent before:border-r-red-600/90">
+                                     before:border-4 before:border-transparent before:border-r-red-600/90"
+            >
               Logout
             </div>
           )}
