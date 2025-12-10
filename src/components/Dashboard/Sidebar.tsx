@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import type { Notification } from "@/types/Notification";
 import type { NavItem } from "@/types/Sidebar";
 import { iconsSvg } from "@/icons/icons";
+import { apiGet, apiPost } from "@/utils/apiClient";
 
 type SidebarProps = {
   isCollapsed: boolean;
@@ -61,21 +62,9 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://192.168.236.15:3000/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      await apiPost('/logout',{});
+      router.push('/');
 
-      if (response.ok) {
-        setNotification({ message: "Anda berhasil logout!", type: "success" });
-        router.push('/');
-      } else {
-        const errorData = await response.json();
-        setNotification({ message: errorData.message || "Gagal logout. Silakan coba lagi.", type: "error" });
-      }
     } catch (error: any) {
       console.error("Error during logout:", error);
       if (error instanceof TypeError && error.message === 'Failed to fetch') {
@@ -97,7 +86,7 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
       ref={sidebarRef}
       animate={{ width: sidebarWidth }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className={`h-[calc(100vh-2rem)] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl rounded-r-3xl m-4 overflow-hidden flex flex-col justify-between backdrop-blur-xl border border-white/10`}
+      className={`h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white shadow-2xl  overflow-hidden flex flex-col justify-between backdrop-blur-xl border border-white/10`}
       style={{
         minWidth: sidebarWidth,
         maxWidth: sidebarWidth,
@@ -111,9 +100,7 @@ const Sidebar: FC<SidebarProps> = ({ isCollapsed, toggleSidebar, setNotification
       {/* Header */}
       <div className="relative flex items-center justify-between px-4 py-4 border-b border-white/10">
         {isCollapsed ? (
-          <div className="w-8 h-8 mx-auto bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">A</span>
-          </div>
+          <></>
         ) : (
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center">
