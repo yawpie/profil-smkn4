@@ -88,7 +88,7 @@ const StatItem = ({
 // Komponen utama StatsSection
 const StatsSection = ({
   stats = {
-    totalSiswa: "800",
+    totalSiswa: "1000",
     totalGuru: 0,
     // totalStaff: 0,
     totalEkstrakurikuler: 0,
@@ -160,7 +160,7 @@ const StatsSection = ({
         </div>
 
         {/* Compact Stats Grid */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4 sm:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
           <StatItem label="Siswa Aktif" value={stats.totalSiswa} index={0} />
           <StatItem label="Guru" value={stats.totalGuru} index={1} />
           {/* <StatItem label="Staf" value={stats.totalStaff} index={2} /> */}

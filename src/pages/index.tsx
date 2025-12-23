@@ -20,7 +20,7 @@ import { apiGet } from "@/utils/apiClient";
 
 export default function HomePage() {
   const [statsData, setStatsData] = useState({
-    totalSiswa: "800",
+    totalSiswa: "1000+",
     totalGuru: 0,
     // totalStaff: 0,
     totalEkstrakurikuler: 0,
@@ -46,7 +46,8 @@ export default function HomePage() {
         ]);
 
         setStatsData({
-          totalSiswa: "800",
+          ...statsData,
+          // totalSiswa: "800",
           totalGuru: guruResponse.total,
           // totalStaff: staffResponse.data.length,
           totalEkstrakurikuler: ekstraResponse.total,
@@ -73,7 +74,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.5 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="bg-white shadow-lg border border-slate-200 p-8 md:p-12 lg:p-16 relative overflow-hidden"
+            className="bg-white shadow-lg border border-slate-200  relative overflow-hidden"
           >
             {/* Geometric Background Pattern */}
             <div className="absolute inset-0 opacity-5">
@@ -82,24 +83,25 @@ export default function HomePage() {
               <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-blue-500 transform rotate-45"></div>
             </div>
 
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 items-center gap-12 lg:gap-16">
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 items-center ">
               {/* Principal Photo */}
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="flex justify-center md:justify-start order-2 md:order-1"
+                className="flex h-full justify-center order-2 md:order-1 "
               >
-                <div className="w-64 h-64 md:w-72 md:h-72 bg-slate-100 shadow-xl border border-slate-200 overflow-hidden">
+                <div className="relative bg-slate-100 shadow-xl border border-slate-200">
                   <Image
-                    src="/images/kepala-sekolah.jpg"
+                    src="/images/foto-kepala-sekolah.jpg"
                     alt="Kepala Sekolah SMKN 4 Mataram"
-                    width={288}
-                    height={288}
-                    layout="responsive"
-                    objectFit="cover"
-                    className="w-full h-full hover:scale-105 transition-transform duration-300"
+                    width={3365}
+                    height={4000}
+                    // layout="responsive"
+                    // objectFit="fill"
+                    // fill
+                    className={"h-full w-full object-cover object-center "} //hover:scale-105 transition-transform duration-300
                   />
                 </div>
               </motion.div>
@@ -110,7 +112,7 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-center md:text-left order-1 md:order-2"
+                className="text-center md:text-left order-1 md:order-2 m-16"
               >
                 <div className="mb-6">
                   <div className="flex items-center justify-center md:justify-start mb-4">
@@ -140,7 +142,7 @@ export default function HomePage() {
                   <p className="font-semibold text-slate-900 mb-1">
                     Iwan Supriady, A.Md.Par., S.Pd.
                   </p>
-                  <p className="text-sm text-slate-600 uppercase tracking-wide">
+                  <p className="text-sm text-slate-600 tracking-wide">
                     Kepala Sekolah SMKN 4 Mataram
                   </p>
                 </div>

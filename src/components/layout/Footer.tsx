@@ -29,15 +29,15 @@ const Footer: FC = () => {
             <ul className="text-sm space-y-3 text-blue-200">
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1"><FaEnvelope size={16} /></span>
-                <span>smkn4mtrm@gmail.com</span>
+                <span>humassmekamtr@gmail.com</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1"><FaPhone size={16} /></span>
-                <span>081 89273 99890</span>
+                <span>+62 853-3746-4898</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1"><FaWhatsapp size={16} /></span>
-                <span>081 89273 99890</span> {/* Often same as phone, or provide separate WhatsApp number */}
+                <span>+62 853-3746-4898</span> {/* Often same as phone, or provide separate WhatsApp number */}
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1">
@@ -86,13 +86,13 @@ const Footer: FC = () => {
       </div>
 
       {/* Bottom Bar: Copyright */}
-      <div className="border-t border-blue-800 pt-6 mt-8">
+      {/* <div className="border-t border-blue-800 pt-6 mt-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-sm text-blue-300">
           <div className="mb-3 sm:mb-0 text-center sm:text-left">
             &copy; {currentYear} SMKN 4 Mataram. All rights reserved.
           </div>
         </div>
-      </div>
+      </div> */}
     </footer>
   );
 };
