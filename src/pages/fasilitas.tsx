@@ -8,6 +8,7 @@ import type {
   FacilityApi,
 } from "@/types/Facility";
 import { apiGet } from "@/utils/apiClient";
+import ContentNotAvailableCard from "@/components/Beranda/NotAvailable";
 
 const Fasilitas: FC = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -226,20 +227,11 @@ const Fasilitas: FC = () => {
 
           {/* Empty State */}
           {!loading && !error && facilities.length === 0 && (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={sectionVariants}
-              className="bg-white border-2 border-blue-200 shadow-lg p-12 max-w-2xl mx-auto text-center"
-            >
-              <h3 className="text-xl font-bold text-gray-900 mb-4 uppercase tracking-wide">
-                Tidak Ada Fasilitas
-              </h3>
-              <p className="text-base text-gray-600">
-                Tidak ada fasilitas yang tersedia saat ini. Mohon maaf, kami
-                sedang mempersiapkan informasi lebih lanjut.
-              </p>
-            </motion.div>
+            
+            <ContentNotAvailableCard 
+            title="Tidak Ada Fasilitas" 
+            content="Tidak ada fasilitas yang tersedia saat ini. Mohon maaf, kami
+                sedang mempersiapkan informasi lebih lanjut."/>
           )}
 
           {/* Main Content when data is loaded */}

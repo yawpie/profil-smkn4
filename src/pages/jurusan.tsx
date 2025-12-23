@@ -7,6 +7,7 @@ import JurusanCard from "../components/Card/JurusanCard";
 import MainLayout from "../components/layout/MainLayout";
 import type { Major, MajorApi, MajorsApiEnvelope } from "@/types/Major";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import ContentNotAvailableCard from "@/components/Beranda/NotAvailable";
 
 const JurusanPage: FC = () => {
   const [jurusan, setJurusan] = useState<Major[]>([]);
@@ -219,10 +220,8 @@ const JurusanPage: FC = () => {
             {/* Main Heading */}
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-6xl md:text-7xl font-black text-white leading-tight tracking-tight">
-                Future Ready
-                <br />
                 <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  Program Jurusan
+                  Jurusan
                 </span>
               </h1>
             </div>
@@ -234,12 +233,13 @@ const JurusanPage: FC = () => {
               transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
               className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium"
             >
-              Discover industry-aligned vocational programs designed to launch
-              your career in hospitality, culinary arts, and fashion technology.
+              Temukan program pendidikan vokasi yang selaras dengan kebutuhan
+              industri untuk memulai karier Anda di bidang perhotelan, seni
+              kuliner, dan teknologi fesyen.
             </motion.p>
 
             {/* CTA Elements */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
@@ -259,7 +259,7 @@ const JurusanPage: FC = () => {
                   <span>Future Focused</span>
                 </div>
               </div>
-            </motion.div>
+            </motion.div> */}
           </motion.div>
         </div>
 
@@ -306,9 +306,7 @@ const JurusanPage: FC = () => {
             <div className="flex items-center justify-center mt-12 space-x-2">
               {/* Previous Button */}
               <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.max(1, prev - 1))
-                }
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
                   currentPage === 1
@@ -400,9 +398,7 @@ const JurusanPage: FC = () => {
               {/* Next Button */}
               <button
                 onClick={() =>
-                  setCurrentPage((prev) =>
-                    Math.min(totalPages, prev + 1)
-                  )
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={currentPage === totalPages}
                 className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
@@ -426,7 +422,9 @@ const JurusanPage: FC = () => {
               </button>
             </div>
           )}
-
+          {!loading && !error && jurusan.length === 0 && (
+            <ContentNotAvailableCard sectionVariants={sectionVariants} />
+          )}
           {/* Bottom CTA Section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
