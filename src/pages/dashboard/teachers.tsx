@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Layout from "../../components/Dashboard/Layout";
 import {
   PlusIcon,
@@ -10,7 +10,12 @@ import {
   AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 import TeacherFormModal from "../../components/Dashboard/TeacherFormModal";
-import type { Teacher, TeacherApi, TeachersApiEnvelope } from "@/types/Teacher";
+import type {
+  Teacher,
+  TeacherApi,
+  TeacherRequestBody,
+  TeachersApiEnvelope,
+} from "@/types/Teacher";
 import type { Notification } from "@/types/Notification";
 import {
   apiDelete,
@@ -19,6 +24,12 @@ import {
   apiPut,
   type ApiError,
 } from "@/utils/apiClient";
+import { MajorsApiEnvelope } from "@/types/Major";
+import {
+  handleDeleteTeacher,
+  handleSaveTeacher,
+} from "@/utils/handleTeacherChanges";
+import { handleNotification } from "@/utils/handleNotification";
 
 const TeachersPage: React.FC = () => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -31,9 +42,10 @@ const TeachersPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
   const itemsPerPage = 10;
+  const majors = useRef<{ id: string; name: string }[]>([]);
 
   // Function to fetch teacher data from the API
-  const fetchTeachers = useCallback(async () => {
+  const fetchTeachersAndMajors = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -45,12 +57,15 @@ const TeachersPage: React.FC = () => {
         id: t.guru_id,
         name: t.name,
         image: t.image_url ?? "",
-        subject: t.jabatan, // temporary mapping; adjust if subject becomes separate
+        subject: t.mata_pelajaran ?? "", // temporary mapping; adjust if subject becomes separate
         nip: t.nip,
         position: t.jabatan,
+        major_id: t.major_id ?? null,
       }));
       setTeachers(normalized);
-
+      majors.current = await apiGet<MajorsApiEnvelope>("/majors").then((res) =>
+        res.data.map((m) => ({ id: m.id, name: m.name }))
+      );
       // Set pagination info from response
       if (res.page) {
         setTotalPages(Math.ceil(res.total / itemsPerPage));
@@ -71,111 +86,46 @@ const TeachersPage: React.FC = () => {
   }, [currentPage, itemsPerPage]);
 
   useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
+    fetchTeachersAndMajors();
+    handleNotification(notification, setNotification);
+  }, [fetchTeachersAndMajors, notification]);
 
   const handleAddEdit = (teacher: Teacher | null = null) => {
     setCurrentTeacher(teacher);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus data guru ini?")) {
-      try {
-        await apiDelete<{ message: string }>(`/teacher?id=${id}`);
-        setNotification({
-          message: "Data guru berhasil dihapus!",
-          type: "success",
-        });
-        setCurrentPage(1); // Reset to first page
-        fetchTeachers();
-      } catch (e: unknown) {
-        console.error("Failed to delete teacher:", e);
-        if ((e as ApiError)?.message) {
-          setNotification({
-            message: `Gagal menghapus guru: ${(e as ApiError).message}`,
-            type: "error",
-          });
-        } else if (e instanceof Error) {
-          setNotification({
-            message: `Gagal menghapus guru: ${e.message}`,
-            type: "error",
-          });
-        } else {
-          setNotification({
-            message: "Gagal menghapus guru. Silakan coba lagi.",
-            type: "error",
-          });
-        }
-      }
-    }
-  };
-
-  const handleSaveTeacher = async (newTeacher: Teacher) => {
-    try {
-      const formData = new FormData();
-      formData.append("name", newTeacher.name);
-      // Backend expects 'jabatan' for position
-      formData.append("jabatan", newTeacher.position);
-      if (newTeacher.nip) {
-        formData.append("nip", newTeacher.nip);
-      }
-      if (newTeacher.imageFile) {
-        formData.append("image", newTeacher.imageFile);
-      }
-
-      // If subject is distinct from jabatan and backend supports it, you could
-      // append it as an extra field here. For now, subject is mapped from jabatan.
-
-      // Image handling: if the form has set an image as a File in a future
-      // enhancement, it should be appended here. Currently Teacher only
-      // exposes image as string URL/base64, so we only send image when it
-      // represents a File in the calling code.
-
-      if (newTeacher.id) {
-        await apiPut<TeachersApiEnvelope, FormData>(
-          `/teachers?id=${newTeacher.id}`,
-          formData
-        );
-      } else {
-        await apiPost<TeachersApiEnvelope, FormData>("/teachers", formData);
-      }
-      setNotification({
-        message: `Data guru berhasil ${
-          newTeacher.id ? "diperbarui" : "ditambahkan"
-        }!`,
-        type: "success",
-      });
-      setIsModalOpen(false);
-      setCurrentTeacher(null);
-      setCurrentPage(1); // Reset to first page
-      fetchTeachers();
-    } catch (e: unknown) {
-      console.error("Failed to save teacher:", e);
-      if ((e as ApiError)?.status === 413) {
-        setNotification({
-          message:
-            "Gagal menyimpan guru. Ukuran gambar terlalu besar. Silakan pilih gambar yang lebih kecil.",
-          type: "error",
-        });
-      } else if ((e as ApiError)?.message) {
-        setNotification({
-          message: `Gagal menyimpan guru: ${(e as ApiError).message}`,
-          type: "error",
-        });
-      } else if (e instanceof Error) {
-        setNotification({
-          message: `Gagal menyimpan guru: ${e.message}`,
-          type: "error",
-        });
-      } else {
-        setNotification({
-          message: "Gagal menyimpan guru. Silakan coba lagi.",
-          type: "error",
-        });
-      }
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   if (confirm("Apakah Anda yakin ingin menghapus data guru ini?")) {
+  //     try {
+  //       await apiDelete<{ message: string }>(`/teachers?id=${id}`);
+  //       setNotification({
+  //         message: "Data guru berhasil dihapus!",
+  //         type: "success",
+  //       });
+  //       setCurrentPage(1); // Reset to first page
+  //       fetchTeachersAndMajors();
+  //     } catch (e: unknown) {
+  //       console.error("Failed to delete teacher:", e);
+  //       if ((e as ApiError)?.message) {
+  //         setNotification({
+  //           message: `Gagal menghapus guru: ${(e as ApiError).message}`,
+  //           type: "error",
+  //         });
+  //       } else if (e instanceof Error) {
+  //         setNotification({
+  //           message: `Gagal menghapus guru: ${e.message}`,
+  //           type: "error",
+  //         });
+  //       } else {
+  //         setNotification({
+  //           message: "Gagal menghapus guru. Silakan coba lagi.",
+  //           type: "error",
+  //         });
+  //       }
+  //     }
+  //   }
+  // };
 
   return (
     <Layout setNotification={setNotification}>
@@ -207,7 +157,7 @@ const TeachersPage: React.FC = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <div className="flex items-center justify-between">
                 <div>
@@ -236,7 +186,7 @@ const TeachersPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
+            {/* <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-amber-600 font-semibold text-sm uppercase tracking-wide">
@@ -250,7 +200,7 @@ const TeachersPage: React.FC = () => {
                   <div className="h-3 w-3 bg-white rounded-full animate-pulse"></div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -320,10 +270,10 @@ const TeachersPage: React.FC = () => {
                           NIP
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Jabatan
+                          Jurusan
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Status
+                          Jabatan
                         </th>
                         <th className="px-6 py-4 text-right text-xs font-bold text-slate-700 uppercase tracking-wider">
                           Aksi
@@ -383,13 +333,18 @@ const TeachersPage: React.FC = () => {
                             {teacher.nip}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">
-                            {teacher.position}
+                            {teacher.major_id
+                              ? majors.current.find(
+                                  (m) => m.id === teacher.major_id
+                                )?.name
+                              : "-"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               <div className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></div>
                               Aktif
-                            </span>
+                            </span> */}
+                            {teacher.position}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end gap-2">
@@ -401,7 +356,15 @@ const TeachersPage: React.FC = () => {
                                 <PencilIcon className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(teacher.id!)}
+                                onClick={() => {
+                                  handleDeleteTeacher(
+                                    teacher.id!,
+                                    setNotification,
+                                    setLoading
+                                  );
+                                  fetchTeachersAndMajors();
+                                  setCurrentPage(1);
+                                }}
                                 className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-all duration-200 border border-red-200"
                                 title="Hapus Data Guru"
                               >
@@ -572,7 +535,12 @@ const TeachersPage: React.FC = () => {
       {isModalOpen && (
         <TeacherFormModal
           teacher={currentTeacher}
-          onSave={handleSaveTeacher}
+          majors={majors.current}
+          onSave={(currentTeacher) => {
+            handleSaveTeacher(currentTeacher, setNotification);
+            setIsModalOpen(false);
+            fetchTeachersAndMajors();
+          }}
           onClose={() => setIsModalOpen(false)}
         />
       )}

@@ -7,6 +7,7 @@ import {
   PencilIcon,
   TrashIcon,
   BookOpenIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import MajorFormModal from "../../components/Dashboard/MajorFormModal";
 import type { Major, MajorApi, MajorsApiEnvelope } from "@/types/Major";
@@ -18,8 +19,10 @@ import {
   apiDelete,
   type ApiError,
 } from "@/utils/apiClient";
+import { useRouter } from "next/router";
 
 const MajorsPage: React.FC = () => {
+  const router = useRouter();
   const [majors, setMajors] = useState<Major[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [currentMajor, setCurrentMajor] = useState<Major | null>(null);
@@ -331,12 +334,21 @@ const MajorsPage: React.FC = () => {
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
+                                onClick={() =>
+                                  router.push(`/dashboard/majors/${item.id}`)
+                                }
+                                className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-all duration-200"
+                                title="Kelola Galeri & Guru"
+                              >
+                                <Cog6ToothIcon className="h-4 w-4" />
+                              </button>
+                              {/* <button
                                 onClick={() => handleAddEdit(item)}
                                 className="p-2 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 transition-all duration-200"
                                 title="Edit Jurusan"
                               >
                                 <PencilIcon className="h-4 w-4" />
-                              </button>
+                              </button> */}
                               <button
                                 onClick={() => handleDelete(item.id!)}
                                 className="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-all duration-200"

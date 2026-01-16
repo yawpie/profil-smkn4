@@ -3,8 +3,8 @@
 import { useState, useEffect, FC, useCallback } from "react";
 import Head from "next/head";
 import { motion, type Variants } from "framer-motion";
-import JurusanCard from "../components/Card/JurusanCard";
-import MainLayout from "../components/layout/MainLayout";
+import JurusanCard from "@/components/Card/JurusanCard";
+import MainLayout from "@/components/layout/MainLayout";
 import type { Major, MajorApi, MajorsApiEnvelope } from "@/types/Major";
 import { apiGet, type ApiError } from "@/utils/apiClient";
 import ContentNotAvailableCard from "@/components/Beranda/NotAvailable";
@@ -280,7 +280,7 @@ const JurusanPage: FC = () => {
           ></motion.div>
 
           {/* Programs Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 lg:gap-10">
             {jurusan.map((item: Major, index: number) => (
               <motion.div
                 key={item.id}

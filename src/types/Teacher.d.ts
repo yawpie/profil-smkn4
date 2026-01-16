@@ -9,8 +9,18 @@ export type TeacherApi = {
   jabatan: string;
   nip: string | null;
   image_url: string | null;
+  mata_pelajaran: string | null;
+  major_id: string | null;
 };
 
+// {
+//   guru_id: string;
+//   name: string;
+//   jabatan: string;
+//   nip: string | null;
+//   image_url: string | null;
+//   mata_pelajaran: string | null;
+// }
 // Normalized shape used throughout the frontend
 export type Teacher = {
   id: string; // maps from guru_id
@@ -19,7 +29,18 @@ export type Teacher = {
   subject: string; // kept for UI compatibility; can be derived from jabatan if needed
   nip: string | null;
   position: string; // maps from jabatan,
-  imageFile?: File | null; 
+  imageFile?: File | null;
+  major_id: string | null;
+  major_name?: string | null;
+};
+
+export type TeacherRequestBody = {
+  name: string;
+  jabatan: string;
+  nip: string;
+  image: File | null;
+  mata_pelajaran: string | null;
+  major_id: string | null;
 };
 
 // Outer envelope from backend for list endpoint

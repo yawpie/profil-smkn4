@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from "react";
+import { useState, useEffect, FC, useRef } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
@@ -13,7 +13,7 @@ const DaftarGuruPage: FC = () => {
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage: number = 8;
-
+  const majors = useRef<{ id: string; name: string }[]>([]);
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: {
@@ -44,20 +44,25 @@ const DaftarGuruPage: FC = () => {
     },
   };
 
-  const fetchTeachers = async (): Promise<void> => {
+  const fetchTeachersAndMajors = async (): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
       const res = await apiGet<TeachersApiEnvelope>("/teachers/");
       const rawItems: TeacherApi[] = res.data;
-
+      majors.current = (await apiGet<{
+        message: string;
+        data: { id: string; name: string }[];
+      }>("/majors/simple")).data;
       const mapped: Teacher[] = rawItems.map((item) => ({
         id: item.guru_id,
         name: item.name,
         image: item.image_url || "/images/default_avatar.png",
-        subject: item.jabatan,
+        subject: item.mata_pelajaran ?? "",
         nip: item.nip,
         position: item.jabatan,
+        major_id: item.major_id,
+        major_name: majors.current.find((m) => m.id === item.major_id)?.name || null,
       }));
 
       setTeachers(mapped);
@@ -79,7 +84,7 @@ const DaftarGuruPage: FC = () => {
   };
 
   useEffect(() => {
-    fetchTeachers();
+    fetchTeachersAndMajors();
   }, []);
 
   // Pagination Logic
@@ -155,7 +160,7 @@ const DaftarGuruPage: FC = () => {
             </motion.p>
             <div className="text-center">
               <button
-                onClick={fetchTeachers}
+                onClick={fetchTeachersAndMajors}
                 className="px-6 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors duration-200"
               >
                 Coba Lagi
@@ -273,10 +278,30 @@ const DaftarGuruPage: FC = () => {
                 </h2>
                 <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
                 <p className="text-slate-600 max-w-2xl mx-auto">
-                  Menampilkan {teachers.length} pendidik berkualitas yang
+                  Menampilkan pendidik berkualitas yang
                   berkomitmen pada keunggulan pendidikan
                 </p>
               </div>
+              {/* Majors grid to categorize teachers */}
+              {/* <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 justify-items-center mb-4">
+                {majors.current.map((major) => (
+                  <motion.div
+                    key={major.id}
+                    variants={cardVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.2 }}
+                    className="bg-white shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
+                  >
+                    
+                    <div className="p-6">
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">{major.name}
+
+                      </h3>
+                    </div>
+                  </motion.div>
+                ))}
+              </div> */}
 
               {/* Teachers Grid */}
               <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
@@ -292,7 +317,7 @@ const DaftarGuruPage: FC = () => {
                               hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
                   >
                     {/* Image Container */}
-                    <div className="w-full h-48 relative overflow-hidden bg-slate-100">
+                    <div className="w-full h-64 relative overflow-hidden bg-slate-100">
                       <Image
                         src={teacher.image || "/images/default_avatar.png"}
                         alt={teacher.name}
@@ -301,20 +326,20 @@ const DaftarGuruPage: FC = () => {
                         className="transition-transform duration-300 group-hover:scale-105"
                       />
                       <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      <div className="absolute bottom-3 left-3">
+                      {/* <div className="absolute bottom-3 left-3">
                         <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
                           {teacher.position || "Guru"}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Content */}
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
+                    <div className="p-4 justify-center">
+                      <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">
                         {teacher.name}
                       </h3>
-                      <p className="text-blue-700 font-semibold text-sm mb-2">
-                        {teacher.subject}
+                      <p className="text-blue-700 font-semibold text-sm mb-0.5">
+                        {teacher.major_name}
                       </p>
                       <p className="text-xs text-slate-500 uppercase tracking-wide">
                         NIP: {teacher.nip || "Tidak Tersedia"}

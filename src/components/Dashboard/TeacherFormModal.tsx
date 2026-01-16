@@ -1,15 +1,17 @@
 // src/components/Dashboard/TeacherFormModal.tsx
 import React, { useState, useEffect, FC, ChangeEvent, FormEvent } from "react";
-import type { Teacher } from "@/types/Teacher";
+import type { Teacher, TeacherRequestBody } from "@/types/Teacher";
 
 type TeacherFormModalProps = {
   teacher: Teacher | null; // Can be null if creating a new teacher
+  majors: { id: string; name: string }[]; // List of majors for the dropdown
   onSave: (teacher: Teacher) => void;
   onClose: () => void;
 };
 
 const TeacherFormModal: FC<TeacherFormModalProps> = ({
   teacher,
+  majors,
   onSave,
   onClose,
 }) => {
@@ -21,7 +23,9 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
     nip: teacher?.nip || "",
     position: teacher?.position || "",
     imageFile: null,
+    major_id: teacher?.major_id || null,
   });
+  const [selectedMajorId, setSelectedMajorId] = useState<string>(teacher?.major_id || "");
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -39,6 +43,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
         subject: "",
         nip: "",
         position: "",
+        major_id: null,
       });
     }
   }, [teacher]);
@@ -226,6 +231,30 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
+          </div>
+
+          <div>
+            <label
+              // htmlFor="major"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >Jurusan</label>
+            <select
+              id="major"
+              name="major_id"
+              value={selectedMajorId}
+              onChange={(e) =>{ 
+                setFormData((prev) => ({ ...prev, major_id: e.target.value || null }));
+                setSelectedMajorId(e.target.value)
+              }}
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+            >
+               <option value="">-- Pilih Jurusan --</option>
+                {majors.map((major) => (
+                  <option key={major.id} value={major.id}>
+                    {major.name}
+                  </option>
+                ))}
+            </select>
           </div>
 
           {/* Tombol Aksi */}

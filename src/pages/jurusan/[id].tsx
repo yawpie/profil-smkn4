@@ -3,15 +3,24 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import type { Major, MajorApi, MajorsApiEnvelope } from "@/types/Major";
+import type {
+  Major,
+  MajorApi,
+  MajorsApiEnvelope,
+  MajorApiResponse,
+  MajorGalleryImages,
+} from "@/types/Major";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import { Teacher, TeacherApi } from "@/types/Teacher";
 
 const DetailJurusanPage = () => {
   const router = useRouter();
   const { id } = router.query;
   const [major, setMajor] = useState<Major | null>(null);
+  const [galleryImages, setGalleryImages] = useState<MajorGalleryImages[]>([]);
+  const [teachers, setTeachers] = useState<TeacherApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,9 +30,7 @@ const DetailJurusanPage = () => {
         setLoading(true);
         setError(null);
         try {
-          const response = await apiGet<MajorApi>(
-            `/majors?id=${id}`
-          );
+          const response = await apiGet<MajorApiResponse>(`/majors?id=${id}`);
           const apiMajor = response;
           if (apiMajor) {
             const mapped: Major = {
@@ -35,6 +42,8 @@ const DetailJurusanPage = () => {
                 "https://placehold.co/600x400/6B7280/FFFFFF?text=Major",
             };
             setMajor(mapped);
+            setGalleryImages(apiMajor.major_gallery_images || []);
+            setTeachers(apiMajor.guru || []);
           } else {
             setError("Data jurusan tidak ditemukan.");
           }
@@ -189,8 +198,8 @@ const DetailJurusanPage = () => {
             )}
 
             {/* Modern Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-blue-900/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-blue-900/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" /> */}
 
             {/* Content Container */}
             <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12 lg:p-16">
@@ -216,7 +225,7 @@ const DetailJurusanPage = () => {
           </motion.div>
 
           {/* Main Content Grid */}
-          <div className="mt-16 grid lg:grid-cols-3 gap-8">
+          <div className="mt-16  gap-8">
             {/* Description Section */}
             <motion.div
               className="lg:col-span-2 space-y-8"
@@ -226,7 +235,7 @@ const DetailJurusanPage = () => {
             >
               <div className="bg-white border-l-4 border-blue-600 shadow-xl p-8 lg:p-10">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
+                  {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
                     <svg
                       className="w-5 h-5 text-white"
                       fill="currentColor"
@@ -238,10 +247,10 @@ const DetailJurusanPage = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                  </div>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+                  </div> */}
+                  {/* <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                     Deskripsi Program
-                  </h2>
+                  </h2> */}
                 </div>
                 <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
                   {typeof major.description === "string" ? (
@@ -260,14 +269,14 @@ const DetailJurusanPage = () => {
             </motion.div>
 
             {/* Sidebar */}
-            <motion.div
+            {/* <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8, duration: 0.7 }}
-            >
-              {/* Quick Facts */}
-              {/* {major.fastFacts && Array.isArray(major.fastFacts) && major.fastFacts.length > 0 && (
+            > */}
+            {/* Quick Facts */}
+            {/* {major.fastFacts && Array.isArray(major.fastFacts) && major.fastFacts.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-t-4 border-blue-600 shadow-lg p-6">
                   <div className="flex items-center space-x-3 mb-6">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
@@ -294,8 +303,8 @@ const DetailJurusanPage = () => {
                 </div>
               )} */}
 
-              {/* Career Prospects */}
-              {/* {major.careerProspects && Array.isArray(major.careerProspects) && major.careerProspects.length > 0 && (
+            {/* Career Prospects */}
+            {/* {major.careerProspects && Array.isArray(major.careerProspects) && major.careerProspects.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-t-4 border-green-600 shadow-lg p-6">
                   <div className="flex items-center space-x-3 mb-6">
                     <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 flex items-center justify-center">
@@ -321,8 +330,165 @@ const DetailJurusanPage = () => {
                   </ul>
                 </div>
               )} */}
-            </motion.div>
+            {/* </motion.div> */}
           </div>
+
+          <motion.div className="mt-12 border-t border-gray-200 pt-12">
+            {/** galeri jurusan dan galeri guru jurusan */}
+
+            {/* Gallery Section */}
+            {galleryImages.length > 0 && (
+              <motion.div
+                className="mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0, duration: 0.6 }}
+              >
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    Galeri Jurusan
+                  </h2>
+                  <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                  {galleryImages.map((img, idx) => (
+                    <motion.div
+                      key={img.id}
+                      className="group relative bg-white border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.1 + idx * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -5 }}
+                    >
+                      <div className="relative w-full h-40 bg-gradient-to-br from-slate-100 to-blue-50">
+                        {img.image_url ? (
+                          <Image
+                            src={img.image_url}
+                            alt={`Gallery ${idx + 1}`}
+                            fill
+                            style={{ objectFit: "cover" }}
+                            className="transition-transform duration-300 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg
+                              className="w-12 h-12"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="p-3 bg-white border-t border-gray-100">
+                        <p className="text-sm font-semibold text-gray-800 text-center truncate">
+                          {img.title}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Teachers Section */}
+            {teachers.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 0.6 }}
+              >
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    Guru Jurusan
+                  </h2>
+                  <div className="w-20 h-1 bg-gradient-to-r from-green-600 to-emerald-600"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {teachers.map((teacher, idx) => (
+                    <motion.div
+                      key={teacher.guru_id}
+                      className="group bg-white border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.3 + idx * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -8 }}
+                    >
+                      <div className="relative w-full h-64 bg-gradient-to-br from-slate-100 to-green-50">
+                        {teacher.image_url ? (
+                          <Image
+                            src={teacher.image_url}
+                            alt={teacher.name}
+                            fill
+                            style={{ objectFit: "cover" }}
+                            className="transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg
+                              className="w-20 h-20"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="p-5 bg-white border-t-4 border-green-600">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                          {teacher.name}
+                        </h3>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-green-700 flex items-center">
+                            <svg
+                              className="w-4 h-4 mr-2 flex-shrink-0"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zM8 5a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM8 11a1 1 0 100 2h4a1 1 0 100-2H8z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            {teacher.mata_pelajaran}
+                          </p>
+                          {teacher.nip && (
+                            <p className="text-xs text-gray-500 flex items-center">
+                              <svg
+                                className="w-4 h-4 mr-2 flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              NIP: {teacher.nip}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
 
           {/* CTA Section */}
           <motion.div

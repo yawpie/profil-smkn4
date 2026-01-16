@@ -55,6 +55,7 @@ const DaftarGuruPreview: FC = () => {
         subject: t.jabatan,
         nip: t.nip,
         position: t.jabatan,
+        major_id: t.major_id,
       }));
 
       setTeachers(mappedTeachers);
@@ -117,9 +118,6 @@ const DaftarGuruPreview: FC = () => {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Staff pengajar profesional yang berpengalaman dan berkualifikasi
           </p>
-          <div className="mt-4 bg-blue-600 text-white px-4 py-2 inline-block text-sm font-medium">
-            Total: {totalTeachersCount} Pengajar
-          </div>
         </motion.div>
 
         {/* Main Content */}
@@ -254,11 +252,11 @@ const DaftarGuruPreview: FC = () => {
                         />
 
                         {/* Position Badge */}
-                        {teacher.position && (
+                        {/* {teacher.position && (
                           <div className="absolute top-3 right-3 bg-white bg-opacity-90 text-gray-800 text-xs font-medium px-2 py-1 border border-gray-200">
                             {teacher.position}
                           </div>
-                        )}
+                        )} */}
                       </div>
 
                       {/* Content */}
@@ -267,11 +265,7 @@ const DaftarGuruPreview: FC = () => {
                           {teacher.name}
                         </h3>
 
-                        {teacher.subject && (
-                          <p className="text-sm text-gray-600 mb-2 font-medium">
-                            {teacher.subject}
-                          </p>
-                        )}
+                        
 
                         {teacher.nip && (
                           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 inline-block border border-gray-200">
@@ -280,24 +274,7 @@ const DaftarGuruPreview: FC = () => {
                         )}
 
                         {/* Contact Info */}
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <div className="flex items-center text-xs text-gray-500">
-                            <svg
-                              className="w-3 h-3 mr-1"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                            <span>Staff Pengajar</span>
-                          </div>
-                        </div>
+                        
                       </div>
                     </motion.div>
                   ))}
@@ -314,7 +291,7 @@ const DaftarGuruPreview: FC = () => {
                 >
                   <button
                     onClick={handleViewMore}
-                    className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md group"
+                    className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md group cursor-pointer"
                   >
                     <span>Lihat Lebih Banyak</span>
                     <svg
@@ -331,10 +308,6 @@ const DaftarGuruPreview: FC = () => {
                       />
                     </svg>
                   </button>
-                  <p className="text-sm text-gray-500 mt-2">
-                    Menampilkan {previewTeachers.length} dari{" "}
-                    {totalTeachersCount} pengajar
-                  </p>
                 </motion.div>
               )}
             </>

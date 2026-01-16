@@ -108,8 +108,7 @@ const MajorFormModal: FC<MajorFormModalProps> = ({
     // Basic validation
     if (
       !formData.name ||
-      !formData.description ||
-      (!formData.id && !formData.imageFile)
+      !formData.description 
     ) {
       setErrorMessage(
         "Nama dan Deskripsi wajib diisi. Gambar wajib untuk jurusan baru."
