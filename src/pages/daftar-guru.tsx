@@ -7,11 +7,13 @@ import type { Teacher, TeacherApi, TeachersApiEnvelope } from "@/types/Teacher";
 import { apiGet, type ApiError } from "@/utils/apiClient";
 
 const DaftarGuruPage: FC = () => {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [teachersNormada, setTeachersNormada] = useState<Teacher[]>([]);
+  const [teachersBimbingan, setTeachersBimbingan] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPageNormada, setCurrentPageNormada] = useState<number>(1);
+  const [currentPageBimbingan, setCurrentPageBimbingan] = useState<number>(1);
   const itemsPerPage: number = 8;
   const majors = useRef<{ id: string; name: string }[]>([]);
   const cardVariants: Variants = {
@@ -50,10 +52,12 @@ const DaftarGuruPage: FC = () => {
     try {
       const res = await apiGet<TeachersApiEnvelope>("/teachers/");
       const rawItems: TeacherApi[] = res.data;
-      majors.current = (await apiGet<{
-        message: string;
-        data: { id: string; name: string }[];
-      }>("/majors/simple")).data;
+      majors.current = (
+        await apiGet<{
+          message: string;
+          data: { id: string; name: string }[];
+        }>("/majors/simple")
+      ).data;
       const mapped: Teacher[] = rawItems.map((item) => ({
         id: item.guru_id,
         name: item.name,
@@ -62,16 +66,22 @@ const DaftarGuruPage: FC = () => {
         nip: item.nip,
         position: item.jabatan,
         major_id: item.major_id,
-        major_name: majors.current.find((m) => m.id === item.major_id)?.name || null,
+        major_name:
+          majors.current.find((m) => m.id === item.major_id)?.name || null,
       }));
 
-      setTeachers(mapped);
-      setCurrentPage(1);
+      setTeachersNormada(
+        mapped.filter((teacher) => teacher.position === "Normada"),
+      );
+      setTeachersBimbingan(
+        mapped.filter((teacher) => teacher.position === "BK"),
+      );
+      setCurrentPageNormada(1);
     } catch (err: unknown) {
       console.error("Failed to load teacher list:", err);
       if ((err as ApiError)?.message) {
         setError(
-          `Gagal memuat daftar guru. Detail: ${(err as ApiError).message}`
+          `Gagal memuat daftar guru. Detail: ${(err as ApiError).message}`,
         );
       } else if (err instanceof Error) {
         setError(`Gagal memuat daftar guru. Detail: ${err.message}`);
@@ -88,16 +98,23 @@ const DaftarGuruPage: FC = () => {
   }, []);
 
   // Pagination Logic
-  const totalPages: number = Math.ceil(teachers.length / itemsPerPage);
-  const startIndex: number = (currentPage - 1) * itemsPerPage;
-  const currentTeachers: Teacher[] = teachers.slice(
+  const totalPages: number = Math.ceil(teachersNormada.length / itemsPerPage);
+  const startIndex: number = (currentPageNormada - 1) * itemsPerPage;
+  const currentTeachersNormada: Teacher[] = teachersNormada.slice(
     startIndex,
-    startIndex + itemsPerPage
+    startIndex + itemsPerPage,
+  );
+  const currentTeachersBimbingan: Teacher[] = teachersBimbingan.slice(
+    startIndex,
+    startIndex + itemsPerPage,
   );
 
-  const goToPage = (page: number) => {
+  const goToPage = (
+    page: number,
+    setCurrentPageFn: React.Dispatch<React.SetStateAction<number>>,
+  ) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      setCurrentPageFn(page);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -252,10 +269,20 @@ const DaftarGuruPage: FC = () => {
         </div>
       </section>
 
-      {/* Main Content Section */}
+      {/* Section guru normada */}
       <section className="bg-white py-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {teachers.length === 0 ? (
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
+              Guru Normatif Adaptif
+            </h2>
+            <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Menghadirkan pendidik profesional yang adaptif dan berlandaskan
+              nilai-nilai normatif pendidikan.
+            </p>
+          </div>
+          {teachersNormada.length === 0 ? (
             <motion.div
               initial="hidden"
               animate="visible"
@@ -272,40 +299,147 @@ const DaftarGuruPage: FC = () => {
           ) : (
             <>
               {/* Section Header */}
-              <div className="text-center mb-12">
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">
-                  Tim Pendidik Profesional
-                </h2>
-                <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
-                <p className="text-slate-600 max-w-2xl mx-auto">
-                  Menampilkan pendidik berkualitas yang
-                  berkomitmen pada keunggulan pendidikan
-                </p>
-              </div>
-              {/* Majors grid to categorize teachers */}
-              {/* <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 justify-items-center mb-4">
-                {majors.current.map((major) => (
+
+              {/* Teachers Grid */}
+              <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+                {currentTeachersNormada.map((teacher, index) => (
                   <motion.div
-                    key={major.id}
+                    key={teacher.id}
                     variants={cardVariants}
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.2 }}
-                    className="bg-white shadow-lg border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white shadow-lg border border-slate-200 overflow-hidden
+                              hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
                   >
-                    
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">{major.name}
+                    {/* Image Container */}
+                    <div className="w-full h-64 relative overflow-hidden bg-slate-100">
+                      <Image
+                        src={teacher.image || "/images/default_avatar.png"}
+                        alt={teacher.name}
+                        layout="fill"
+                        objectFit="cover"
+                        className="transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    </div>
 
+                    {/* Content */}
+                    <div className="p-4 justify-center">
+                      <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">
+                        {teacher.name}
                       </h3>
+                      {/* <p className="text-blue-700 font-semibold text-sm mb-0.5">
+                        {teacher.major_name}
+                      </p> */}
+                      <p className="text-xs text-slate-500 uppercase tracking-wide">
+                        NIP: {teacher.nip || "Tidak Tersedia"}
+                      </p>
                     </div>
                   </motion.div>
                 ))}
-              </div> */}
+              </div>
 
-              {/* Teachers Grid */}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-16">
+                  <motion.nav
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.5 }}
+                    variants={textVariants}
+                    className="inline-flex bg-white shadow-lg border border-slate-200"
+                  >
+                    <button
+                      onClick={() =>
+                        goToPage(currentPageNormada - 1, setCurrentPageNormada)
+                      }
+                      disabled={currentPageNormada === 1}
+                      className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
+                        ${
+                          currentPageNormada === 1
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
+                        }`}
+                    >
+                      &larr; Sebelumnya
+                    </button>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => goToPage(i + 1, setCurrentPageNormada)}
+                        className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
+                          ${
+                            currentPageNormada === i + 1
+                              ? "bg-blue-600 text-white"
+                              : "text-slate-700 bg-white hover:bg-slate-50"
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() =>
+                        goToPage(
+                          currentPageBimbingan + 1,
+                          setCurrentPageBimbingan,
+                        )
+                      }
+                      disabled={currentPageBimbingan === totalPages}
+                      className={`px-4 py-2 font-medium transition-colors duration-200
+                        ${
+                          currentPageBimbingan === totalPages
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
+                        }`}
+                    >
+                      Berikutnya &rarr;
+                    </button>
+                  </motion.nav>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+      {/* border between section */}
+      <div className="border-t border-slate-200"></div>
+      {/* section guru bimbingan */}
+      <section className="bg-white py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
+              Guru Bimbingan Konseling
+            </h2>
+            <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Menghadirkan pendidik profesional yang adaptif dan berlandaskan
+              nilai-nilai normatif pendidikan.
+            </p>
+          </div>
+          {teachersBimbingan.length === 0 ? (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={textVariants}
+              className="max-w-2xl mx-auto bg-slate-50 border-l-4 border-slate-400 p-8 text-center"
+            >
+              <p className="text-lg font-semibold text-slate-800 mb-2">
+                Belum ada data guru tersedia
+              </p>
+              <p className="text-slate-600">
+                Data sedang dalam proses pembaruan
+              </p>
+            </motion.div>
+          ) : (
+            <>
+              {/* Section Header */}
+
               <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-                {currentTeachers.map((teacher, index) => (
+                {currentTeachersBimbingan.map((teacher, index) => (
                   <motion.div
                     key={teacher.id}
                     variants={cardVariants}
@@ -360,11 +494,13 @@ const DaftarGuruPage: FC = () => {
                     className="inline-flex bg-white shadow-lg border border-slate-200"
                   >
                     <button
-                      onClick={() => goToPage(currentPage - 1)}
-                      disabled={currentPage === 1}
+                      onClick={() =>
+                        goToPage(currentPageNormada - 1, setCurrentPageNormada)
+                      }
+                      disabled={currentPageNormada === 1}
                       className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
                         ${
-                          currentPage === 1
+                          currentPageNormada === 1
                             ? "text-slate-400 bg-slate-50 cursor-not-allowed"
                             : "text-slate-700 bg-white hover:bg-slate-50"
                         }`}
@@ -375,10 +511,10 @@ const DaftarGuruPage: FC = () => {
                     {[...Array(totalPages)].map((_, i) => (
                       <button
                         key={i}
-                        onClick={() => goToPage(i + 1)}
+                        onClick={() => goToPage(i + 1, setCurrentPageBimbingan)}
                         className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
                           ${
-                            currentPage === i + 1
+                            currentPageBimbingan === i + 1
                               ? "bg-blue-600 text-white"
                               : "text-slate-700 bg-white hover:bg-slate-50"
                           }`}
@@ -388,11 +524,16 @@ const DaftarGuruPage: FC = () => {
                     ))}
 
                     <button
-                      onClick={() => goToPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        goToPage(
+                          currentPageBimbingan + 1,
+                          setCurrentPageBimbingan,
+                        )
+                      }
+                      disabled={currentPageBimbingan === totalPages}
                       className={`px-4 py-2 font-medium transition-colors duration-200
                         ${
-                          currentPage === totalPages
+                          currentPageBimbingan === totalPages
                             ? "text-slate-400 bg-slate-50 cursor-not-allowed"
                             : "text-slate-700 bg-white hover:bg-slate-50"
                         }`}

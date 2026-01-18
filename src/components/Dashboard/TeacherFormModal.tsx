@@ -49,7 +49,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
   }, [teacher]);
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -176,24 +176,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
             </div>
           )}
 
-          {/* Mata Pelajaran */}
-          <div>
-            <label
-              htmlFor="subject"
-              className="block text-sm font-semibold text-gray-700 mb-1"
-            >
-              Mata Pelajaran:
-            </label>
-            <input
-              type="text"
-              id="subject"
-              name="subject"
-              value={formData.subject}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
-              required
-            />
-          </div>
+          
 
           {/* NIP */}
           <div>
@@ -214,30 +197,58 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
             />
           </div>
 
-          {/* Jabatan */}
+          {/* Posisi */}
           <div>
             <label
               htmlFor="position"
               className="block text-sm font-semibold text-gray-700 mb-1"
             >
-              Jabatan:
+              Posisi:
             </label>
-            <input
-              type="text"
+            <select
+              // type="text"
               id="position"
               name="position"
               value={formData.position}
+              // onChange={handleChange}
+              onChange={handleChange}
+              className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
+              required
+            >
+              <option value="">-- Pilih Posisi --</option>
+              <option value="BK">BK</option>
+              <option value="Normada">Normada</option>
+              <option value="Program Keahlian">Program Keahlian</option>
+
+            </select>
+          </div>
+          {/* Mata Pelajaran */}
+          <div>
+            <label
+              htmlFor="subject"
+              className="block text-sm font-semibold text-gray-700 mb-1"
+            >
+              Mata Pelajaran:
+            </label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value={formData.subject}
               onChange={handleChange}
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
               required
             />
           </div>
 
-          <div>
-            <label
-              // htmlFor="major"
-              className="block text-sm font-semibold text-gray-700 mb-1"
-            >Jurusan</label>
+          { formData.position === "Program Keahlian" ? (
+
+            
+            <div>
+              <label
+                // htmlFor="major"
+                className="block text-sm font-semibold text-gray-700 mb-1"
+                >Jurusan</label>
             <select
               id="major"
               name="major_id"
@@ -247,7 +258,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
                 setSelectedMajorId(e.target.value)
               }}
               className="w-full rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-600 focus:outline-none px-3 py-1.5 text-gray-800 shadow-sm transition duration-200 ease-in-out hover:border-blue-400"
-            >
+              >
                <option value="">-- Pilih Jurusan --</option>
                 {majors.map((major) => (
                   <option key={major.id} value={major.id}>
@@ -256,6 +267,7 @@ const TeacherFormModal: FC<TeacherFormModalProps> = ({
                 ))}
             </select>
           </div>
+              ) : null }
 
           {/* Tombol Aksi */}
           <div className="flex items-center justify-end gap-2 pt-3">

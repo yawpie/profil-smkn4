@@ -186,21 +186,6 @@ const TeachersPage: React.FC = () => {
               </div>
             </div>
 
-            {/* <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-amber-600 font-semibold text-sm uppercase tracking-wide">
-                    Status Aktif
-                  </p>
-                  <p className="text-3xl font-bold text-amber-800 mt-1">
-                    {teachers.length}
-                  </p>
-                </div>
-                <div className="h-12 w-12 bg-amber-500 rounded-full flex items-center justify-center">
-                  <div className="h-3 w-3 bg-white rounded-full animate-pulse"></div>
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
 
