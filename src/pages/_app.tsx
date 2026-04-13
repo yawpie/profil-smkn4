@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-import Head from "next/head";
+import SEO from "@/components/SEO";
 import { merriweatherSans, sourceSerif } from "../fonts";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -17,10 +17,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <Head>
-        <link rel="icon" href="/favicon.ico" />
-        <title>SMKN 4 Mataram</title> {/* Optional */}
-      </Head>
+      <SEO />
       <AuthProvider>
         <div className={`${merriweatherSans.variable} ${sourceSerif.variable}`}>
           {isDashboardRoute ? (
