@@ -1,5 +1,4 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { GetStaticProps, GetStaticPaths } from "next";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
 import Link from "next/link";
@@ -19,141 +18,75 @@ const slideInVariants: Variants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
-const ArticleDetailPage: React.FC = () => {
-  const router = useRouter();
-  const { id } = router.query;
+interface ArticleDetailPageProps {
+  article: Article;
+}
 
-  const [article, setArticle] = useState<Article | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Helper function to format date
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date string");
-      }
-      return date.toLocaleDateString("id-ID", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      console.error("Error formatting date:", e);
-      return dateString;
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      throw new Error("Invalid date string");
     }
+    return date.toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return dateString;
+  }
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
   };
+};
 
-  useEffect(() => {
-    const fetchArticleDetails = async () => {
-      if (!id) return;
+export const getStaticProps: GetStaticProps<ArticleDetailPageProps> = async (context) => {
+  const id = context.params?.id as string;
 
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await apiGet<ArticleApi>(`/articles?id=${id}`);
-        if (res) {
-          const data: Article = {
-            id: res.articles_id,
-            title: res.title,
-            image: res.image_url || "/images/placeholder-article.png",
-            content: res.content,
-            author: res.admin?.username || "Admin",
-            publishDate: res.published_date || "",
-            slug: res.slug,
-            status: res.status,
-            categoryName: res.category?.name || null,
-          };
-          setArticle(data);
-        } else {
-          setError("Data artikel tidak tersedia.");
-        }
-      } catch (err: any) {
-        console.error("Error fetching article details:", err);
-        setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticleDetails();
-  }, [id]);
-
-  // Loading State
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-gray-50 text-gray-700 font-sans p-4">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin mx-auto mb-6"></div>
-            <p className="text-lg font-medium text-gray-800">
-              Memuat detail artikel...
-            </p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  if (!id) {
+    return { notFound: true };
   }
 
-  // Error State
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gray-50 text-gray-700 p-4 text-center font-sans">
-          <div className="bg-white border-2 border-red-200 p-12 max-w-lg w-full shadow-lg">
-            <div className="w-20 h-20 bg-red-100 mx-auto mb-6 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <p className="text-lg text-red-600 mb-8 font-semibold">{error}</p>
-            <Link
-              href="/artikel"
-              className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition duration-300 ease-in-out text-sm uppercase tracking-wider"
-            >
-              Kembali ke Daftar Artikel
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const res = await apiGet<ArticleApi>(`/articles?id=${id}`);
+    if (res) {
+      const article: Article = {
+        id: res.articles_id,
+        title: res.title,
+        image: res.image_url || "/images/placeholder-article.png",
+        content: res.content,
+        author: res.admin?.username || "Admin",
+        publishDate: res.published_date || "",
+        slug: res.slug,
+        status: res.status,
+        categoryName: res.category?.name || null,
+      };
+
+      return {
+        props: { article },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching article details at SSG:", error);
   }
 
-  // If article is null
-  if (!article) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gray-50 text-gray-700 font-sans p-4">
-          <div className="bg-white border-2 border-gray-200 p-12 max-w-lg w-full text-center shadow-lg">
-            <p className="text-lg mb-8 font-medium">Artikel tidak tersedia.</p>
-            <Link
-              href="/artikel"
-              className="inline-block px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold transition duration-300 ease-in-out text-sm uppercase tracking-wider"
-            >
-              Kembali ke Daftar Artikel
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
 
+const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ article }) => {
   return (
     <MainLayout>
       <Head>
-        <title>{article.title} - Artikel SMKN 4 Mataram</title>
+        <title>{`${article.title} - SMKN 4 Mataram`}</title>
         <meta
           name="description"
           content={

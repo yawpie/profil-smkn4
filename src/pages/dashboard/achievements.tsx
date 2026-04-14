@@ -63,6 +63,8 @@ const AchievementsPage: FC = () => {
         `/achievements?page=${currentPage}&limit=${itemsPerPage}`
       );
       const apiList: AchievementApi[] = response.data;
+      console.log(apiList);
+      
 
       const data: Achievement[] = apiList.map((item) => ({
         id: item.id,

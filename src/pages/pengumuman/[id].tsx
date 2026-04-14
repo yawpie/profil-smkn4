@@ -1,13 +1,7 @@
-// pages/pengumuman/[id].tsx
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { GetStaticProps, GetStaticPaths } from "next";
 import { motion, type Variants } from "framer-motion";
 import Link from "next/link";
-import type {
-  Announcement,
-  AnnouncementApi,
-  AnnouncementsApiEnvelope,
-} from "@/types/Announcement";
+import type { Announcement, AnnouncementApi } from "@/types/Announcement";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
 import { apiGet } from "@/utils/apiClient";
@@ -23,126 +17,73 @@ const slideInVariants: Variants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.4, ease: "easeOut" } },
 };
 
-const AnnouncementDetailPage: React.FC = () => {
-  const router = useRouter();
-  const { id } = router.query;
+interface AnnouncementDetailPageProps {
+  announcement: Announcement;
+}
 
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAnnouncementDetails = async () => {
-      if (!id) return;
-
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await apiGet<AnnouncementApi>(`/announcement?id=${id}`);
-        console.log(res);
-        
-        if (res) {
-          const mapped: Announcement = {
-            id: res.id,
-            title: res.title,
-            content: res.content,
-            publishDate: res.date,
-            status: res.status === "PUBLISHED" ? "Published" : "Draft",
-            image: res.image_url,
-          };
-          setAnnouncement(mapped);
-        } else {
-          setError("Data pengumuman tidak ditemukan.");
-        }
-      } catch (err: any) {
-        console.error("Error fetching announcement details:", err);
-        setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnnouncementDetails();
-  }, [id]);
-
-  // Helper function to format date
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        throw new Error("Invalid date string");
-      }
-      return date.toLocaleDateString("id-ID", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      console.error("Error formatting date:", e);
-      return dateString;
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      throw new Error("Invalid date string");
     }
+    return date.toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return dateString;
+  }
+};
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
   };
+};
 
-  // Loading State
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-slate-50">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-900 animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-600">Memuat detail pengumuman...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+export const getStaticProps: GetStaticProps<AnnouncementDetailPageProps> = async (context) => {
+  const id = context.params?.id as string;
+
+  if (!id) {
+    return { notFound: true };
   }
 
-  // Error State
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-slate-50">
-          <div className="max-w-2xl mx-auto bg-red-50 border-l-4 border-red-500 p-8 text-center">
-            <p className="text-lg text-red-800 font-semibold mb-4">{error}</p>
-            <Link
-              href="/pengumuman"
-              className="inline-block px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-200"
-            >
-              Kembali ke Daftar Pengumuman
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const res = await apiGet<AnnouncementApi>(`/announcement?id=${id}`);
+    if (res) {
+      const announcement: Announcement = {
+        id: res.id,
+        title: res.title,
+        content: res.content,
+        publishDate: res.date,
+        status: res.status === "PUBLISHED" ? "Published" : "Draft",
+        image: res.image_url,
+      };
+
+      return {
+        props: { announcement },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching announcement details at SSG:", error);
   }
 
-  // Not Found State
-  if (!announcement) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-slate-50">
-          <div className="max-w-2xl mx-auto bg-slate-100 border-l-4 border-slate-400 p-8 text-center">
-            <p className="text-lg text-slate-800 font-semibold mb-4">
-              Pengumuman tidak tersedia
-            </p>
-            <Link
-              href="/pengumuman"
-              className="inline-block px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white font-medium transition-colors duration-200"
-            >
-              Kembali ke Daftar Pengumuman
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
 
+const AnnouncementDetailPage: React.FC<AnnouncementDetailPageProps> = ({ announcement }) => {
   return (
     <MainLayout>
       <Head>
-        <title>{announcement.title} - Pengumuman SMKN 4 Mataram</title>
+        <title>{`${announcement.title} - SMKN 4 Mataram`}</title>
         <meta
           name="description"
           content={

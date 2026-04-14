@@ -1,5 +1,5 @@
-import React, { useState, useEffect, FC } from 'react';
-import { useRouter } from 'next/router';
+import React, { FC } from 'react';
+import { GetStaticProps, GetStaticPaths } from "next";
 import MainLayout from '../../components/layout/MainLayout';
 import Image from 'next/image';
 import { motion, type Variants } from 'framer-motion';
@@ -34,104 +34,53 @@ const slideInVariants: Variants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.3, ease: 'easeOut' } },
 };
 
-const AchievementDetailPage: FC = () => {
-  const router = useRouter();
-  const { id } = router.query;
-  const [achievement, setAchievement] = useState<Achievement | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+interface AchievementDetailPageProps {
+  achievement: Achievement;
+}
 
-  useEffect(() => {
-    const fetchAchievement = async () => {
-      if (!id) return;
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
 
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiGet<AchievementApi>(`/achievements?id=${id}`);
-        if (response) {
-          const data: Achievement = {
-            id: response.id,
-            title: response.title,
-            content: response.content,
-            description: response.description || '',
-            publishDate: response.publishDate || '',
-            image: response.image_url || "/images/placeholder-achievement.png",
-          };
-          setAchievement(data);
-        } else {
-          setError('Achievement data not available.');
-        }
-      } catch (err: any) {
-        console.error('Error fetching achievement details:', err);
-        setError(`An error occurred while loading data: ${err.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+export const getStaticProps: GetStaticProps<AchievementDetailPageProps> = async (context) => {
+  const id = context.params?.id as string;
 
-    fetchAchievement();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-900 animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-600 font-medium">Loading achievement details...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  if (!id) {
+    return { notFound: true };
   }
 
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-          <div className="max-w-md mx-auto text-center bg-white border border-red-200 p-8">
-            <div className="w-16 h-16 bg-red-100 mx-auto mb-4 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-red-900 mb-2">Error</h2>
-            <p className="text-red-700 mb-6">{error}</p>
-            <button
-              onClick={() => router.push('/prestasi')}
-              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium transition-colors duration-200"
-            >
-              Back to Achievements
-            </button>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const response = await apiGet<AchievementApi>(`/achievements?id=${id}`);
+    if (response) {
+      const achievement: Achievement = {
+        id: response.id,
+        title: response.title,
+        content: response.content,
+        description: response.description || '',
+        publishDate: response.publishDate || '',
+        image: response.image_url || "/images/placeholder-achievement.png",
+      };
+
+      return {
+        props: { achievement },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (err: any) {
+    console.error('Error fetching achievement details at SSG:', err);
   }
 
-  if (!achievement) {
-    return (
-      <MainLayout>
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-          <div className="text-center bg-white border border-slate-200 p-8">
-            <p className="text-slate-600 mb-4">Achievement not available.</p>
-            <button
-              onClick={() => router.push('/prestasi')}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-medium transition-colors duration-200"
-            >
-              Back to Achievements
-            </button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
 
+const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) => {
   return (
     <MainLayout>
       <Head>
-        <title>{achievement.title} - Institutional Achievements</title>
+        <title>{`${achievement.title} - SMKN 4 Mataram`}</title>
         <meta name="description" content={achievement.description || achievement.content?.substring(0, 160) || `Details of achievement ${achievement.title}.`} />
         <meta property="og:title" content={achievement.title} />
         <meta property="og:description" content={achievement.description || achievement.content?.substring(0, 160) || `Details of achievement ${achievement.title}.`} />
@@ -243,7 +192,7 @@ const AchievementDetailPage: FC = () => {
                   {/* Content Sections */}
                   <div className="space-y-12">
                     {/* Summary Section */}
-                    <motion.div
+                    {/* <motion.div
                       variants={fadeInVariants}
                       className="border-l-4 border-blue-600 pl-8"
                     >
@@ -256,17 +205,17 @@ const AchievementDetailPage: FC = () => {
                           {achievement.description}
                         </p>
                       </div>
-                    </motion.div>
+                    </motion.div> */}
 
                     {/* Detailed Content */}
                     <motion.div
                       variants={fadeInVariants}
                       className="border-l-4 border-purple-600 pl-8"
                     >
-                      <h2 className="text-3xl font-bold text-slate-900 mb-6 flex items-center space-x-4">
+                      {/* <h2 className="text-3xl font-bold text-slate-900 mb-6 flex items-center space-x-4">
                         <span>Comprehensive Details</span>
                         <div className="w-12 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
-                      </h2>
+                      </h2> */}
                       <div className="prose prose-slate prose-lg max-w-none">
                         <div className="text-slate-700 leading-relaxed space-y-6">
                           {achievement.content?.split('\n\n').map((paragraph, index) => (

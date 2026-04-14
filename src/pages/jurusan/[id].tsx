@@ -1,5 +1,4 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { GetStaticProps, GetStaticPaths } from "next";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -15,109 +14,60 @@ import Head from "next/head";
 import { apiGet, type ApiError } from "@/utils/apiClient";
 import { Teacher, TeacherApi } from "@/types/Teacher";
 
-const DetailJurusanPage = () => {
-  const router = useRouter();
-  const { id } = router.query;
-  const [major, setMajor] = useState<Major | null>(null);
-  const [galleryImages, setGalleryImages] = useState<MajorGalleryImages[]>([]);
-  const [teachers, setTeachers] = useState<TeacherApi[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface DetailJurusanPageProps {
+  major: Major;
+  galleryImages: MajorGalleryImages[];
+  teachers: TeacherApi[];
+}
 
-  useEffect(() => {
-    const fetchMajorDetails = async () => {
-      if (id) {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await apiGet<MajorApiResponse>(`/majors?id=${id}`);
-          const apiMajor = response;
-          if (apiMajor) {
-            const mapped: Major = {
-              id: apiMajor.id,
-              name: apiMajor.name,
-              description: apiMajor.description,
-              image:
-                apiMajor.image_url ||
-                "https://placehold.co/600x400/6B7280/FFFFFF?text=Major",
-            };
-            setMajor(mapped);
-            setGalleryImages(apiMajor.major_gallery_images || []);
-            setTeachers(apiMajor.guru || []);
-          } else {
-            setError("Data jurusan tidak ditemukan.");
-          }
-        } catch (err: unknown) {
-          console.error("Error fetching major details:", err);
-          if ((err as ApiError)?.message) {
-            setError(
-              `Terjadi kesalahan saat memuat data: ${(err as ApiError).message}`
-            );
-          } else if (err instanceof Error) {
-            setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
-          } else {
-            setError("Terjadi kesalahan saat memuat data.");
-          }
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
 
-    fetchMajorDetails();
-  }, [id]);
+export const getStaticProps: GetStaticProps<DetailJurusanPageProps> = async (context) => {
+  const id = context.params?.id as string;
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700">
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin mx-auto"></div>
-            <p className="text-xl font-medium">Loading data jurusan...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  if (!id) {
+    return { notFound: true };
   }
 
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700 p-4 text-center">
-          <div className="bg-red-50 border-l-4 border-red-500 p-6 mb-6 max-w-md">
-            <p className="text-lg text-red-700 font-medium">{error}</p>
-          </div>
-          <Link
-            href="/jurusan"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            ← Back to Jurusan List
-          </Link>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const response = await apiGet<MajorApiResponse>(`/majors?id=${id}`);
+    const apiMajor = response;
+    
+    if (apiMajor) {
+      const major: Major = {
+        id: apiMajor.id,
+        name: apiMajor.name,
+        description: apiMajor.description,
+        image:
+          apiMajor.image_url ||
+          "https://placehold.co/600x400/6B7280/FFFFFF?text=Major",
+      };
+      
+      const galleryImages = apiMajor.major_gallery_images || [];
+      const teachers = apiMajor.guru || [];
+
+      return {
+        props: { major, galleryImages, teachers },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (err: unknown) {
+    console.error("Error fetching major details at SSG:", err);
   }
 
-  if (!major) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700 space-y-6">
-          <p className="text-xl font-medium">Data tidak tersedia.</p>
-          <Link
-            href="/jurusan"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            ← Back to Jurusan List
-          </Link>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
 
+const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryImages, teachers }) => {
   return (
     <MainLayout>
       <Head>
-        <title>{major.name} - Jurusan SMKN 4 Mataram</title>
+        <title>{`${major.name} - SMKN 4 Mataram`}</title>
         <meta
           name="description"
           content={`Detail jurusan ${major.name} di SMKN 4 Mataram, termasuk deskripsi, prospek karir, dan kurikulum.`}

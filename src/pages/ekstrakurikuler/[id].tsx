@@ -1,5 +1,4 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { GetStaticProps, GetStaticPaths } from "next";
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -8,98 +7,52 @@ import MainLayout from '../../components/layout/MainLayout';
 import Head from 'next/head';
 import { apiGet } from '@/utils/apiClient';
 
-const DetailEkstrakurikulerPage = () => {
-  const router = useRouter();
-  const { id } = router.query;
+interface DetailEkstrakurikulerPageProps {
+  ekskul: Extracurricular;
+}
 
-  const [ekskul, setEkskul] = useState<Extracurricular | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
 
-  useEffect(() => {
-    const fetchEkskulDetails = async () => {
-      if (id) {
-        setLoading(true);
-        setError(null);
-        try {
-          const res = await apiGet<ExtracurricularApi>(`/extracurriculars?id=${id}`);
-          if (res) {
-            setEkskul({
-              id: res.id,
-              name: res.name,
-              description: res.description || '',
-              image: res.image_url || undefined,
-              coach: res.guru?.name || undefined,
-            });
-          } else {
-            setError('Data ekstrakurikuler tidak ditemukan.');
-          }
-        } catch (err: any) {
-          console.error('Error fetching extracurricular details:', err);
-          setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+export const getStaticProps: GetStaticProps<DetailEkstrakurikulerPageProps> = async (context) => {
+  const id = context.params?.id as string;
 
-    fetchEkskulDetails();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-gray-50 text-gray-700">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-700 border-t-transparent animate-spin mx-auto mb-4"></div>
-            <p className="text-base font-medium uppercase tracking-wide">Memuat Detail Ekstrakurikuler</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  if (!id) {
+    return { notFound: true };
   }
 
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gray-50 text-gray-700 p-4 text-center">
-          <div className="bg-white border-l-4 border-red-600 shadow-lg p-6 max-w-md w-full">
-            <div className="flex items-center mb-3">
-              <svg className="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <h3 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Error</h3>
-            </div>
-            <p className="text-sm text-gray-700 mb-4">{error}</p>
-            <Link href="/ekstrakurikuler" className="inline-block px-6 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold transition duration-300 ease-in-out text-sm uppercase tracking-wider shadow-md hover:shadow-lg">
-              Kembali ke Daftar Ekstrakurikuler
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const res = await apiGet<ExtracurricularApi>(`/extracurriculars?id=${id}`);
+    if (res) {
+      const ekskul: Extracurricular = {
+        id: res.id,
+        name: res.name,
+        description: res.description || '',
+        image: res.image_url || undefined,
+        coach: res.guru?.name || undefined,
+      };
+
+      return {
+        props: { ekskul },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching extracurricular details at SSG:", error);
   }
 
-  if (!ekskul) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gray-50 text-gray-700 p-4">
-          <div className="bg-white border border-gray-300 shadow-lg p-6 max-w-md w-full text-center">
-            <h3 className="text-lg font-bold text-gray-900 mb-3 uppercase tracking-wide">Data Tidak Tersedia</h3>
-            <p className="text-sm text-gray-600 mb-4">Ekstrakurikuler yang Anda cari tidak dapat ditemukan.</p>
-            <Link href="/ekstrakurikuler" className="inline-block px-6 py-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold transition duration-300 ease-in-out text-sm uppercase tracking-wider shadow-md hover:shadow-lg">
-              Kembali ke Daftar Ekstrakurikuler
-            </Link>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
 
+const DetailEkstrakurikulerPage: React.FC<DetailEkstrakurikulerPageProps> = ({ ekskul }) => {
   return (
     <MainLayout>
       <Head>
-        <title>{ekskul.name} - Ekstrakurikuler SMKN 4 Mataram</title>
+        <title>{`${ekskul.name} - SMKN 4 Mataram`}</title>
         <meta name="description" content={`Detail ekstrakurikuler ${ekskul.name} di SMKN 4 Mataram.`} />
         <meta property="og:title" content={ekskul.name} />
         <meta property="og:description" content={`Detail ekstrakurikuler ${ekskul.name} di SMKN 4 Mataram.`} />
