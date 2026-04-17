@@ -6,6 +6,7 @@ import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 import type { Achievement, AchievementApi } from '@/types/Achievement';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { apiGet } from '@/utils/apiClient';
 
 // Helper function to format dates
@@ -77,6 +78,12 @@ export const getStaticProps: GetStaticProps<AchievementDetailPageProps> = async 
 };
 
 const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) => {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <div className="min-h-screen bg-white flex items-center justify-center">Loading...</div>;
+  }
+
   return (
     <MainLayout>
       <Head>
