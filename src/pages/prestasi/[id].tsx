@@ -8,6 +8,8 @@ import type { Achievement, AchievementApi } from '@/types/Achievement';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { apiGet } from '@/utils/apiClient';
+import DOMPurify from "isomorphic-dompurify";
+import RichTextRenderer from '@/components/richTextRenderer';
 
 // Helper function to format dates
 const formatDate = (dateString: string): string => {
@@ -59,7 +61,7 @@ export const getStaticProps: GetStaticProps<AchievementDetailPageProps> = async 
       const achievement: Achievement = {
         id: response.id,
         title: response.title,
-        content: response.content,
+        content: DOMPurify.sanitize(response.content),
         description: response.description || '',
         publishDate: response.publishDate || '',
         image: response.image_url || "/images/placeholder-achievement.png",
@@ -108,7 +110,7 @@ const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) 
             <div className="absolute bottom-10 left-1/4 w-16 h-16 bg-gradient-to-br from-green-500 to-blue-500"></div>
             <div className="absolute bottom-20 right-1/3 w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500"></div>
           </div>
-          
+
           <div className="relative container mx-auto px-6 sm:px-8 lg:px-12 py-24">
             <motion.div
               initial="hidden"
@@ -145,7 +147,7 @@ const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) 
                     </h1>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-8 text-slate-300 ml-8">
                   <div className="flex items-center space-x-3">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,9 +192,11 @@ const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) 
                         className="w-full h-auto object-cover"
                         unoptimized
                       />
-                      <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 border border-slate-200">
-                        <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">FEATURED</span>
-                      </div>
+                      {/* <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 border border-slate-200">
+                        <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                          FEATURED
+                        </span>
+                      </div> */}
                     </motion.div>
                   )}
 
@@ -224,13 +228,15 @@ const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) 
                         <div className="w-12 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
                       </h2> */}
                       <div className="prose prose-slate prose-lg max-w-none">
-                        <div className="text-slate-700 leading-relaxed space-y-6">
-                          {achievement.content?.split('\n\n').map((paragraph, index) => (
-                            <p key={index} className="text-lg">
-                              {paragraph}
-                            </p>
+                        {RichTextRenderer({
+                          content: achievement.content || "",
+                          className: "text-slate-700 leading-relaxed space-y-6",
+                        })}
+                        {/* <div className="" /> */}
+                        {/* {achievement.content?.split('\n\n').map((paragraph, index) => (
+                            <div key={index} className="prose" dangerouslySetInnerHTML={ {__html:paragraph}}/>
                           ))}
-                        </div>
+                        </div> */}
                       </div>
                     </motion.div>
                   </div>
