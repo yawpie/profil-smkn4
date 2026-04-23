@@ -6,6 +6,7 @@ import type { Article, ArticleApi } from "@/types/Article";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
 import { apiGet } from "@/utils/apiClient";
+import RichTextRenderer from "@/components/RichTextRenderer";
 
 // Animation variants for Framer Motion
 const fadeInVariants: Variants = {
@@ -255,18 +256,12 @@ const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ article }) => {
                 transition={{ delay: 0.5, duration: 0.8 }}
               >
                 <div
-                  className="prose prose-xl max-w-none text-gray-700 leading-relaxed"
+                  className="text-gray-700 leading-relaxed"
                   style={{
                     lineHeight: "1.8",
                   }}
                 >
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        article.content ||
-                        "<p>Konten artikel tidak tersedia.</p>",
-                    }}
-                  />
+                  <RichTextRenderer content={article.content} />
                 </div>
               </motion.div>
             </motion.div>

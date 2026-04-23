@@ -9,7 +9,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { apiGet } from '@/utils/apiClient';
 import DOMPurify from "isomorphic-dompurify";
-import RichTextRenderer from '@/components/richTextRenderer';
+import RichTextRenderer from '@/components/RichTextRenderer';
 
 // Helper function to format dates
 const formatDate = (dateString: string): string => {
@@ -66,7 +66,7 @@ export const getStaticProps: GetStaticProps<AchievementDetailPageProps> = async 
         publishDate: response.publishDate || '',
         image: response.image_url || "/images/placeholder-achievement.png",
       };
-
+      // console.log("Fetched achievement for SSG:", achievement);
       return {
         props: { achievement },
         revalidate: 60, // ISR revalidate every 60 seconds
@@ -190,7 +190,7 @@ const AchievementDetailPage: FC<AchievementDetailPageProps> = ({ achievement }) 
                         width={1200}
                         height={600}
                         className="w-full h-auto object-cover"
-                        unoptimized
+                        // unoptimized
                       />
                       {/* <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm px-4 py-2 border border-slate-200">
                         <span className="text-sm font-semibold text-slate-700 uppercase tracking-wide">

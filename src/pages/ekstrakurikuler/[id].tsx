@@ -6,6 +6,7 @@ import type { Extracurricular, ExtracurricularApi } from '@/types/Extracurricula
 import MainLayout from '../../components/layout/MainLayout';
 import Head from 'next/head';
 import { apiGet } from '@/utils/apiClient';
+import RichTextRenderer from "@/components/RichTextRenderer";
 
 interface DetailEkstrakurikulerPageProps {
   ekskul: Extracurricular;
@@ -33,7 +34,7 @@ export const getStaticProps: GetStaticProps<DetailEkstrakurikulerPageProps> = as
         name: res.name,
         description: res.description || '',
         image: res.image_url || undefined,
-        coach: res.guru?.name || undefined,
+        coach: res.guru?.name || null,
       };
 
       return {
@@ -161,7 +162,9 @@ const DetailEkstrakurikulerPage: React.FC<DetailEkstrakurikulerPageProps> = ({ e
                   }}
                 >
                   {typeof ekskul.description === 'string' ? (
-                    <div dangerouslySetInnerHTML={{ __html: ekskul.description.replace(/\n/g, '<br/><br/>') }} />
+                    <RichTextRenderer content={ekskul.description} 
+                    // className="text-gray-700 leading-relaxed text-lg" 
+                    />
                   ) : (
                     <p className="italic text-gray-500">Deskripsi belum tersedia.</p>
                   )}

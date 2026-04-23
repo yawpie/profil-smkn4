@@ -5,7 +5,7 @@ import type { Announcement, AnnouncementApi } from "@/types/Announcement";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
 import { apiGet } from "@/utils/apiClient";
-
+import RichTextRenderer from "@/components/RichTextRenderer";
 // Motion variants
 const fadeInVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -213,14 +213,7 @@ const AnnouncementDetailPage: React.FC<AnnouncementDetailPageProps> = ({ announc
 
                 {/* Article Content */}
                 <div className="prose prose-xl prose-slate max-w-none">
-                  <div
-                    className="text-slate-700 leading-relaxed text-lg"
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        announcement.content ||
-                        "<p>Konten pengumuman tidak tersedia.</p>",
-                    }}
-                  />
+                  <RichTextRenderer content={announcement.content} className="text-slate-700 leading-relaxed text-lg"/>
                 </div>
               </div>
             </motion.article>

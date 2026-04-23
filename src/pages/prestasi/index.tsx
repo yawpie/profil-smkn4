@@ -5,6 +5,7 @@ import { motion, type Variants } from "framer-motion";
 import Link from "next/link";
 import type { Achievement, AchievementsApiEnvelope } from "@/types/Achievement";
 import { apiGet } from "@/utils/apiClient";
+import RichTextRenderer from "@/components/RichTextRenderer";
 
 // Helper function to format dates
 const formatDate = (dateString: string): string => {
@@ -404,9 +405,16 @@ const AchievementsPage: FC = () => {
                         <h3 className="text-lg font-semibold text-slate-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
                           {achievement.title}
                         </h3>
-                        <p className="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-3">
+                        <RichTextRenderer
+                          content={getTruncatedText(
+                            achievement.description,
+                            120,
+                          )}
+                          className="text-sm text-slate-600 mb-4 leading-relaxed line-clamp-3"
+                        />
+                        {/* <p className="text-sm text-slate-600 leading-relaxed mb-4 line-clamp-3">
                           {getTruncatedText(achievement.description, 120)}
-                        </p>
+                        </p> */}
 
                         {/* Read More Link */}
                         <div className="flex items-center justify-between">

@@ -10,6 +10,7 @@ import type {
   AnnouncementsApiEnvelope,
 } from "@/types/Announcement";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import RichTextRenderer from "@/components/RichTextRenderer";
 
 const Pengumuman: FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -274,7 +275,7 @@ const Pengumuman: FC = () => {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      }
+                      },
                     )}
                   </time>
 
@@ -287,12 +288,19 @@ const Pengumuman: FC = () => {
                     </h2>
                   </Link>
 
-                  <p className="text-slate-700 mb-6 leading-relaxed line-clamp-4">
+                  <RichTextRenderer
+                    content={getTruncatedContent(
+                      mainAnnouncement.content,
+                      mainAnnouncement.summary,
+                    )}
+                    className="text-slate-700 mb-6 leading-relaxed line-clamp-4"
+                  />
+                  {/* <p className="text-slate-700 mb-6 leading-relaxed line-clamp-4">
                     {getTruncatedContent(
                       mainAnnouncement.content,
                       mainAnnouncement.summary
                     )}
-                  </p>
+                  </p> */}
 
                   <Link
                     href={getAnnouncementLink(mainAnnouncement)}
@@ -340,7 +348,7 @@ const Pengumuman: FC = () => {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
-                          }
+                          },
                         )}
                       </time>
 
@@ -356,7 +364,7 @@ const Pengumuman: FC = () => {
                       <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">
                         {getTruncatedContent(
                           announcement.content,
-                          announcement.summary
+                          announcement.summary,
                         )}
                       </p>
                     </motion.article>
@@ -365,142 +373,139 @@ const Pengumuman: FC = () => {
               </aside>
             </div>
           </div>
-        </section>)}
+        </section>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <section className="py-12 bg-white">
-            <div className="container mx-auto px-6 sm:px-8 lg:px-12">
-              <div className="flex items-center justify-center">
-                {/* Pagination Controls */}
-                <div className="flex items-center space-x-2">
-                  {/* Previous Button */}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
-                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                    }`}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-6 sm:px-8 lg:px-12">
+            <div className="flex items-center justify-center">
+              {/* Pagination Controls */}
+              <div className="flex items-center space-x-2">
+                {/* Previous Button */}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                    currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Previous
-                  </button>
+                    <path
+                      fillRule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Previous
+                </button>
 
-                  {/* Page Numbers */}
-                  <div className="hidden sm:flex items-center space-x-1">
-                    {(() => {
-                      const pages = [];
-                      const maxVisible = 7;
+                {/* Page Numbers */}
+                <div className="hidden sm:flex items-center space-x-1">
+                  {(() => {
+                    const pages = [];
+                    const maxVisible = 7;
 
-                      if (totalPages <= maxVisible) {
-                        for (let i = 1; i <= totalPages; i++) {
-                          pages.push(i);
-                        }
-                      } else {
-                        pages.push(1);
-                        let start = Math.max(2, currentPage - 1);
-                        let end = Math.min(totalPages - 1, currentPage + 1);
+                    if (totalPages <= maxVisible) {
+                      for (let i = 1; i <= totalPages; i++) {
+                        pages.push(i);
+                      }
+                    } else {
+                      pages.push(1);
+                      let start = Math.max(2, currentPage - 1);
+                      let end = Math.min(totalPages - 1, currentPage + 1);
 
-                        if (currentPage <= 3) {
-                          end = 5;
-                        }
-                        if (currentPage >= totalPages - 2) {
-                          start = totalPages - 4;
-                        }
-
-                        if (start > 2) {
-                          pages.push(-1);
-                        }
-                        for (let i = start; i <= end; i++) {
-                          pages.push(i);
-                        }
-                        if (end < totalPages - 1) {
-                          pages.push(-2);
-                        }
-                        pages.push(totalPages);
+                      if (currentPage <= 3) {
+                        end = 5;
+                      }
+                      if (currentPage >= totalPages - 2) {
+                        start = totalPages - 4;
                       }
 
-                      return pages.map((page, index) => {
-                        if (page < 0) {
-                          return (
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="px-3 py-2 text-gray-500"
-                            >
-                              ...
-                            </span>
-                          );
-                        }
-                        return (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
-                              currentPage === page
-                                ? "bg-blue-600 text-white shadow-sm"
-                                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        );
-                      });
-                    })()}
-                  </div>
-
-                  {/* Mobile Page Indicator */}
-                  <div className="sm:hidden px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg">
-                    {currentPage} / {totalPages}
-                  </div>
-
-                  {/* Next Button */}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) =>
-                        Math.min(totalPages, prev + 1)
-                      )
+                      if (start > 2) {
+                        pages.push(-1);
+                      }
+                      for (let i = start; i <= end; i++) {
+                        pages.push(i);
+                      }
+                      if (end < totalPages - 1) {
+                        pages.push(-2);
+                      }
+                      pages.push(totalPages);
                     }
-                    disabled={currentPage === totalPages}
-                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                    }`}
-                  >
-                    Next
-                    <svg
-                      className="w-4 h-4 ml-1"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
+
+                    return pages.map((page, index) => {
+                      if (page < 0) {
+                        return (
+                          <span
+                            key={`ellipsis-${index}`}
+                            className="px-3 py-2 text-gray-500"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                            currentPage === page
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    });
+                  })()}
                 </div>
+
+                {/* Mobile Page Indicator */}
+                <div className="sm:hidden px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg">
+                  {currentPage} / {totalPages}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                  }`}
+                >
+                  Next
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
               </div>
             </div>
-          </section>
-        )}
-      
-      
+          </div>
+        </section>
+      )}
     </MainLayout>
   );
 };

@@ -6,6 +6,7 @@ import MainLayout from "../../components/layout/MainLayout";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import type { Article, ArticleApi, ArticlesApiEnvelope } from "@/types/Article";
 import { apiGet } from "@/utils/apiClient";
+import RichTextRenderer from "@/components/RichTextRenderer";
 
 // Helper function to safely get a truncated text
 const getTruncatedText = (
@@ -299,10 +300,10 @@ const ArtikelPage: React.FC = () => {
                       <h3 className="text-lg font-bold text-slate-900 mb-3 leading-tight group-hover:text-blue-700 transition-colors duration-200">
                         {article.title}
                       </h3>
-
-                      <p className="text-sm text-slate-600 mb-4 leading-relaxed line-clamp-3">
+                          <RichTextRenderer content={getTruncatedText(article.content, 120)} className="text-sm text-slate-600 mb-4 leading-relaxed line-clamp-3" />
+                      {/* <p className="text-sm text-slate-600 mb-4 leading-relaxed line-clamp-3">
                         {getTruncatedText(article.content, 120)}
-                      </p>
+                      </p> */}
 
                       <Link
                         href={`/artikel/${article.id}`}
