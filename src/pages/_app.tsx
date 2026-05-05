@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import SEO from "@/components/SEO";
 import { merriweatherSans, sourceSerif } from "../fonts";
-import { AuthProvider } from "@/contexts/AuthContext";
+// import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useRouter } from "next/router";
 
@@ -18,7 +18,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <SEO />
-      <AuthProvider>
+      {/* <AuthProvider> */}
         <div className={`${merriweatherSans.variable} ${sourceSerif.variable}`}>
           {isDashboardRoute ? (
             <ProtectedRoute>
@@ -28,7 +28,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <Component {...pageProps} />
           )}
         </div>
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </>
   );
 }
