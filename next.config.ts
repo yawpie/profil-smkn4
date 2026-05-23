@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       "localhost" // <-- Domain baru ditambahkan di sini
     ],
     dangerouslyAllowSVG: true,
+    // unoptimized:true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },

@@ -85,7 +85,6 @@ const ArticleSection: FC = () => {
         summary: undefined,
         slug: item.slug,
         status: item.status,
-        categoryName: item.category?.name ?? null,
       }));
 
       const sorted = mapped.sort((a, b) => {

@@ -115,7 +115,7 @@ const HubungiKami: React.FC = () => {
                   <div className="flex items-center p-4 bg-slate-50 border-l-2 border-blue-500 hover:bg-slate-100 transition-colors duration-200">
                     <FontAwesomeIcon icon={faPhone} className="mr-4 text-blue-600 w-5 h-5" />
                     <div>
-                      <p className="font-medium text-slate-900">+62 81 8054 22671</p>
+                      <p className="font-medium text-slate-900">+62 853-3746-4898</p>
                       <p className="text-xs text-slate-500 uppercase">Telepon Sekolah</p>
                     </div>
                   </div>
@@ -123,7 +123,7 @@ const HubungiKami: React.FC = () => {
                   <div className="flex items-center p-4 bg-slate-50 border-l-2 border-blue-500 hover:bg-slate-100 transition-colors duration-200">
                     <FontAwesomeIcon icon={faEnvelope} className="mr-4 text-blue-600 w-5 h-5" />
                     <div>
-                      <p className="font-medium text-slate-900">info@universitas.id</p>
+                      <p className="font-medium text-slate-900">humassmekamtr@gmail.com</p>
                       <p className="text-xs text-slate-500 uppercase">Email Resmi</p>
                     </div>
                   </div>
@@ -240,7 +240,7 @@ const HubungiKami: React.FC = () => {
                     Telepon Sekarang
                   </a> */}
                   <a 
-                    href="mailto:smkn4mtrm@gmail.com"
+                    href="mailto:humassmekamtr@gmail.com"
                     className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-600 hover:bg-slate-700 text-white font-semibold transition-colors duration-200 border border-slate-600"
                   >
                     <FontAwesomeIcon icon={faEnvelope} className="w-4 h-4" />

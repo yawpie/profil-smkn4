@@ -1,33 +1,10 @@
-import { useState, useEffect, FC, useRef } from "react";
+import { FC } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import Image from "next/image";
 import { motion, type Variants } from "framer-motion";
-
-import type { Teacher, TeacherApi, TeachersApiEnvelope } from "@/types/Teacher";
-import { apiGet, type ApiError } from "@/utils/apiClient";
+import DaftarGuru from "@/components/layout/DaftarGuru";
 
 const DaftarGuruPage: FC = () => {
-  const [teachersNormada, setTeachersNormada] = useState<Teacher[]>([]);
-  const [teachersBimbingan, setTeachersBimbingan] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [currentPageNormada, setCurrentPageNormada] = useState<number>(1);
-  const [currentPageBimbingan, setCurrentPageBimbingan] = useState<number>(1);
-  const itemsPerPage: number = 8;
-  const majors = useRef<{ id: string; name: string }[]>([]);
-  const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut",
-      },
-    },
-  };
-
   const headerVariants: Variants = {
     hidden: { opacity: 0, y: -30 },
     visible: {
@@ -46,152 +23,9 @@ const DaftarGuruPage: FC = () => {
     },
   };
 
-  const fetchTeachersAndMajors = async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiGet<TeachersApiEnvelope>("/teachers/");
-      const rawItems: TeacherApi[] = res.data;
-      majors.current = (
-        await apiGet<{
-          message: string;
-          data: { id: string; name: string }[];
-        }>("/majors/simple")
-      ).data;
-      const mapped: Teacher[] = rawItems.map((item) => ({
-        id: item.guru_id,
-        name: item.name,
-        image: item.image_url || "/images/default_avatar.png",
-        subject: item.mata_pelajaran ?? "",
-        nip: item.nip,
-        position: item.jabatan,
-        major_id: item.major_id,
-        major_name:
-          majors.current.find((m) => m.id === item.major_id)?.name || null,
-      }));
-
-      setTeachersNormada(
-        mapped.filter((teacher) => teacher.position === "Normada"),
-      );
-      setTeachersBimbingan(
-        mapped.filter((teacher) => teacher.position === "BK"),
-      );
-      setCurrentPageNormada(1);
-    } catch (err: unknown) {
-      console.error("Failed to load teacher list:", err);
-      if ((err as ApiError)?.message) {
-        setError(
-          `Gagal memuat daftar guru. Detail: ${(err as ApiError).message}`,
-        );
-      } else if (err instanceof Error) {
-        setError(`Gagal memuat daftar guru. Detail: ${err.message}`);
-      } else {
-        setError("Gagal memuat daftar guru. Silakan coba lagi nanti.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTeachersAndMajors();
-  }, []);
-
-  // Pagination Logic
-  const totalPages: number = Math.ceil(teachersNormada.length / itemsPerPage);
-  const startIndex: number = (currentPageNormada - 1) * itemsPerPage;
-  const currentTeachersNormada: Teacher[] = teachersNormada.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
-  const currentTeachersBimbingan: Teacher[] = teachersBimbingan.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
-
-  const goToPage = (
-    page: number,
-    setCurrentPageFn: React.Dispatch<React.SetStateAction<number>>,
-  ) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPageFn(page);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  // Loading State
-  if (loading) {
-    return (
-      <MainLayout>
-        <section className="relative w-full py-20 min-h-[calc(100vh-120px)] flex flex-col justify-center items-center overflow-hidden bg-slate-900">
-          {/* Geometric Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-10 w-32 h-32 bg-blue-600 transform rotate-12"></div>
-            <div className="absolute bottom-10 right-10 w-24 h-24 bg-slate-600 transform -rotate-12"></div>
-            <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-blue-500 transform rotate-45"></div>
-          </div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative text-3xl md:text-4xl font-bold text-center text-white mb-4"
-          >
-            Daftar Guru
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-            className="relative text-slate-300 text-center"
-          >
-            Memuat data pendidik...
-          </motion.p>
-          <div className="mt-6 w-8 h-8 border-2 border-slate-400 border-t-white animate-spin"></div>
-        </section>
-      </MainLayout>
-    );
-  }
-
-  // Error State
-  if (error) {
-    return (
-      <MainLayout>
-        <section className="relative container mx-auto px-4 py-16 min-h-[calc(100vh-120px)] flex flex-col justify-center items-center bg-slate-50">
-          <div className="max-w-2xl mx-auto bg-red-50 border-l-4 border-red-500 p-8">
-            <motion.h1
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-2xl font-bold text-center text-red-800 mb-4"
-            >
-              Terjadi Kesalahan
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-              className="text-red-700 text-center mb-6"
-            >
-              {error}
-            </motion.p>
-            <div className="text-center">
-              <button
-                onClick={fetchTeachersAndMajors}
-                className="px-6 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors duration-200"
-              >
-                Coba Lagi
-              </button>
-            </div>
-          </div>
-        </section>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
-      {/* Hero Section - Professional Design */}
+      {/* Hero Section */}
       <section className="relative w-full py-20 md:py-24 lg:py-28 overflow-hidden bg-slate-900">
         {/* Geometric Background Pattern */}
         <div className="absolute inset-0 opacity-10">
@@ -199,8 +33,6 @@ const DaftarGuruPage: FC = () => {
           <div className="absolute top-32 right-16 w-32 h-32 bg-slate-600 transform -rotate-12"></div>
           <div className="absolute bottom-16 left-1/3 w-24 h-24 bg-blue-500 transform rotate-45"></div>
           <div className="absolute bottom-32 right-1/4 w-28 h-28 bg-slate-500 transform -rotate-45"></div>
-
-          {/* Additional geometric elements */}
           <div className="absolute top-1/4 left-1/2 w-2 h-16 bg-white opacity-20 transform rotate-12"></div>
           <div className="absolute top-1/3 right-1/3 w-16 h-2 bg-white opacity-20 transform -rotate-12"></div>
           <div className="absolute bottom-1/3 left-1/4 w-2 h-12 bg-white opacity-20 transform rotate-45"></div>
@@ -269,284 +101,26 @@ const DaftarGuruPage: FC = () => {
         </div>
       </section>
 
-      {/* Section guru normada */}
-      <section className="bg-white py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              Guru Normatif Adaptif
-            </h2>
-            <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Menghadirkan pendidik profesional yang adaptif dan berlandaskan
-              nilai-nilai normatif pendidikan.
-            </p>
-          </div>
-          {teachersNormada.length === 0 ? (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-              className="max-w-2xl mx-auto bg-slate-50 border-l-4 border-slate-400 p-8 text-center"
-            >
-              <p className="text-lg font-semibold text-slate-800 mb-2">
-                Belum ada data guru tersedia
-              </p>
-              <p className="text-slate-600">
-                Data sedang dalam proses pembaruan
-              </p>
-            </motion.div>
-          ) : (
-            <>
-              {/* Section Header */}
+      {/* Section Guru Normada */}
+      <DaftarGuru
+        jabatan="normada"
+        title="Guru Normatif Adaptif"
+        description="Menghadirkan pendidik profesional yang adaptif dan berlandaskan nilai-nilai normatif pendidikan."
+        mode="full"
+        itemsPerPage={9}
+      />
 
-              {/* Teachers Grid */}
-              <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-                {currentTeachersNormada.map((teacher, index) => (
-                  <motion.div
-                    key={teacher.id}
-                    variants={cardVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-white shadow-lg border border-slate-200 overflow-hidden
-                              hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
-                  >
-                    {/* Image Container */}
-                    <div className="w-full h-64 relative overflow-hidden bg-slate-100">
-                      <Image
-                        src={teacher.image || "/images/default_avatar.png"}
-                        alt={teacher.name}
-                        layout="fill"
-                        objectFit="cover"
-                        className="transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 justify-center">
-                      <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">
-                        {teacher.name}
-                      </h3>
-                      {/* <p className="text-blue-700 font-semibold text-sm mb-0.5">
-                        {teacher.major_name}
-                      </p> */}
-                      <p className="text-xs text-slate-500 uppercase tracking-wide">
-                        NIP: {teacher.nip || "Tidak Tersedia"}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-16">
-                  <motion.nav
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.5 }}
-                    variants={textVariants}
-                    className="inline-flex bg-white shadow-lg border border-slate-200"
-                  >
-                    <button
-                      onClick={() =>
-                        goToPage(currentPageNormada - 1, setCurrentPageNormada)
-                      }
-                      disabled={currentPageNormada === 1}
-                      className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
-                        ${
-                          currentPageNormada === 1
-                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-                            : "text-slate-700 bg-white hover:bg-slate-50"
-                        }`}
-                    >
-                      &larr; Sebelumnya
-                    </button>
-
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => goToPage(i + 1, setCurrentPageNormada)}
-                        className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
-                          ${
-                            currentPageNormada === i + 1
-                              ? "bg-blue-600 text-white"
-                              : "text-slate-700 bg-white hover:bg-slate-50"
-                          }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() =>
-                        goToPage(
-                          currentPageBimbingan + 1,
-                          setCurrentPageBimbingan,
-                        )
-                      }
-                      disabled={currentPageBimbingan === totalPages}
-                      className={`px-4 py-2 font-medium transition-colors duration-200
-                        ${
-                          currentPageBimbingan === totalPages
-                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-                            : "text-slate-700 bg-white hover:bg-slate-50"
-                        }`}
-                    >
-                      Berikutnya &rarr;
-                    </button>
-                  </motion.nav>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </section>
-      {/* border between section */}
+      {/* Border between sections */}
       <div className="border-t border-slate-200"></div>
-      {/* section guru bimbingan */}
-      <section className="bg-white py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">
-              Guru Bimbingan Konseling
-            </h2>
-            <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Menghadirkan pendidik profesional yang adaptif dan berlandaskan
-              nilai-nilai normatif pendidikan.
-            </p>
-          </div>
-          {teachersBimbingan.length === 0 ? (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-              className="max-w-2xl mx-auto bg-slate-50 border-l-4 border-slate-400 p-8 text-center"
-            >
-              <p className="text-lg font-semibold text-slate-800 mb-2">
-                Belum ada data guru tersedia
-              </p>
-              <p className="text-slate-600">
-                Data sedang dalam proses pembaruan
-              </p>
-            </motion.div>
-          ) : (
-            <>
-              {/* Section Header */}
 
-              <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-                {currentTeachersBimbingan.map((teacher, index) => (
-                  <motion.div
-                    key={teacher.id}
-                    variants={cardVariants}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-white shadow-lg border border-slate-200 overflow-hidden
-                              hover:shadow-xl transition-all duration-300 group w-full max-w-sm"
-                  >
-                    {/* Image Container */}
-                    <div className="w-full h-64 relative overflow-hidden bg-slate-100">
-                      <Image
-                        src={teacher.image || "/images/default_avatar.png"}
-                        alt={teacher.name}
-                        layout="fill"
-                        objectFit="cover"
-                        className="transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
-                      {/* <div className="absolute bottom-3 left-3">
-                        <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
-                          {teacher.position || "Guru"}
-                        </span>
-                      </div> */}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 justify-center">
-                      <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">
-                        {teacher.name}
-                      </h3>
-                      <p className="text-blue-700 font-semibold text-sm mb-0.5">
-                        {teacher.major_name}
-                      </p>
-                      <p className="text-xs text-slate-500 uppercase tracking-wide">
-                        NIP: {teacher.nip || "Tidak Tersedia"}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-16">
-                  <motion.nav
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.5 }}
-                    variants={textVariants}
-                    className="inline-flex bg-white shadow-lg border border-slate-200"
-                  >
-                    <button
-                      onClick={() =>
-                        goToPage(currentPageNormada - 1, setCurrentPageNormada)
-                      }
-                      disabled={currentPageNormada === 1}
-                      className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
-                        ${
-                          currentPageNormada === 1
-                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-                            : "text-slate-700 bg-white hover:bg-slate-50"
-                        }`}
-                    >
-                      &larr; Sebelumnya
-                    </button>
-
-                    {[...Array(totalPages)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => goToPage(i + 1, setCurrentPageBimbingan)}
-                        className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
-                          ${
-                            currentPageBimbingan === i + 1
-                              ? "bg-blue-600 text-white"
-                              : "text-slate-700 bg-white hover:bg-slate-50"
-                          }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() =>
-                        goToPage(
-                          currentPageBimbingan + 1,
-                          setCurrentPageBimbingan,
-                        )
-                      }
-                      disabled={currentPageBimbingan === totalPages}
-                      className={`px-4 py-2 font-medium transition-colors duration-200
-                        ${
-                          currentPageBimbingan === totalPages
-                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
-                            : "text-slate-700 bg-white hover:bg-slate-50"
-                        }`}
-                    >
-                      Berikutnya &rarr;
-                    </button>
-                  </motion.nav>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </section>
+      {/* Section Guru BK */}
+      <DaftarGuru
+        jabatan="BK"
+        title="Guru Bimbingan Konseling"
+        description="Menghadirkan pendidik profesional yang adaptif dan berlandaskan nilai-nilai normatif pendidikan."
+        mode="full"
+        itemsPerPage={9}
+      />
     </MainLayout>
   );
 };

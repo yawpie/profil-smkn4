@@ -14,7 +14,7 @@ import Image from "next/image";
 import type { TeachersApiEnvelope } from "../types/Teacher";
 import type { ExtracurricularsApiEnvelope } from "../types/Extracurricular";
 import type { FacilitiesApiEnvelope } from "../types/Facility";
-import type { StaffApiResponse } from "../types/Staff";
+// import type { StaffApiResponse } from "../types/Staff";
 import type { MajorsApiEnvelope } from "../types/Major";
 import { apiGet } from "@/utils/apiClient";
 

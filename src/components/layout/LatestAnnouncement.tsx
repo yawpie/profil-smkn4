@@ -9,6 +9,7 @@ import type {
   AnnouncementsApiEnvelope,
 } from "@/types/Announcement";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import RichTextRenderer from "../RichTextRenderer";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -180,9 +181,7 @@ const LatestAnnouncement: FC = () => {
           >
             <div className="w-1 h-6 bg-orange-500"></div>
             Pengumuman Terbaru
-            <span className="ml-auto bg-orange-500 text-white text-xs font-medium px-2 py-1">
-              PENTING
-            </span>
+            
           </motion.h3>
         </div>
 
@@ -219,9 +218,10 @@ const LatestAnnouncement: FC = () => {
 
           {/* Content Preview */}
           <div className="mb-6">
-            <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
+            <RichTextRenderer content={truncateContent(announcement.content, 25)} />
+            {/* <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
               {truncateContent(announcement.content, 25)}
-            </p>
+            </p> */}
           </div>
 
           {/* Action Button */}

@@ -1,9 +1,10 @@
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, useCallback, FC } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import Image from 'next/image';
 import { motion, type Variants } from 'framer-motion';
+import { apiGet } from '@/utils/apiClient';
 
-import type { Staff } from '@/types/Staff';
+import type { Staff, StaffPaginatedResponse } from '@/types/Staff';
 
 const DaftarStaffPage: FC = () => {
   const [staffList, setStaffList] = useState<Staff[]>([]);
@@ -11,6 +12,7 @@ const DaftarStaffPage: FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const itemsPerPage: number = 8;
 
   const cardVariants: Variants = {
@@ -35,41 +37,35 @@ const DaftarStaffPage: FC = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
   };
 
-  const fetchStaff = async (): Promise<void> => {
+  const fetchStaff = useCallback(async (page: number): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/staffs');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data: Staff[] = await response.json();
-      setStaffList(data);
-      setCurrentPage(1);
+      const result = await apiGet<StaffPaginatedResponse>(
+        `/staffs?page=${page}&limit=${itemsPerPage}`
+      );
+      setStaffList(result.data);
+      setTotalPages(Math.ceil(result.total / itemsPerPage));
+      setCurrentPage(result.page);
     } catch (err: unknown) {
       console.error("Failed to load staff list:", err);
-      if (err instanceof Error) {
-        setError(`Gagal memuat daftar staff. Detail: ${err.message}`);
+      if (err && typeof err === 'object' && 'message' in err) {
+        setError(`Gagal memuat daftar staff. Detail: ${(err as { message: string }).message}`);
       } else {
         setError("Gagal memuat daftar staff. Silakan coba lagi nanti.");
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [itemsPerPage]);
 
   useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  // Pagination Logic
-  const totalPages: number = Math.ceil(staffList.length / itemsPerPage);
-  const startIndex: number = (currentPage - 1) * itemsPerPage;
-  const currentStaff: Staff[] = staffList.slice(startIndex, startIndex + itemsPerPage);
+    fetchStaff(1);
+  }, [fetchStaff]);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+      fetchStaff(page);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -132,7 +128,7 @@ const DaftarStaffPage: FC = () => {
             </motion.p>
             <div className="text-center">
               <button
-                onClick={fetchStaff}
+                onClick={() => fetchStaff(currentPage)}
                 className="px-6 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors duration-200"
               >
                 Coba Lagi
@@ -220,15 +216,15 @@ const DaftarStaffPage: FC = () => {
                 </h2>
                 <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
                 <p className="text-slate-600 max-w-2xl mx-auto">
-                  Menampilkan {staffList.length} staff yang berkomitmen mendukung kelancaran operasional sekolah
+                  Menampilkan staff yang berkomitmen mendukung kelancaran operasional sekolah
                 </p>
               </div>
 
               {/* Staff Grid */}
               <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-                {currentStaff.map((staff, index) => (
+                {staffList.map((staff, index) => (
                   <motion.div
-                    key={staff.id}
+                    key={staff.staff_id}
                     variants={cardVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -239,34 +235,34 @@ const DaftarStaffPage: FC = () => {
                   >
                     {/* Image Container */}
                     <div className="w-full h-48 relative overflow-hidden bg-slate-100">
-                    <Image
-                      src={staff.image || '/images/default_avatar.png'}
-                      alt={staff.name}
-                      layout="fill"
-                      objectFit="cover"
-                      className="transition-transform duration-300 group-hover:scale-105"
-                      unoptimized
-                    />
-                    <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
-                    <div className="absolute bottom-3 left-3">
-                      <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
-                        {staff.position || 'Staff'}
-                      </span>
+                      <Image
+                        src={staff.image_url || '/images/default_avatar.png'}
+                        alt={staff.name}
+                        layout="fill"
+                        objectFit="cover"
+                        className="transition-transform duration-300 group-hover:scale-105"
+                        unoptimized
+                      />
+                      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
+                      <div className="absolute bottom-3 left-3">
+                        <span className="inline-block bg-blue-600 text-white text-xs font-medium px-2 py-1 uppercase tracking-wide">
+                          {staff.jabatan || 'Staff'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
                     {/* Content */}
                     <div className="p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
-                      {staff.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">
-                      NIP: {staff.nip || 'Tidak Tersedia'}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-2 leading-tight">
+                        {staff.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 uppercase tracking-wide">
+                        NIP: {staff.nip || 'Tidak Tersedia'}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (

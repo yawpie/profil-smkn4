@@ -2,22 +2,25 @@ import { GetStaticProps, GetStaticPaths } from "next";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useState } from "react";
 import type {
   Major,
-  MajorApi,
-  MajorsApiEnvelope,
   MajorApiResponse,
   MajorGalleryImages,
 } from "@/types/Major";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
-import { apiGet, type ApiError } from "@/utils/apiClient";
-import { Teacher, TeacherApi } from "@/types/Teacher";
+import { apiGet } from "@/utils/apiClient";
+import { TeacherApi } from "@/types/Teacher";
+import type { Teacher } from "@/types/Teacher";
+import RichTextRenderer from "@/components/RichTextRenderer";
+import Lightbox from "@/components/Lightbox";
+import DaftarGuru from "@/components/layout/DaftarGuru";
 
 interface DetailJurusanPageProps {
   major: Major;
   galleryImages: MajorGalleryImages[];
-  teachers: TeacherApi[];
+  teachers: Teacher[];
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -49,7 +52,16 @@ export const getStaticProps: GetStaticProps<DetailJurusanPageProps> = async (con
       };
       
       const galleryImages = apiMajor.major_gallery_images || [];
-      const teachers = apiMajor.guru || [];
+      const rawTeachers = apiMajor.guru || [];
+      const teachers: Teacher[] = rawTeachers.map((t: TeacherApi) => ({
+        id: t.guru_id,
+        name: t.name,
+        image: t.image_url || "/images/default_avatar.png",
+        subject: t.mata_pelajaran || t.jabatan,
+        nip: t.nip,
+        position: t.jabatan,
+        major_id: t.major_id,
+      }));
 
       return {
         props: { major, galleryImages, teachers },
@@ -64,6 +76,8 @@ export const getStaticProps: GetStaticProps<DetailJurusanPageProps> = async (con
 };
 
 const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryImages, teachers }) => {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
   return (
     <MainLayout>
       <Head>
@@ -204,10 +218,9 @@ const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryIma
                 </div>
                 <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
                   {typeof major.description === "string" ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: major.description.replace(/\n/g, "<br/><br/>"),
-                      }}
+                    <RichTextRenderer
+                      content={major.description}
+                      className="text-gray-700 leading-relaxed"
                     />
                   ) : (
                     <p className="italic text-gray-500 text-center py-8">
@@ -300,24 +313,23 @@ const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryIma
                   </h2>
                   <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {galleryImages.map((img, idx) => (
                     <motion.div
                       key={img.id}
-                      className="group relative bg-white border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
+                      className="group relative bg-white border border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.1 + idx * 0.1, duration: 0.5 }}
-                      whileHover={{ y: -5 }}
+                      onClick={() => img.image_url && setLightboxImage(img.image_url)}
                     >
-                      <div className="relative w-full h-40 bg-gradient-to-br from-slate-100 to-blue-50">
+                      <div className="relative w-full h-56 sm:h-64 bg-gradient-to-br from-slate-100 to-blue-50">
                         {img.image_url ? (
                           <Image
                             src={img.image_url}
-                            alt={`Gallery ${idx + 1}`}
+                            alt={img.title || `Gallery ${idx + 1}`}
                             fill
                             style={{ objectFit: "cover" }}
-                            className="transition-transform duration-300 group-hover:scale-110"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -334,13 +346,15 @@ const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryIma
                             </svg>
                           </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       </div>
-                      <div className="p-3 bg-white border-t border-gray-100">
-                        <p className="text-sm font-semibold text-gray-800 text-center truncate">
-                          {img.title}
-                        </p>
-                      </div>
+                      {img.title && (
+                        <div className="p-3 bg-white border-t border-gray-100">
+                          <p className="text-sm font-semibold text-gray-800 text-center truncate">
+                            {img.title}
+                          </p>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -349,94 +363,13 @@ const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryIma
 
             {/* Teachers Section */}
             {teachers.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.2, duration: 0.6 }}
-              >
-                <div className="mb-8">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    Guru Jurusan
-                  </h2>
-                  <div className="w-20 h-1 bg-gradient-to-r from-green-600 to-emerald-600"></div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {teachers.map((teacher, idx) => (
-                    <motion.div
-                      key={teacher.guru_id}
-                      className="group bg-white border border-gray-200 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.3 + idx * 0.1, duration: 0.5 }}
-                      whileHover={{ y: -8 }}
-                    >
-                      <div className="relative w-full h-64 bg-gradient-to-br from-slate-100 to-green-50">
-                        {teacher.image_url ? (
-                          <Image
-                            src={teacher.image_url}
-                            alt={teacher.name}
-                            fill
-                            style={{ objectFit: "cover" }}
-                            className="transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <svg
-                              className="w-20 h-20"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      <div className="p-5 bg-white border-t-4 border-green-600">
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                          {teacher.name}
-                        </h3>
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-green-700 flex items-center">
-                            <svg
-                              className="w-4 h-4 mr-2 flex-shrink-0"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h2zM8 5a1 1 0 011-1h2a1 1 0 011 1v1H8V5zM8 11a1 1 0 100 2h4a1 1 0 100-2H8z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            {teacher.mata_pelajaran}
-                          </p>
-                          {teacher.nip && (
-                            <p className="text-xs text-gray-500 flex items-center">
-                              <svg
-                                className="w-4 h-4 mr-2 flex-shrink-0"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                              NIP: {teacher.nip}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
+              <DaftarGuru
+                title="Guru Jurusan"
+                description=""
+                mode="full"
+                itemsPerPage={10}
+                initialData={teachers}
+              />
             )}
           </motion.div>
 
@@ -469,6 +402,9 @@ const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryIma
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Lightbox Overlay */}
+      <Lightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
     </MainLayout>
   );
 };

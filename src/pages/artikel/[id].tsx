@@ -68,7 +68,6 @@ export const getStaticProps: GetStaticProps<ArticleDetailPageProps> = async (con
         publishDate: res.published_date || "",
         slug: res.slug,
         status: res.status,
-        categoryName: res.category?.name || null,
       };
 
       return {

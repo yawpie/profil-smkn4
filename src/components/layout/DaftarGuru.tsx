@@ -1,12 +1,36 @@
 import Image from "next/image";
 import React, { useState, useEffect, FC, useCallback } from "react";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useRouter } from "next/router";
 import type { ModalMessage } from "@/types/Teacher";
 import type { Teacher, TeacherApi, TeachersApiEnvelope } from "@/types/Teacher";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import paginate from "@/utils/paginate";
+import Lightbox from "@/components/Lightbox";
 
-const DaftarGuruPreview: FC = () => {
+interface DaftarGuruProps {
+  /** Filter berdasarkan jabatan, contoh: "normada", "BK" */
+  jabatan?: string;
+  /** Judul section */
+  title?: string;
+  /** Deskripsi section */
+  description?: string;
+  /** Mode tampilan: "preview" untuk homepage (max items, tombol lihat lebih), "full" untuk halaman lengkap (pagination) */
+  mode?: "preview" | "full";
+  /** Jumlah item per halaman (mode full) atau max preview items (mode preview) */
+  itemsPerPage?: number;
+  /** Data guru yang sudah di-fetch (skip API call jika disediakan) */
+  initialData?: Teacher[];
+}
+
+const DaftarGuru: FC<DaftarGuruProps> = ({
+  jabatan = "normada",
+  title = "Tenaga Pengajar",
+  description = "Staff pengajar profesional yang berpengalaman dan berkualifikasi",
+  mode = "preview",
+  itemsPerPage = mode === "preview" ? 4 : 10,
+  initialData,
+}) => {
   const router = useRouter();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -14,18 +38,15 @@ const DaftarGuruPreview: FC = () => {
   const [totalTeachersCount, setTotalTeachersCount] = useState<number>(0);
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<ModalMessage | null>(null);
-
-  const maxPreviewItems: number = 4; // Maksimal 4 guru untuk preview
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   const cardVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut",
-      },
+      transition: { duration: 0.4, ease: "easeOut" },
     },
   };
 
@@ -38,57 +59,85 @@ const DaftarGuruPreview: FC = () => {
     },
   };
 
-  const fetchTeachersFromBackend = useCallback(async (): Promise<void> => {
+  const textVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
+
+  const fetchTeachers = useCallback(async (): Promise<void> => {
+    // Skip fetch if initialData is provided
+    if (initialData) {
+      setTeachers(initialData);
+      setTotalTeachersCount(initialData.length);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const response = await apiGet<TeachersApiEnvelope>("/teachers/");
+      const queryParams = new URLSearchParams();
+      if (jabatan) {
+        queryParams.set("jabatan", jabatan);
+      }
+      // In preview mode, limit from API; in full mode, fetch all and paginate client-side
+      if (mode === "preview") {
+        queryParams.set("limit", String(itemsPerPage));
+      }
+
+      const response = await apiGet<TeachersApiEnvelope>(
+        `/teachers?${queryParams.toString()}`
+      );
 
       const apiTeachers: TeacherApi[] = response.data;
 
       const mappedTeachers: Teacher[] = apiTeachers.map((t) => ({
         id: t.guru_id,
         name: t.name,
-        image:
-          t.image_url ||
-          "https://placehold.co/400x300/6B7280/FFFFFF?text=Teacher",
-        subject: t.jabatan,
+        image: t.image_url || "/images/default_avatar.png",
+        subject: t.mata_pelajaran || t.jabatan,
         nip: t.nip,
         position: t.jabatan,
         major_id: t.major_id,
       }));
 
       setTeachers(mappedTeachers);
-      setTotalTeachersCount(mappedTeachers.length);
+      setTotalTeachersCount(response.total);
     } catch (e: unknown) {
-      console.error("Gagal mengambil daftar guru dari database:", e);
+      console.error("Gagal mengambil daftar guru:", e);
+      let message = "Gagal memuat daftar guru. Silakan coba lagi nanti.";
       if ((e as ApiError)?.message) {
-        const message = `Gagal memuat daftar guru. Detail: ${
-          (e as ApiError).message
-        }`;
-        setError(message);
-        setModalMessage({ message, type: "error" });
+        message = `Gagal memuat daftar guru. Detail: ${(e as ApiError).message}`;
       } else if (e instanceof Error) {
-        const message = `Gagal memuat daftar guru. Detail: ${e.message}`;
-        setError(message);
-        setModalMessage({ message, type: "error" });
-      } else {
-        const message = "Gagal memuat daftar guru. Silakan coba lagi nanti.";
-        setError(message);
-        setModalMessage({ message, type: "error" });
+        message = `Gagal memuat daftar guru. Detail: ${e.message}`;
       }
+      setError(message);
+      setModalMessage({ message, type: "error" });
       setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [jabatan, itemsPerPage, mode, initialData]);
 
   useEffect(() => {
-    fetchTeachersFromBackend();
-  }, [fetchTeachersFromBackend]);
+    fetchTeachers();
+  }, [fetchTeachers]);
 
-  // Ambil hanya 4 guru pertama untuk preview
-  const previewTeachers = teachers.slice(0, maxPreviewItems);
+  // Pagination logic for full mode
+  const paginated = paginate(teachers, currentPage, itemsPerPage);
+  const displayTeachers = mode === "full" ? paginated.data : teachers;
+  const totalPages = mode === "full" ? paginated.totalPages : 1;
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const handleCloseModal = () => {
     setShowErrorModal(false);
@@ -96,7 +145,7 @@ const DaftarGuruPreview: FC = () => {
   };
 
   const handleViewMore = () => {
-    router.push("/daftar-guru"); // Navigasi ke halaman daftar guru lengkap
+    router.push("/daftar-guru");
   };
 
   return (
@@ -112,11 +161,12 @@ const DaftarGuruPreview: FC = () => {
           <div className="flex items-center justify-center mb-4">
             <div className="w-1 h-12 bg-blue-600 mr-4"></div>
             <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">
-              Tenaga Pengajar
+              {title}
             </h2>
           </div>
+          <div className="w-24 h-1 bg-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Staff pengajar profesional yang berpengalaman dan berkualifikasi
+            {description}
           </p>
         </motion.div>
 
@@ -124,16 +174,15 @@ const DaftarGuruPreview: FC = () => {
         <div className="max-w-6xl mx-auto">
           {/* Loading State */}
           {loading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
-              {[...Array(maxPreviewItems)].map((_, i) => (
+            <div className="flex flex-col items-center gap-6 max-w-4xl mx-auto">
+              {[...Array(itemsPerPage > 4 ? 4 : itemsPerPage)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-gray-200 shadow-sm animate-pulse w-full max-w-sm"
+                  className="bg-white border border-gray-200 shadow-sm animate-pulse w-full flex flex-col sm:flex-row overflow-hidden"
                 >
-                  <div className="w-full h-48 bg-gray-300"></div>
-                  <div className="p-4">
-                    <div className="h-4 bg-gray-300 w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-300 w-1/2 mb-2"></div>
+                  <div className="w-full sm:w-64 h-64 sm:h-72 bg-gray-300 flex-shrink-0"></div>
+                  <div className="p-5 flex flex-col justify-center flex-1">
+                    <div className="h-5 bg-gray-300 w-1/2 mb-3"></div>
                     <div className="h-3 bg-gray-300 w-1/3"></div>
                   </div>
                 </div>
@@ -212,77 +261,63 @@ const DaftarGuruPreview: FC = () => {
             </motion.div>
           )}
 
-          {/* Teacher Cards - Maksimal 4 */}
+          {/* Teacher Cards */}
           {!loading && !error && teachers.length > 0 && (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
-                <AnimatePresence>
-                  {previewTeachers.map((teacher, index) => (
-                    <motion.div
-                      key={teacher.id}
-                      variants={cardVariants}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, amount: 0.2 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300 group w-full max-w-sm"
+              <div className="flex flex-col items-center gap-6 max-w-4xl mx-auto">
+                {displayTeachers.map((teacher, index) => (
+                  <motion.div
+                    key={teacher.id}
+                    variants={cardVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white border border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden w-full flex flex-col sm:flex-row"
+                  >
+                    {/* Image */}
+                    <div
+                      className="relative w-full sm:w-64 h-64 sm:h-72 flex-shrink-0 bg-gray-100 cursor-pointer"
+                      onClick={() => teacher.image && setLightboxImage(teacher.image)}
                     >
-                      {/* Status Bar */}
-                      <div className="h-1 bg-blue-600"></div>
+                      <Image
+                        src={teacher.image || "/images/default_avatar.png"}
+                        alt={teacher.name}
+                        layout="fill"
+                        objectFit="cover"
+                        quality={75}
+                      />
+                    </div>
 
-                      {/* Image */}
-                      <div className="w-full h-48 relative overflow-hidden bg-gray-100">
-                        <Image
-                          src={
-                            teacher.image ||
-                            "https://placehold.co/400x300/6B7280/FFFFFF?text=Teacher"
-                          }
-                          alt={teacher.name}
-                          layout="fill"
-                          objectFit="cover"
-                          className="group-hover:opacity-90 transition-opacity duration-300"
-                          quality={75}
-                          onError={(
-                            e: React.SyntheticEvent<HTMLImageElement, Event>
-                          ) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src =
-                              "https://placehold.co/400x300/6B7280/FFFFFF?text=Error";
-                          }}
-                        />
+                    {/* Content */}
+                    <div className="p-5 flex flex-col justify-center border-t-4 sm:border-t-0 sm:border-l-4 border-blue-600">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">
+                        {teacher.name}
+                      </h3>
 
-                        {/* Position Badge */}
-                        {/* {teacher.position && (
-                          <div className="absolute top-3 right-3 bg-white bg-opacity-90 text-gray-800 text-xs font-medium px-2 py-1 border border-gray-200">
-                            {teacher.position}
-                          </div>
-                        )} */}
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-700 transition-colors duration-200">
-                          {teacher.name}
-                        </h3>
-
-                        
-
-                        {teacher.nip && (
-                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 inline-block border border-gray-200">
-                            NIP: {teacher.nip}
-                          </div>
-                        )}
-
-                        {/* Contact Info */}
-                        
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                      {teacher.nip && (
+                        <p className="text-xs text-gray-500 flex items-center">
+                          <svg
+                            className="w-4 h-4 mr-2 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          NIP: {teacher.nip}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
 
-              {/* Lihat Lebih Banyak Button */}
-              {totalTeachersCount > maxPreviewItems && (
+              {/* Preview mode: "Lihat Lebih Banyak" button */}
+              {mode === "preview" && totalTeachersCount > itemsPerPage && (
                 <motion.div
                   initial="hidden"
                   whileInView="visible"
@@ -310,12 +345,68 @@ const DaftarGuruPreview: FC = () => {
                   </button>
                 </motion.div>
               )}
+
+              {/* Full mode: Pagination */}
+              {mode === "full" && totalPages > 1 && (
+                <div className="flex justify-center mt-16">
+                  <motion.nav
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.5 }}
+                    variants={textVariants}
+                    className="inline-flex bg-white shadow-lg border border-slate-200"
+                  >
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 border-r border-slate-200 font-medium transition-colors duration-200
+                        ${
+                          currentPage === 1
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
+                        }`}
+                    >
+                      &larr; Sebelumnya
+                    </button>
+
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => goToPage(i + 1)}
+                        className={`px-4 py-2 border-r border-slate-200 last:border-r-0 font-medium transition-colors duration-200
+                          ${
+                            currentPage === i + 1
+                              ? "bg-blue-600 text-white"
+                              : "text-slate-700 bg-white hover:bg-slate-50"
+                          }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 font-medium transition-colors duration-200
+                        ${
+                          currentPage === totalPages
+                            ? "text-slate-400 bg-slate-50 cursor-not-allowed"
+                            : "text-slate-700 bg-white hover:bg-slate-50"
+                        }`}
+                    >
+                      Berikutnya &rarr;
+                    </button>
+                  </motion.nav>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
+
+      <Lightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
     </section>
   );
 };
 
-export default DaftarGuruPreview;
+export default DaftarGuru;
