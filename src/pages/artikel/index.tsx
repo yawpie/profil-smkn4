@@ -306,7 +306,7 @@ const ArtikelPage: React.FC = () => {
                       </p> */}
 
                       <Link
-                        href={`/artikel/${article.id}`}
+                        href={`/artikel/${article.slug || article.id}`}
                         className="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold text-sm group"
                       >
                         Baca Selengkapnya

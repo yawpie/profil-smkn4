@@ -50,14 +50,17 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const getStaticProps: GetStaticProps<ArticleDetailPageProps> = async (context) => {
-  const id = context.params?.id as string;
+  const param = context.params?.id as string;
 
-  if (!id) {
+  if (!param) {
     return { notFound: true };
   }
 
   try {
-    const res = await apiGet<ArticleApi>(`/articles?id=${id}`);
+    // Try fetching by id first, then by slug
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(param);
+    const queryParam = isUuid ? `id=${param}` : `slug=${param}`;
+    const res = await apiGet<ArticleApi>(`/articles?${queryParam}`);
     if (res) {
       const article: Article = {
         id: res.articles_id,
@@ -72,7 +75,7 @@ export const getStaticProps: GetStaticProps<ArticleDetailPageProps> = async (con
 
       return {
         props: { article },
-        revalidate: 60, // ISR revalidate every 60 seconds
+        revalidate: 60,
       };
     }
   } catch (error) {
@@ -240,8 +243,9 @@ const ArticleDetailPage: React.FC<ArticleDetailPageProps> = ({ article }) => {
                     src={article.image}
                     alt={article.title}
                     width={1000}
-                    height={500}
-                    className="w-full h-80 sm:h-96 object-cover"
+                    height={700}
+                    className="w-full h-auto object-contain"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1000px"
                     priority
                   />
                 </motion.div>

@@ -201,7 +201,7 @@ const ArticleSection: FC = () => {
               className="lg:col-span-2"
             >
               <Link
-                href={`/artikel/${featuredArticle.id}`}
+                href={`/artikel/${featuredArticle.slug || featuredArticle.id}`}
                 className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
               >
                 <div className="relative w-full h-64">
