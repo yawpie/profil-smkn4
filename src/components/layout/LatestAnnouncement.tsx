@@ -146,8 +146,10 @@ const LatestAnnouncement: FC = () => {
 
   if (!announcement) {
     return (
-      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <motion.div
+      <section 
+      // className = "container mx-auto px-4 sm:px-6 lg:px-8 py-6"
+      >
+        {/* <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
@@ -157,7 +159,7 @@ const LatestAnnouncement: FC = () => {
           <p className="text-gray-600 font-medium">
             Belum ada pengumuman terbaru saat ini.
           </p>
-        </motion.div>
+        </motion.div> */}
       </section>
     );
   }

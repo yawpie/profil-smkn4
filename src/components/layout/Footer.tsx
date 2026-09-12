@@ -31,14 +31,14 @@ const Footer: FC = () => {
                 <span className="text-blue-300 mt-1"><FaEnvelope size={16} /></span>
                 <span>humassmekamtr@gmail.com</span>
               </li>
-              <li className="flex items-start gap-3">
+              {/* <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1"><FaPhone size={16} /></span>
                 <span>+62 853-3746-4898</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1"><FaWhatsapp size={16} /></span>
-                <span>+62 853-3746-4898</span> {/* Often same as phone, or provide separate WhatsApp number */}
-              </li>
+                <span>+62 853-3746-4898</span> 
+              </li> */}
               <li className="flex items-start gap-3">
                 <span className="text-blue-300 mt-1">
                   {/* Inline SVG for location icon - ensure it's valid JSX */}
