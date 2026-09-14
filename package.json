@@ -1,31 +1,45 @@
 {
-  "name": "profile-smkn4",
-  "version": "0.1.0",
+  "name": "frontend-smkn4",
+  "version": "0.4.0-beta.1",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.0.0",
+    "@fortawesome/free-brands-svg-icons": "^7.0.0",
+    "@fortawesome/free-solid-svg-icons": "^7.0.0",
+    "@fortawesome/react-fontawesome": "^0.2.3",
     "@heroicons/react": "^2.2.0",
-    "@tailwindcss/cli": "^4.1.8",
-    "framer-motion": "^12.23.3",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/formidable": "^3.4.5",
+    "dompurify": "^3.4.1",
+    "formidable": "^3.5.4",
+    "framer-motion": "^12.23.6",
+    "isomorphic-dompurify": "^3.10.0",
     "lucide-react": "^0.525.0",
-    "next": "15.3.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "next": "^15.4.10",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-icons": "^5.5.0",
     "recharts": "^3.1.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4.1.8",
-    "autoprefixer": "^10.4.21",
+    "@svgr/webpack": "^8.1.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19",
+    "@types/recharts": "^1.8.29",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3",
-    "postcss": "^8.5.4",
-    "tailwindcss": "^4.1.8"
+    "eslint-config-next": "15.4.3",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

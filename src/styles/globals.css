@@ -1,1 +1,41 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-merriweather-sans: "Merriweather Sans", sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer utilities {
+  .font-dm-serif {
+    font-family: var(--font-dm-serif-text);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ededed;
+    --foreground: #0a0a0a;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* font-family: var(--font-sans); */
+}
+
+.serif {
+  font-family: var(--font-source-serif);
+}
+.merriweather-sans {
+  font-family: var(--font-merriweather-sans);
+}
