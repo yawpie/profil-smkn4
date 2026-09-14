@@ -2,12 +2,12 @@
 export type Slide = {
   id: string; // ID unik untuk setiap slide
   image: string;
-  alt: string = "default alt text";
+  alt: string;
   title: string;
   subtitle: string;
   description: string;
-  gradientFrom: string = "defaultGradientFrom";
-  gradientTo: string = "defaultGradientTo";
+  gradientFrom: string;
+  gradientTo: string;
   order: number; // Sangat direkomendasikan untuk pengurutan
   isActive: boolean; // Sangat direkomendasikan untuk kontrol visibilitas
   imageFile?: File | null;

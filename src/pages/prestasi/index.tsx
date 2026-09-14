@@ -164,7 +164,7 @@ const AchievementsPage: FC = () => {
               variants={textVariants}
               className="text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8"
             >
-              Discover our students' inspiring achievements and accomplishments
+              Discover our students&apos; inspiring achievements and accomplishments
               at local, national, and international levels that demonstrate
               excellence and dedication.
             </motion.p>
@@ -325,7 +325,7 @@ const AchievementsPage: FC = () => {
                 variants={textVariants}
                 className="text-slate-600"
               >
-                We're preparing amazing achievements to showcase. Please check
+                We&apos;re preparing amazing achievements to showcase. Please check
                 back soon!
               </motion.p>
             </div>

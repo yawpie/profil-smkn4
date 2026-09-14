@@ -125,9 +125,9 @@ export default function HomePage() {
                 </div>
 
                 <blockquote className="text-lg md:text-xl font-semibold text-slate-800 mb-6 leading-relaxed">
-                  "Pendidikan adalah investasi terbaik untuk masa depan. Kami
+                  &quot;Pendidikan adalah investasi terbaik untuk masa depan. Kami
                   berkomitmen menghasilkan lulusan yang kompeten, berkarakter,
-                  dan siap menghadapi tantangan dunia industri."
+                  dan siap menghadapi tantangan dunia industri.&quot;
                 </blockquote>
 
                 <div className="border-l-4 border-blue-600 pl-6 mb-6">

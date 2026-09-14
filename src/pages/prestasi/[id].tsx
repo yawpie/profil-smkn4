@@ -72,7 +72,7 @@ export const getStaticProps: GetStaticProps<AchievementDetailPageProps> = async 
         revalidate: 60, // ISR revalidate every 60 seconds
       };
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error fetching achievement details at SSG:', err);
   }
 

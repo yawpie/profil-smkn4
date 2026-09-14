@@ -1,40 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Frontend SMKN 4 Mataram
 
-## Getting Started
+Situs publik berbasis Next.js 15. Pengembangan lokal tetap memakai Next.js, sedangkan build dan deploy Cloudflare Workers memakai OpenNext.
 
-First, run the development server:
+## Pengembangan lokal
 
 ```bash
+npm ci
+copy .env.local.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Isi variabel berikut sesuai lingkungan:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+- `NEXT_PUBLIC_API_BASE_URL`: URL API backend.
+- `NEXT_PUBLIC_BASE_URL`: URL publik frontend untuk metadata SEO.
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Validasi aplikasi dengan:
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+```bash
+npm run lint
+npm run build
+npm run build:cloudflare
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Gunakan `npm run preview` untuk menjalankan hasil build pada runtime Workers lokal.
 
-## Learn More
+## Cloudflare Workers
 
-To learn more about Next.js, take a look at the following resources:
+Sebelum deploy pertama, login ke Wrangler dan buat bucket cache ISR yang namanya sesuai `wrangler.jsonc`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+```bash
+npx wrangler login
+npx wrangler r2 bucket create smkn4-frontend-cache
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Deploy dari mesin lokal:
 
-## Deploy on Vercel
+```bash
+npm run deploy
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Untuk Workers Builds, gunakan pengaturan berikut:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- Build command: `npm run build:cloudflare`
+- Deploy command: `npm run deploy:cloudflare`
+- Non-production branch deploy command: `npm run deploy:cloudflare`
+
+Tambahkan `NEXT_PUBLIC_API_BASE_URL` dan `NEXT_PUBLIC_BASE_URL` sebagai Build variables and secrets di Cloudflare. Nilai produksi tidak disimpan di repository.
+
+Cloudflare Images digunakan oleh `next/image`. Fitur ini dapat menimbulkan biaya sesuai paket Cloudflare. Cache ISR memakai R2 dan antrean Durable Object agar halaman dinamis dengan `revalidate` tetap konsisten di seluruh lokasi Workers.
