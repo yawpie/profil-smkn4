@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "opennextjs-cloudflare build",
-    "start": "opennextjs-cloudflare start",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint .",
     "build:cloudflare": "next build && opennextjs-cloudflare build --skipNextBuild",
     "preview": "npm run build:cloudflare && opennextjs-cloudflare preview",

@@ -11,7 +11,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "smkn4-frontend"
+      "service": "profil-smkn4"
     }
   ],
   "r2_buckets": [
