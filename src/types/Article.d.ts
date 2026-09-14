@@ -10,9 +10,7 @@ export type ArticleApi = {
   slug: string | null;
   status?: "DRAFT" | "PUBLISHED";
   admin?: { username: string } | null;
-  category?: { name: string } | null;
   admin_id?: string;
-  category_id?: string;
 };
 
 // Normalized shape used by the frontend components
@@ -27,7 +25,6 @@ export type Article = {
   summary?: string;
   slug?: string | null;
   status?: "DRAFT" | "PUBLISHED";
-  categoryName?: string | null; // from category?.name
 };
 
 export type ArticlesApiEnvelope = {

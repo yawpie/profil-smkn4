@@ -4,6 +4,7 @@ import React, { useState, useEffect, FC, useCallback } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import type { Article, ArticleApi, ArticlesApiEnvelope } from "@/types/Article";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import RichTextRenderer from "../RichTextRenderer";
 
 const getTruncatedText = (
   content: string,
@@ -85,7 +86,6 @@ const ArticleSection: FC = () => {
         summary: undefined,
         slug: item.slug,
         status: item.status,
-        categoryName: item.category?.name ?? null,
       }));
 
       const sorted = mapped.sort((a, b) => {
@@ -202,7 +202,7 @@ const ArticleSection: FC = () => {
               className="lg:col-span-2"
             >
               <Link
-                href={`/artikel/${featuredArticle.id}`}
+                href={`/artikel/${featuredArticle.slug || featuredArticle.id}`}
                 className="block group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300"
               >
                 <div className="relative w-full h-64">
@@ -240,12 +240,13 @@ const ArticleSection: FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-700 transition-colors duration-200">
                     {featuredArticle.title}
                   </h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <RichTextRenderer content={getTruncatedText(featuredArticle.content, featuredArticle.summary)} />
+                  {/* <p className="text-sm text-gray-600 line-clamp-2">
                     {getTruncatedText(
                       featuredArticle.content,
                       featuredArticle.summary
                     )}
-                  </p>
+                  </p> */}
                 </div>
               </Link>
             </motion.div>

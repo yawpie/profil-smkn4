@@ -1,13 +1,17 @@
-// types/Staff.ts
+// types/Staff.d.ts
 export type Staff = {
-    id: string;
-    name: string;
-    position: string; // e.g., "Kepala Tata Usaha", "Staff Administrasi", "Pustakawan"
-    image?: string; // Optional image URL
-    nip?: string; // NIP (Nomor Induk Pegawai) - optional
-  };
+  staff_id: string;
+  name: string;
+  jabatan: string;
+  image_url: string | null;
+  nip: string | null;
+};
 
-export type StaffApiResponse = {
-    data: Staff[];
-    totalCount: number;
-  };
+export type StaffPaginatedResponse = {
+  message: string;
+  data: Staff[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};

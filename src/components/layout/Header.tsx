@@ -160,7 +160,7 @@ const Header: FC = () => {
                 <ChevronDownIcon className={`ml-1 h-5 w-5 transform transition-transform ${isProfileDropdownOpen ? 'rotate-180' : 'rotate-0'}`} />
               </button>
               {isProfileDropdownOpen && (
-                <ul className="mt-2 pl-4 text-base bg-white bg-opacity-10 rounded-md py-1.5 space-y-1 animate-fade-in-down">
+                <ul className="mt-2 pl-4 text-base  bg-opacity-10 rounded-md py-1.5 space-y-1 animate-fade-in-down">
                   <li><Link href="/visi-misi" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Visi Misi</Link></li>
                   <li><Link href="/daftar-guru" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Daftar Guru</Link></li>
                   <li><Link href="/daftar-staff" className="block px-3 py-2 hover:text-blue-300 transition-colors" onClick={() => { setIsMobileMenuOpen(false); setIsProfileDropdownOpen(false); }}>Daftar Staff</Link></li>

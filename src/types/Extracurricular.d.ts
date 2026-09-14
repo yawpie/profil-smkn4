@@ -13,7 +13,7 @@ export type Extracurricular = {
   name: string;
   description: string;
   image?: string; // from image_url or fallback
-  coach?: string; // legacy field kept optional for UI compatibility
+  coach?: string | null; // legacy field kept optional for UI compatibility
   schedule?: string; // legacy field kept optional for UI compatibility
 };
 

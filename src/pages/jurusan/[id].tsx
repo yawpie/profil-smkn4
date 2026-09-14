@@ -1,114 +1,87 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { GetStaticProps, GetStaticPaths } from "next";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import type { Major, MajorApi, MajorsApiEnvelope } from "@/types/Major";
+import { useState } from "react";
+import type {
+  Major,
+  MajorApiResponse,
+  MajorGalleryImages,
+} from "@/types/Major";
 import MainLayout from "../../components/layout/MainLayout";
 import Head from "next/head";
-import { apiGet, type ApiError } from "@/utils/apiClient";
+import { apiGet } from "@/utils/apiClient";
+import { TeacherApi } from "@/types/Teacher";
+import type { Teacher } from "@/types/Teacher";
+import RichTextRenderer from "@/components/RichTextRenderer";
+import Lightbox from "@/components/Lightbox";
+import DaftarGuru from "@/components/layout/DaftarGuru";
 
-const DetailJurusanPage = () => {
-  const router = useRouter();
-  const { id } = router.query;
-  const [major, setMajor] = useState<Major | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface DetailJurusanPageProps {
+  major: Major;
+  galleryImages: MajorGalleryImages[];
+  teachers: Teacher[];
+}
 
-  useEffect(() => {
-    const fetchMajorDetails = async () => {
-      if (id) {
-        setLoading(true);
-        setError(null);
-        try {
-          const response = await apiGet<MajorApi>(
-            `/majors?id=${id}`
-          );
-          const apiMajor = response;
-          if (apiMajor) {
-            const mapped: Major = {
-              id: apiMajor.id,
-              name: apiMajor.name,
-              description: apiMajor.description,
-              image:
-                apiMajor.image_url ||
-                "https://placehold.co/600x400/6B7280/FFFFFF?text=Major",
-            };
-            setMajor(mapped);
-          } else {
-            setError("Data jurusan tidak ditemukan.");
-          }
-        } catch (err: unknown) {
-          console.error("Error fetching major details:", err);
-          if ((err as ApiError)?.message) {
-            setError(
-              `Terjadi kesalahan saat memuat data: ${(err as ApiError).message}`
-            );
-          } else if (err instanceof Error) {
-            setError(`Terjadi kesalahan saat memuat data: ${err.message}`);
-          } else {
-            setError("Terjadi kesalahan saat memuat data.");
-          }
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
 
-    fetchMajorDetails();
-  }, [id]);
+export const getStaticProps: GetStaticProps<DetailJurusanPageProps> = async (context) => {
+  const id = context.params?.id as string;
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700">
-          <div className="text-center space-y-4">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent animate-spin mx-auto"></div>
-            <p className="text-xl font-medium">Loading data jurusan...</p>
-          </div>
-        </div>
-      </MainLayout>
-    );
+  if (!id) {
+    return { notFound: true };
   }
 
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700 p-4 text-center">
-          <div className="bg-red-50 border-l-4 border-red-500 p-6 mb-6 max-w-md">
-            <p className="text-lg text-red-700 font-medium">{error}</p>
-          </div>
-          <Link
-            href="/jurusan"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            ← Back to Jurusan List
-          </Link>
-        </div>
-      </MainLayout>
-    );
+  try {
+    const response = await apiGet<MajorApiResponse>(`/majors?id=${id}`);
+    const apiMajor = response;
+    
+    if (apiMajor) {
+      const major: Major = {
+        id: apiMajor.id,
+        name: apiMajor.name,
+        description: apiMajor.description,
+        image:
+          apiMajor.image_url ||
+          "https://placehold.co/600x400/6B7280/FFFFFF?text=Major",
+      };
+      
+      const galleryImages = apiMajor.major_gallery_images || [];
+      const rawTeachers = apiMajor.guru || [];
+      const teachers: Teacher[] = rawTeachers.map((t: TeacherApi) => ({
+        id: t.guru_id,
+        name: t.name,
+        image: t.image_url || "/images/default_avatar.png",
+        subject: t.mata_pelajaran || t.jabatan,
+        nip: t.nip,
+        position: t.jabatan,
+        major_id: t.major_id,
+      }));
+
+      return {
+        props: { major, galleryImages, teachers },
+        revalidate: 60, // ISR revalidate every 60 seconds
+      };
+    }
+  } catch (err: unknown) {
+    console.error("Error fetching major details at SSG:", err);
   }
 
-  if (!major) {
-    return (
-      <MainLayout>
-        <div className="min-h-[calc(100vh-120px)] flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-blue-50 text-gray-700 space-y-6">
-          <p className="text-xl font-medium">Data tidak tersedia.</p>
-          <Link
-            href="/jurusan"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-          >
-            ← Back to Jurusan List
-          </Link>
-        </div>
-      </MainLayout>
-    );
-  }
+  return { notFound: true };
+};
+
+const DetailJurusanPage: React.FC<DetailJurusanPageProps> = ({ major, galleryImages, teachers }) => {
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   return (
     <MainLayout>
       <Head>
-        <title>{major.name} - Jurusan SMKN 4 Mataram</title>
+        <title>{`${major.name} - SMKN 4 Mataram`}</title>
         <meta
           name="description"
           content={`Detail jurusan ${major.name} di SMKN 4 Mataram, termasuk deskripsi, prospek karir, dan kurikulum.`}
@@ -189,8 +162,8 @@ const DetailJurusanPage = () => {
             )}
 
             {/* Modern Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-blue-900/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-blue-900/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" /> */}
 
             {/* Content Container */}
             <div className="absolute inset-0 flex flex-col justify-end p-8 sm:p-12 lg:p-16">
@@ -216,7 +189,7 @@ const DetailJurusanPage = () => {
           </motion.div>
 
           {/* Main Content Grid */}
-          <div className="mt-16 grid lg:grid-cols-3 gap-8">
+          <div className="mt-16  gap-8">
             {/* Description Section */}
             <motion.div
               className="lg:col-span-2 space-y-8"
@@ -226,7 +199,7 @@ const DetailJurusanPage = () => {
             >
               <div className="bg-white border-l-4 border-blue-600 shadow-xl p-8 lg:p-10">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
+                  {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
                     <svg
                       className="w-5 h-5 text-white"
                       fill="currentColor"
@@ -238,17 +211,16 @@ const DetailJurusanPage = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                  </div>
-                  <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+                  </div> */}
+                  {/* <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                     Deskripsi Program
-                  </h2>
+                  </h2> */}
                 </div>
                 <div className="prose prose-lg max-w-none text-gray-700 leading-relaxed">
                   {typeof major.description === "string" ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: major.description.replace(/\n/g, "<br/><br/>"),
-                      }}
+                    <RichTextRenderer
+                      content={major.description}
+                      className="text-gray-700 leading-relaxed"
                     />
                   ) : (
                     <p className="italic text-gray-500 text-center py-8">
@@ -260,14 +232,14 @@ const DetailJurusanPage = () => {
             </motion.div>
 
             {/* Sidebar */}
-            <motion.div
+            {/* <motion.div
               className="space-y-8"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8, duration: 0.7 }}
-            >
-              {/* Quick Facts */}
-              {/* {major.fastFacts && Array.isArray(major.fastFacts) && major.fastFacts.length > 0 && (
+            > */}
+            {/* Quick Facts */}
+            {/* {major.fastFacts && Array.isArray(major.fastFacts) && major.fastFacts.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-t-4 border-blue-600 shadow-lg p-6">
                   <div className="flex items-center space-x-3 mb-6">
                     <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center">
@@ -294,8 +266,8 @@ const DetailJurusanPage = () => {
                 </div>
               )} */}
 
-              {/* Career Prospects */}
-              {/* {major.careerProspects && Array.isArray(major.careerProspects) && major.careerProspects.length > 0 && (
+            {/* Career Prospects */}
+            {/* {major.careerProspects && Array.isArray(major.careerProspects) && major.careerProspects.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-t-4 border-green-600 shadow-lg p-6">
                   <div className="flex items-center space-x-3 mb-6">
                     <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 flex items-center justify-center">
@@ -321,8 +293,85 @@ const DetailJurusanPage = () => {
                   </ul>
                 </div>
               )} */}
-            </motion.div>
+            {/* </motion.div> */}
           </div>
+
+          <motion.div className="mt-12 border-t border-gray-200 pt-12">
+            {/** galeri jurusan dan galeri guru jurusan */}
+
+            {/* Gallery Section */}
+            {galleryImages.length > 0 && (
+              <motion.div
+                className="mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0, duration: 0.6 }}
+              >
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    Galeri Jurusan
+                  </h2>
+                  <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-cyan-600"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {galleryImages.map((img, idx) => (
+                    <motion.div
+                      key={img.id}
+                      className="group relative bg-white border border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.1 + idx * 0.1, duration: 0.5 }}
+                      onClick={() => img.image_url && setLightboxImage(img.image_url)}
+                    >
+                      <div className="relative w-full h-56 sm:h-64 bg-gradient-to-br from-slate-100 to-blue-50">
+                        {img.image_url ? (
+                          <Image
+                            src={img.image_url}
+                            alt={img.title || `Gallery ${idx + 1}`}
+                            fill
+                            style={{ objectFit: "cover" }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg
+                              className="w-12 h-12"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      {img.title && (
+                        <div className="p-3 bg-white border-t border-gray-100">
+                          <p className="text-sm font-semibold text-gray-800 text-center truncate">
+                            {img.title}
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Teachers Section */}
+            {teachers.length > 0 && (
+              <DaftarGuru
+                title="Guru Jurusan"
+                description=""
+                mode="full"
+                itemsPerPage={10}
+                initialData={teachers}
+              />
+            )}
+          </motion.div>
 
           {/* CTA Section */}
           <motion.div
@@ -353,6 +402,9 @@ const DetailJurusanPage = () => {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Lightbox Overlay */}
+      <Lightbox imageUrl={lightboxImage} onClose={() => setLightboxImage(null)} />
     </MainLayout>
   );
 };

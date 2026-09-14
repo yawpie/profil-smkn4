@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   images: {
     domains: [
@@ -10,9 +11,11 @@ const nextConfig: NextConfig = {
       "cdn.pixabay.com",
       "i.pravatar.cc",
       "via.placeholder.com",
+      "imagestorage.smkn4mtr.sch.id",
       "localhost" // <-- Domain baru ditambahkan di sini
     ],
     dangerouslyAllowSVG: true,
+    // unoptimized:true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import type { Slide, SlideApi, SlidesApiEnvelope } from "@/types/Slide";
 import { apiGet, type ApiError } from "@/utils/apiClient";
+import RichTextRenderer from "../RichTextRenderer";
 
 export default function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -145,9 +146,10 @@ export default function HeroSection() {
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-wide leading-tight drop-shadow-lg">
             {currentSlide.subtitle}
           </h1>
-          <p className="text-sm md:text-lg max-w-2xl  opacity-90 leading-relaxed drop-shadow-sm">
-            {currentSlide.description}
-          </p>
+          <RichTextRenderer
+            content={currentSlide.description}
+            className="text-white text-opacity-90 text-sm md:text-lg max-w-2xl opacity-90 leading-relaxed drop-shadow-sm"
+          />
         </div>
       </div>
 

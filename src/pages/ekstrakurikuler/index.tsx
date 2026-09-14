@@ -34,7 +34,7 @@ const EkstrakurikulerPage: FC = () => {
           image: item.image_url || "/images/placeholder-extracurricular.png",
           coach: item.guru?.name || "Not assigned",
           // schedule is not provided by the API; using placeholder
-          schedule: "Schedule not available",
+          schedule: "",
         }));
 
         setExtracurriculars(mapped);

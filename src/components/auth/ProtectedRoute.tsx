@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("ProtectedRoute Jalan");
+    // console.log("ProtectedRoute Jalan");
     
     if (!isAuthenticated && !isLoading) {
       // Save the attempted URL to redirect back after login
