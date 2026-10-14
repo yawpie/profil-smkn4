@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   images: {
+    qualities: [50, 75, 90],
     remotePatterns: [
       {
-        protocol: "https",
+        protocol: "http",
         hostname: "imagestorage.smkn4mtr.sch.id",
         pathname: "/uploads/**",
       },
@@ -42,8 +43,7 @@ const nextConfig: NextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
-    contentSecurityPolicy:
-      "default-src 'self'; script-src 'none'; sandbox;",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   webpack(config) {
