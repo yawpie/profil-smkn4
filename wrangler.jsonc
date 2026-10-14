@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "profil-smkn4",
+  "name": "frontend-smkn4",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-14",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -11,7 +11,7 @@
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "profil-smkn4"
+      "service": "frontend-smkn4"
     }
   ],
   "r2_buckets": [
