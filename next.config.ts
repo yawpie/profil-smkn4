@@ -3,22 +3,49 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+
   images: {
-    domains: [
-      "images.unsplash.com",
-      "placehold.co",
-      "picsum.photos",
-      "cdn.pixabay.com",
-      "i.pravatar.cc",
-      "via.placeholder.com",
-      "imagestorage.smkn4mtr.sch.id",
-      "localhost" // <-- Domain baru ditambahkan di sini
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "imagestorage.smkn4mtr.sch.id",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+      {
+        protocol: "https",
+        hostname: "picsum.photos",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.pixabay.com",
+      },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
     ],
     dangerouslyAllowSVG: true,
-    // unoptimized:true,
-    contentDispositionType: 'attachment',
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    contentDispositionType: "attachment",
+    contentSecurityPolicy:
+      "default-src 'self'; script-src 'none'; sandbox;",
   },
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/i,
