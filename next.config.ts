@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   images: {
-    domains: [
+    remotePatterns: [
       "images.unsplash.com",
       "placehold.co",
       "picsum.photos",
@@ -12,8 +12,8 @@ const nextConfig: NextConfig = {
       "i.pravatar.cc",
       "via.placeholder.com",
       "imagestorage.smkn4mtr.sch.id",
-      "localhost" // <-- Domain baru ditambahkan di sini
-    ],
+      "localhost"
+    ].map(hostname => ({ hostname })),
     dangerouslyAllowSVG: true,
     // unoptimized:true,
     contentDispositionType: 'attachment',

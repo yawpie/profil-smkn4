@@ -24,8 +24,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# create non-root user (do this after copying so files keep correct perms)
-RUN addgroup -S app && adduser -S app -G app
+# Image optimization writes its cache at runtime as the app user.
+RUN addgroup -S app && adduser -S app -G app \
+ && mkdir -p /app/.next/cache \
+ && chown -R app:app /app/.next/cache
 USER app
 
 EXPOSE 3000
